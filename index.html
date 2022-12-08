@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Lua Playground</title>
+<link rel="stylesheet" href="style.css" media="all">
+</head>
+<body>
+<div id="main">
+  <div class="editor-container">
+    <ul class="editor-header">
+      <li><span><span id="grammar-validation" class="validation"></span></span></li>
+      <li><span>Lua Source Code</span></li>
+    </ul>
+    <pre id="grammar-editor" class="editor-area">{{syntax}}</pre>
+    <div id="grammar-info" class="editor-info"></div>
+  </div>
+  <div class="editor-container">
+    <ul class="editor-header">
+      <li><span><span id="code-validation" class="validation"></span></span></li>
+      <li><span>Input Text (arg[1])</span></li>
+      <li class="editor-options">
+        <ul class="editor-header-options">
+          <li class="option"><button id="parse" class="parse">Run</button></li>
+        </ul>
+      </li>
+    </ul>
+    <pre id="code-editor" class="editor-area">{{source}}</pre>
+    <div class="editor-sub-header"><input id="show-output" class="show-toggle" type="checkbox">Output</div>
+    <div id="run-output" class="editor-area"></div>
+
+    <div id="code-info" class="editor-info"></div>
+  </div>
+</div>
+<div id="overlay"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.2/ace.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="index.js"></script>
+<script src="am-lua-5.4.4.js"></script>
+</body>
+</html>
