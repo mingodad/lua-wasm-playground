@@ -10,6 +10,17 @@
     <ul class="editor-header">
       <li><span><span id="grammar-validation" class="validation"></span></span></li>
       <li><span>Lua Source Code</span></li>
+      <li class="editor-options">
+        <ul class="editor-header-options">
+          <li class="option"><label>Examples </label>
+            <select id="opt-samples" onchange="loadLua_sample(this)">
+              <option>choose</option>
+              <option>Lua parser</option>
+              <option>C11 parser</option>
+            </select>
+          </li>
+        </ul>
+      </li>
     </ul>
     <pre id="grammar-editor" class="editor-area">{{syntax}}</pre>
     <div id="grammar-info" class="editor-info"></div>

@@ -25,6 +25,28 @@ const codeEditor = setupEditorArea("code-editor", "codeText");
 
 const codeOutput = setupInfoArea("run-output");
 
+function loadLua_sample(self) {
+  let base_url = "https://raw.githubusercontent.com/mingodad/lua-wasm-playground/main/examples/"
+  switch(self.options[self.selectedIndex].value) {
+    case "Lua parser":
+      $.get(base_url + "lua-ast-playground.lua", function( data ) {
+        grammarEditor.setValue( data );
+      });
+      $.get(base_url + "fact.lua", function( data ) {
+        codeEditor.setValue( data );
+      });
+      break;
+      case "C11 parser":
+      $.get(base_url + "c11-ast-playground.lua", function( data ) {
+        grammarEditor.setValue( data );
+      });
+      $.get(base_url + "fact.c", function( data ) {
+        codeEditor.setValue( data );
+      });
+      break;
+  }
+}
+
 // Parse
 function escapeHtml(unsafe) {
   return unsafe
