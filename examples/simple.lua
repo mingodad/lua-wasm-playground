@@ -5,4 +5,12 @@
 
 local input_text = arg[1]
 
-print("Here is the content of 'Input Text (arg[1])'", input_text)
+print("Here is the content of 'Input Text (arg[1])'")
+print(input_text)
+
+-- There is two embedded files that can be viewed as shown bellow
+local lpegrex = io.open('lpegrex.lua'):read("a*")
+print(lpegrex)
+
+local relabel = io.open('relabel.lua'):read("a*")
+print(relabel)
