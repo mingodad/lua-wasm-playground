@@ -199,20 +199,20 @@ local prefix = '/home/mingo/dev/lua/lua-5.4.4/src/'; local lua_files = lua_54;
 for filename in lua_files:gmatch('([^\n]+)') do
 	CopyWithInline(prefix, filename);
 end
-print('#ifdef WITH_LPEGLABEL');
-#define Instruction Instruction_lpeg
-#define match match_lpeg
-#define utf8_decode utf8_decode_lpeg
-#define finaltarget finaltarget_lpeg
-#define codenot codenot_lpeg
+print('#ifdef WITH_LPEGLABEL')
+print('#define Instruction Instruction_lpeg')
+print('#define match match_lpeg')
+print('#define utf8_decode utf8_decode_lpeg')
+print('#define finaltarget finaltarget_lpeg')
+print('#define codenot codenot_lpeg')
 for filename in lpeglabel:gmatch('([^\n]+)') do
 	CopyWithInline(lpeglabel_prefix, filename);
 end
-#undef codenot
-#undef finaltarget
-#undef utf8_decode
-#undef match
-#undef Instruction
+print('#undef codenot')
+print('#undef finaltarget')
+print('#undef utf8_decode')
+print('#undef match')
+print('#undef Instruction')
 print('#endif //WITH_LPEGLABEL');
 print('#ifdef MAKE_LUA_CMD');
 CopyWithInline(prefix, "lua.c");

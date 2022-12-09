@@ -1,4 +1,6 @@
+local parserLuaCached
 function parserLua()
+	if parserLuaCached then return parserLuaCached end
 --[[
 This grammar is based on Lua 5.4
 As seen in https://www.lua.org/manual/5.4/manual.html#9
@@ -191,12 +193,13 @@ local function parse(source, name)
   return ast
 end
 
+parserLuaCached = parse
 return parse
 end
 
-local parse_lua = parserLua() -- require 'parsers.lua'
 local lpegrex = require 'lpegrex'
-
+--lpegrex.debug = true
+local parse_lua = parserLua() -- require 'parsers.lua'
 
 -- Parse Lua source
 local ast = parse_lua(arg[1], "input_text")
