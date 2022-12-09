@@ -250,9 +250,9 @@ local function mkrex()
   resetRuleConters()
 
   local function showRuleConters()
-	io.stderr:write("= Rule counters:\n\tTotal\tSucced\t%\tFailed\t%\tRule\n")
-	io.stderr:write(string.format("\t%d\t%d\t%.2f\t%d\t%.2f\tall rules\n",
-		totalRuleCount,
+	io.stderr:write("= Rule counters:\n\tTotal\t%\tSucced\t%\tFailed\t%\tRule\n")
+	io.stderr:write(string.format("\t%d\t%.2f\t%d\t%.2f\t%d\t%.2f\tall rules\n",
+		totalRuleCount, 100.0,
 		totalRuelSucced, ((totalRuelSucced+0.0)/totalRuleCount) *100.0,
 		totalRuleFailed, ((totalRuleFailed+0.0)/totalRuleCount) *100.0))
 	--print("Rule count", #totalPerRuleCountList)
@@ -265,8 +265,8 @@ local function mkrex()
 		local rsucced = v[2]
 		local rfailed = v[3]
 
-		io.stderr:write(string.format("\t%d\t%d\t%.2f\t%d\t%.2f\t%s\n",
-			rtotal,
+		io.stderr:write(string.format("\t%d\t%.2f\t%d\t%.2f\t%d\t%.2f\t%s\n",
+			rtotal, ((rtotal+0.0)/totalRuleCount) *100.0,
 			rsucced, ((rsucced+0.0)/rtotal) *100.0,
 			rfailed, ((rfailed+0.0)/rtotal) *100.0, k))
 	end
@@ -304,7 +304,7 @@ local function mkrex()
 	    incTotalPerRule(k ,1)
 	    if ndebug > 0 then
               local lineno, colno = lpegrex.calcline(s, p)
-              io.stderr:write(string.format('ENTER %s (%d:%d)\n', k, lineno, colno))
+              io.stderr:write(string.format('--> %s (%d:%d)\n', k, lineno, colno))
 	    end
             return true
           end)
@@ -313,7 +313,7 @@ local function mkrex()
 	     incTotalPerRule(k ,2)
 	    if ndebug > 1 then
               local lineno, colno = lpegrex.calcline(s, p)
-              io.stderr:write(string.format('OK %s (%d:%d)\n', k, lineno, colno))
+              io.stderr:write(string.format('==  %s (%d:%d)\n', k, lineno, colno))
 	    end
             return true
           end)
@@ -322,7 +322,7 @@ local function mkrex()
 	     incTotalPerRule(k ,3)
 	    if ndebug > 2 then
               local lineno, colno = lpegrex.calcline(s, p)
-              io.stderr:write(string.format('FAILED %s (%d:%d)\n', k, lineno, colno))
+              io.stderr:write(string.format('<-- %s (%d:%d)\n', k, lineno, colno))
 	    end
             return false
           end) * false
