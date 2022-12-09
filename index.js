@@ -52,6 +52,14 @@ function loadLua_sample(self) {
         codeEditor.setValue( data );
       });
       break;
+      case "Json parser**":
+      $.get(base_url + "json-ast-playground.lua", function( data ) {
+        grammarEditor.setValue( data );
+      });
+      $.get(base_url + "sample.json", function( data ) {
+        codeEditor.setValue( data );
+      });
+      break;
   }
 }
 
