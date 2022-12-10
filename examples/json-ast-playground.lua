@@ -240,6 +240,7 @@ local function mkrex()
 
   -- current grammar stats
   local totalRuleCount, totalRuelSucced, totalRuleFailed, debugIndent
+  local last_k, last_lineno, last_colno
   local totalPerRuleCountList = {}
 
   local function resetRuleConters()
@@ -247,6 +248,9 @@ local function mkrex()
 	totalRuelSucced = 0
 	totalRuleFailed = 0
 	debugIndent = 0
+	last_k = nil
+	last_lineno = 0
+	last_colno = 0
 	for k,v in pairs(totalPerRuleCountList) do totalPerRuleCountList[k] =  {0,0,0} end
   end
 
@@ -307,6 +311,9 @@ local function mkrex()
 	    incTotalPerRule(k ,1)
 	    if ndebug > 0 then
               local lineno, colno, line = lpegrex.calcline(s, p)
+	      last_k = k
+	      last_lineno = lineno
+	      last_colno = colno
               io.stderr:write(format('-->%s %s (%d:%d) %s\n', str_rep("  ",debugIndent), k, lineno, colno, line:sub(colno)))
 	    end
 	    debugIndent = debugIndent +1
@@ -328,7 +335,11 @@ local function mkrex()
 	    incTotalPerRule(k ,3)
 	    if ndebug > 2 then
               local lineno, colno, line = lpegrex.calcline(s, p)
-              io.stderr:write(format('<--%s %s (%d:%d) %s\n', str_rep("  ",debugIndent), k, lineno, colno, line:sub(colno)))
+	      if k == last_k and lineno == last_lineno and colno == last_colno then
+                io.stderr:write('<--\n')
+	      else
+                io.stderr:write(format('<--%s %s (%d:%d) %s\n', str_rep("  ",debugIndent), k, lineno, colno, line:sub(colno)))
+	      end
 	    end
             return false
           end) * false
