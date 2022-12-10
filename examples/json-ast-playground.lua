@@ -85,6 +85,8 @@ local char = string.char
 local utf8char = utf8 and utf8.char
 local select, tonumber = select, tonumber
 local insert = table.insert
+local format = string.format
+local str_rep = string.rep
 
 -- Pattern matching any character.
 local Any = lpeg.P(1)
@@ -237,13 +239,14 @@ local function mkrex()
   local G, Gkeywords, Gtokens
 
   -- current grammar stats
-  local totalRuleCount, totalRuelSucced, totalRuleFailed
+  local totalRuleCount, totalRuelSucced, totalRuleFailed, debugIndent
   local totalPerRuleCountList = {}
 
   local function resetRuleConters()
 	totalRuleCount = 0
 	totalRuelSucced = 0
 	totalRuleFailed = 0
+	debugIndent = 0
 	for k,v in pairs(totalPerRuleCountList) do totalPerRuleCountList[k] =  {0,0,0} end
   end
 
@@ -303,26 +306,29 @@ local function mkrex()
 	    totalRuleCount = totalRuleCount + 1
 	    incTotalPerRule(k ,1)
 	    if ndebug > 0 then
-              local lineno, colno = lpegrex.calcline(s, p)
-              io.stderr:write(string.format('--> %s (%d:%d)\n', k, lineno, colno))
+              local lineno, colno, line = lpegrex.calcline(s, p)
+              io.stderr:write(format('-->%s %s (%d:%d) %s\n', str_rep("  ",debugIndent), k, lineno, colno, line:sub(colno)))
 	    end
+	    debugIndent = debugIndent +1
             return true
           end)
           local succeded = lpeg.P(function(s, p)
 	    totalRuelSucced = totalRuelSucced + 1
-	     incTotalPerRule(k ,2)
+	    debugIndent = debugIndent -1
+	    incTotalPerRule(k ,2)
 	    if ndebug > 1 then
-              local lineno, colno = lpegrex.calcline(s, p)
-              io.stderr:write(string.format('==  %s (%d:%d)\n', k, lineno, colno))
+              local lineno, colno, line = lpegrex.calcline(s, p)
+              io.stderr:write(format('==>%s %s (%d:%d) %s\n', str_rep("  ",debugIndent), k, lineno, colno, line:sub(colno)))
 	    end
             return true
           end)
           local failed = lpeg.P(function(s, p)
 	    totalRuleFailed = totalRuleFailed + 1
-	     incTotalPerRule(k ,3)
+	    debugIndent = debugIndent -1
+	    incTotalPerRule(k ,3)
 	    if ndebug > 2 then
-              local lineno, colno = lpegrex.calcline(s, p)
-              io.stderr:write(string.format('<-- %s (%d:%d)\n', k, lineno, colno))
+              local lineno, colno, line = lpegrex.calcline(s, p)
+              io.stderr:write(format('<--%s %s (%d:%d) %s\n', str_rep("  ",debugIndent), k, lineno, colno, line:sub(colno)))
 	    end
             return false
           end) * false
