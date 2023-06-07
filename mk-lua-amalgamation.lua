@@ -194,7 +194,8 @@ print([==[
 --local prefix = '/home/mingo/dev/lua/lua-5.1.5/src/'; local lua_files = lua_51;
 --local prefix = '/home/mingo/dev/lua/lua-5.2.4/src/'; local lua_files = lua_52;
 --local prefix = '/home/mingo/dev/lua/lua-5.3.6/src/'; local lua_files = lua_53;
-local prefix = '/home/mingo/dev/lua/lua-5.4.4/src/'; local lua_files = lua_54;
+--local prefix = '/home/mingo/dev/lua/lua-5.4.4/src/'; local lua_files = lua_54;
+local prefix = '/home/mingo/dev/lua/lua-5.4.6/src/'; local lua_files = lua_54;
 --for filename in lua_files:gmatch('#include "([^"]+)"') do
 for filename in lua_files:gmatch('([^\n]+)') do
 	CopyWithInline(prefix, filename);
