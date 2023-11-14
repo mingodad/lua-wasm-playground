@@ -60,6 +60,14 @@ function loadLua_sample(self) {
         codeEditor.setValue( data );
       });
       break;
+      case "Tree-sitter-ebnf-generator":
+      $.get(base_url + "tree-sitter-ebnf-generator.lua", function( data ) {
+        grammarEditor.setValue( data );
+      });
+      $.get(base_url + "scala.ebnf", function( data ) {
+        codeEditor.setValue( data );
+      });
+      break;
   }
 }
 
