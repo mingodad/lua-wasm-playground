@@ -19,55 +19,62 @@ function setupEditorArea(id, lsKey) {
   return e;
 }
 
+let userContentHasChanged = false;
+let grammarContentHasChanged = false;
+let inputContentHasChanged = false;
+function grammarOnChange(delta) {
+	if(!grammarContentHasChanged) {
+		grammarContentHasChanged = true;
+		userContentHasChanged = true;
+	}
+}
+function inputOnChange(delta) {
+	if(!inputContentHasChanged) {
+		inputContentHasChanged = true;
+		userContentHasChanged = true;
+	}
+}
+
 const grammarEditor = setupEditorArea("grammar-editor", "grammarText");
+grammarEditor.on("change", grammarOnChange);
 grammarEditor.getSession().setMode("ace/mode/lua");
 const codeEditor = setupEditorArea("code-editor", "codeText");
+codeEditor.on("change", inputOnChange);
+userContentHasChanged = localStorage.getItem("userContentHasChanged");
 
 const codeOutput = setupInfoArea("run-output");
 
+onbeforeunload= function(event) { updateLocalStorage(); };
+
+const sampleList = [
+	//title, lua_code, input, input ace syntax
+	["Simple", "simple.lua", "fact.lua", "ace/mode/lua"],
+	["Lua parser", "lua-ast-playground.lua", "fact.lua", "ace/mode/lua"],
+	["C11 parser", "c11-ast-playground.lua", "fact.c", "ace/mode/c_cpp"],
+	["Json parser**", "json-ast-playground.lua", "sample.json.txt", "ace/mode/json"],
+	["Tree-sitter-ebnf-generator", "tree-sitter-ebnf-generator.lua", "scala.ebnf", "ace/mode/text"],
+];
+
 function loadLua_sample(self) {
-  let base_url = "https://raw.githubusercontent.com/mingodad/lua-wasm-playground/main/examples/"
-  switch(self.options[self.selectedIndex].value) {
-    case "Simple":
-      $.get(base_url + "simple.lua", function( data ) {
+  if(userContentHasChanged)
+  {
+	let ok = confirm("Your changes will be lost !\nIf the changes you've made are important save then before proceed.\nCopy and paste to your prefered editor and save it.\nEither OK or Cancel.");
+	if(!ok) return false;
+  }
+  let base_url = "./examples/"
+  if(self.selectedIndex > 0) {
+      let sample_to_use = sampleList[self.selectedIndex-1];
+      $.get(base_url + sample_to_use[1], function( data ) {
         grammarEditor.setValue( data );
+	grammarContentHasChanged = false;
+	userContentHasChanged = false;
       });
-      $.get(base_url + "fact.lua", function( data ) {
+      $.get(base_url + sample_to_use[2], function( data ) {
         codeEditor.setValue( data );
+	codeEditor.getSession().setMode(sample_to_use[3]);
+	inputContentHasChanged = false;
+	userContentHasChanged = false;
       });
-      break;
-    case "Lua parser":
-      $.get(base_url + "lua-ast-playground.lua", function( data ) {
-        grammarEditor.setValue( data );
-      });
-      $.get(base_url + "fact.lua", function( data ) {
-        codeEditor.setValue( data );
-      });
-      break;
-      case "C11 parser":
-      $.get(base_url + "c11-ast-playground.lua", function( data ) {
-        grammarEditor.setValue( data );
-      });
-      $.get(base_url + "fact.c", function( data ) {
-        codeEditor.setValue( data );
-      });
-      break;
-      case "Json parser**":
-      $.get(base_url + "json-ast-playground.lua", function( data ) {
-        grammarEditor.setValue( data );
-      });
-      $.get(base_url + "sample.json", function( data ) {
-        codeEditor.setValue( data );
-      });
-      break;
-      case "Tree-sitter-ebnf-generator":
-      $.get(base_url + "tree-sitter-ebnf-generator.lua", function( data ) {
-        grammarEditor.setValue( data );
-      });
-      $.get(base_url + "scala.ebnf", function( data ) {
-        codeEditor.setValue( data );
-      });
-      break;
   }
 }
 
@@ -124,8 +131,14 @@ function generateErrorListHTML(errors) {
 }
 
 function updateLocalStorage() {
-  localStorage.setItem('grammarText', grammarEditor.getValue());
-  localStorage.setItem('codeText', codeEditor.getValue());
+  if(grammarContentHasChanged || inputContentHasChanged)
+  {
+    localStorage.setItem('grammarText', grammarEditor.getValue());
+    localStorage.setItem('codeText', codeEditor.getValue());
+    grammarContentHasChanged = false;
+    inputContentHasChanged = false;
+    localStorage.setItem('userContentHasChanged', userContentHasChanged);
+  }
 }
 
 function parse() {
