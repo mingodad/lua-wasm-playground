@@ -174,7 +174,7 @@ function parse() {
   });
 
   window.setTimeout(() => {
-    lua_run(grammarText, grammarText.length , codeText, codeText.length);
+    lua_run(grammarText , codeText);
 
     $('#overlay').css({
       'z-index': '-1',
@@ -302,7 +302,7 @@ var Module = {
   // called when emscripten runtime is initialized
   'onRuntimeInitialized': function() {
     // wrap the C `parse` function
-    lua_run = cwrap('run_lua', 'number', ['string', 'number', 'string', 'number']);
+    lua_run = cwrap('run_lua', 'number', ['string', 'string']);
     // Initial parse
     if ($('#auto-refresh').prop('checked')) {
       parse();

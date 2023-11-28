@@ -36,7 +36,9 @@ STATIC_STACK_SIZE(0x40000);
 #include <stdlib.h> //10
 //#include <readline/readline.h> //23
 //#include <io.h> //22
+#ifdef __EMSCRIPTEN__
 #include <emscripten.h> //25
+#endif
 #include <float.h> //8
 #endif
 
@@ -34490,8 +34492,11 @@ static int msghandler (lua_State *L) {
   return 1;  /* return the traceback */
 }
 
-int run_lua(const char *script, size_t script_size, const char *input, size_t input_size)
+int run_lua(const char *script, const char *input)
 {
+	//use of Javascript string.length can't be used for utf8
+	size_t script_size = strlen(script);
+	size_t input_size = strlen(input);
 	int err = 0; // currently, zero is always returned; result codes for each part
 		 // are sent to JS via set_result()
 

@@ -7,6 +7,6 @@ emsdk-env emcc  \
 	-DWITH_LPEGLABEL \
 	-o am-lua-5.4.6.js am-lua-5.4.6.c \
 	-sEXPORTED_FUNCTIONS=_run_lua -sEXPORTED_RUNTIME_METHODS=ccall,cwrap \
-	-sALLOW_MEMORY_GROWTH \
+	-sALLOW_MEMORY_GROWTH -s TOTAL_STACK=8MB \
 	--embed-file $HOME/dev/lua/lpeglabel/relabel.lua@$destFolder \
 	--embed-file $HOME/dev/lua/lpegrex/lpegrex.lua@$destFolder
