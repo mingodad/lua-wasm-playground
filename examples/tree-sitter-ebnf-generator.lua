@@ -182,6 +182,22 @@ Expressions:
     explicit grouping if necessary, i.e. `("foo" "bar"): baz` to generate
     `field("baz", seq("foo", "bar"))`
 ]]
+
+function dumpTable(tbl)
+	if type(tbl) ~= "table" then
+		return
+	end
+	if #tbl > 0 then
+		for k,v in ipairs(tbl) do
+			print(k, v);
+			dumpTable(v)
+		end
+	end
+	for k,v in pairs(tbl) do
+		print(k, v);
+		dumpTable(v)
+	end
+end
 local function print_help()
   print(msg)
   print(usage)
@@ -552,7 +568,12 @@ local function print_node(n, offset, max_width)
       return write_function_with_args("token", { kind = SEQUENCE, children = n.children })
     elseif n.kind == PRECEDENCE then
       local modifier, next_node = unpack(n.children)
-      local prec = tonumber(modifier:match("([-0-9]+)"))
+      local prec = modifier:match("([-0-9]+)")
+      if prec then
+	prec = tonumber(prec)
+      elseif #modifier > 1 then
+        prec = '"' .. modifier:sub(2) .. '"'
+      end
       local assoc = modifier:match("([<>~])")
       local immediate = modifier:match("([%!])")
       local func =
