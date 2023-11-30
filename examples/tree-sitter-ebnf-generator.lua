@@ -570,9 +570,13 @@ local function print_node(n, offset, max_width)
       local modifier, next_node = unpack(n.children)
       local prec = modifier:match("([-0-9]+)")
       if prec then
-	prec = tonumber(prec)
+        prec = tonumber(prec)
       elseif #modifier > 1 then
-        prec = '"' .. modifier:sub(2) .. '"'
+        if modifier:match("^[<>~]") then
+          prec = '"' .. modifier:sub(2) .. '"'
+        else
+          prec = '"' .. modifier .. '"'
+        end
       end
       local assoc = modifier:match("([<>~])")
       local immediate = modifier:match("([%!])")
