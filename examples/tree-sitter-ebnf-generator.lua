@@ -327,6 +327,9 @@ local function scan_file()
     line_num = nil
     is_value = nil
   end
+  local leading = "[%w_%[%]]"
+  local prefix = leading .. leading .. "?" .. leading .. "?"
+  local line_re = "(" .. prefix .. "[%w_.]*)%s*(::?=)%s*(.*)"
   --for line in io.lines(file) do
   for line in file:gmatch("[^\n]*") do
     --print("++", count, line)
@@ -339,9 +342,8 @@ local function scan_file()
     elseif is_comment then
       if def then table.insert(def, line) end
     else
-      local leading = "[%w_%[%]]"
-      local prefix = leading .. leading .. "?" .. leading .. "?"
-      local s, _, i, a, b = line:find("(" .. prefix .. "[%w_.]*)%s*(:?:=)%s*(.*)")
+      local s, _, i, a, b = line:find(line_re)
+      --print(count, line, s, i, a, b)
       local is_beginning = not rules and s == 1
       if not is_beginning then
         local ss, e = line:find("  " .. leading)
@@ -355,7 +357,7 @@ local function scan_file()
         body = { b }
         def = { line }
       else
-        assert(def, line .. tostring(is_beginning))
+        assert(def, count .. ":" .. line .. tostring(is_beginning))
         table.insert(def, line)
         local rest = line:match("%s+(.*)")
         if rest then

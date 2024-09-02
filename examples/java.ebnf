@@ -1,0 +1,513 @@
+; From tree-sitter-java/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	}
+
+extras ::= {
+	line_comment
+	block_comment
+	/\s/
+	}
+
+supertypes ::= {
+	expression
+	declaration
+	statement
+	primary_expression
+	_literal
+	_type
+	_simple_type
+	_unannotated_type
+	comment
+	module_directive
+	}
+
+inline ::= {
+	_name
+	_simple_type
+	_class_body_declaration
+	_variable_initializer
+	}
+
+conflicts ::= {
+	{ modifiers annotated_type receiver_parameter }
+	{ modifiers annotated_type module_declaration package_declaration }
+	{ _unannotated_type primary_expression inferred_parameters }
+	{ _unannotated_type primary_expression }
+	{ _unannotated_type primary_expression scoped_type_identifier }
+	{ _unannotated_type scoped_type_identifier }
+	{ _unannotated_type generic_type }
+	{ generic_type primary_expression }
+	{ expression statement }
+	{ lambda_expression primary_expression }
+	{ inferred_parameters primary_expression }
+	{ argument_list record_pattern_body }
+	}
+
+word ::= identifier
+
+rules:
+
+  program ::= _toplevel_statement*
+
+  _toplevel_statement ::= statement
+	| method_declaration
+
+  _literal ::= decimal_integer_literal
+	| hex_integer_literal
+	| octal_integer_literal
+	| binary_integer_literal
+	| decimal_floating_point_literal
+	| hex_floating_point_literal
+	| true
+	| false
+	| character_literal
+	| string_literal
+	| null_literal
+
+  decimal_integer_literal ::= @( @( '0' | /[1-9]/ ( '_'? /[0-9]+/ ( /_+/ /[0-9]+/ )* )? ) ( 'l' | 'L' )? )
+
+  hex_integer_literal ::= @( ( '0x' | '0X' ) @( /[A-Fa-f0-9]+/ ( '_' /[A-Fa-f0-9]+/ )* ) ( 'l' | 'L' )? )
+
+  octal_integer_literal ::= @( ( '0o' | '0O' | '0' ) /[0-7]+/ ( '_' /[0-7]+/ )* ( 'l' | 'L' )? )
+
+  binary_integer_literal ::= @( ( '0b' | '0B' ) /[01]+/ ( '_' /[01]+/ )* ( 'l' | 'L' )? )
+
+  decimal_floating_point_literal ::= @( @( /[0-9]+/ ( '_' /[0-9]+/ )* ) '.' @( /[0-9]+/ ( '_' /[0-9]+/ )* )? ( /[eE]/ ( '-' | '+' )? @( /[0-9]+/ ( '_' /[0-9]+/ )* ) )? /[fFdD]/? | '.' @( /[0-9]+/ ( '_' /[0-9]+/ )* ) ( /[eE]/ ( '-' | '+' )? @( /[0-9]+/ ( '_' /[0-9]+/ )* ) )? /[fFdD]/? | @( '0' | /[1-9]/ ( '_'? /[0-9]+/ ( /_+/ /[0-9]+/ )* )? ) /[eEpP]/ ( '-' | '+' )? @( /[0-9]+/ ( '_' /[0-9]+/ )* ) /[fFdD]/? | @( '0' | /[1-9]/ ( '_'? /[0-9]+/ ( /_+/ /[0-9]+/ )* )? ) ( /[eE]/ ( '-' | '+' )? @( /[0-9]+/ ( '_' /[0-9]+/ )* ) )? /[fFdD]/ )
+
+  hex_floating_point_literal ::= @( ( '0x' | '0X' ) ( @( /[A-Fa-f0-9]+/ ( '_' /[A-Fa-f0-9]+/ )* ) '.'? | @( /[A-Fa-f0-9]+/ ( '_' /[A-Fa-f0-9]+/ )* )? '.' @( /[A-Fa-f0-9]+/ ( '_' /[A-Fa-f0-9]+/ )* ) ) ( /[eEpP]/ ( '-' | '+' )? @( '0' | /[1-9]/ ( '_'? /[0-9]+/ ( /_+/ /[0-9]+/ )* )? ) /[fFdD]/? )? )
+
+  true ::= 'true'
+
+  false ::= 'false'
+
+  character_literal ::= @( "'"  ( /[^\\'\n]/ | /\\./ | /\\\n/ )+ "'"  )
+
+  string_literal ::= _string_literal
+	| _multiline_string_literal
+
+  _string_literal ::= '"'  ( string_fragment | escape_sequence | string_interpolation )* '"'
+
+  _multiline_string_literal ::= '"""' ( _multiline_string_fragment -> "multiline_string_fragment" | _escape_sequence | string_interpolation )* '"""'
+
+  string_fragment ::= !(  1(  /[^"\\]+/ )  )
+
+  _multiline_string_fragment ::= /[^"\\]+/
+	| /"([^"\\]|\\")*/
+
+  string_interpolation ::= '\{' expression '}'
+
+  _escape_sequence ::=  2(  !( '\\'  /[^bfnrts'\"\\]/ ) )
+	|  1(  escape_sequence )
+
+  escape_sequence ::= !( '\\'  ( /[^xu0-7]/ | /[0-7]{1,3}/ | /x[0-9a-fA-F]{2}/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F]+\}/ ) )
+
+  null_literal ::= 'null'
+
+  expression ::= assignment_expression
+	| binary_expression
+	| instanceof_expression
+	| lambda_expression
+	| ternary_expression
+	| update_expression
+	| primary_expression
+	| unary_expression
+	| cast_expression
+	| switch_expression
+
+  cast_expression ::=  14(  '(' ( _type ):type ')' ( expression ):value | '(' ( _type ):type ( '&' ( _type ):type )* ')' ( primary_expression | lambda_expression ):value )
+
+  assignment_expression ::=  >1(  ( identifier | _reserved_identifier | field_access | array_access ):left ( '=' | '+=' | '-=' | '*=' | '/=' | '&=' | '|=' | '^=' | '%=' | '<<=' | '>>=' | '>>>=' ):operator ( expression ):right )
+
+  binary_expression ::=  <10(  ( expression ):left ( '>' ):operator ( expression ):right )
+	|  <10(  ( expression ):left ( '<' ):operator ( expression ):right )
+	|  <10(  ( expression ):left ( '>=' ):operator ( expression ):right )
+	|  <10(  ( expression ):left ( '<=' ):operator ( expression ):right )
+	|  <9(  ( expression ):left ( '==' ):operator ( expression ):right )
+	|  <9(  ( expression ):left ( '!=' ):operator ( expression ):right )
+	|  <5(  ( expression ):left ( '&&' ):operator ( expression ):right )
+	|  <4(  ( expression ):left ( '||' ):operator ( expression ):right )
+	|  <12(  ( expression ):left ( '+' ):operator ( expression ):right )
+	|  <12(  ( expression ):left ( '-' ):operator ( expression ):right )
+	|  <13(  ( expression ):left ( '*' ):operator ( expression ):right )
+	|  <13(  ( expression ):left ( '/' ):operator ( expression ):right )
+	|  <8(  ( expression ):left ( '&' ):operator ( expression ):right )
+	|  <6(  ( expression ):left ( '|' ):operator ( expression ):right )
+	|  <7(  ( expression ):left ( '^' ):operator ( expression ):right )
+	|  <13(  ( expression ):left ( '%' ):operator ( expression ):right )
+	|  <11(  ( expression ):left ( '<<' ):operator ( expression ):right )
+	|  <11(  ( expression ):left ( '>>' ):operator ( expression ):right )
+	|  <11(  ( expression ):left ( '>>>' ):operator ( expression ):right )
+
+  instanceof_expression ::=  10(  ( expression ):left 'instanceof' 'final'? ( ( _type ):right ( identifier | _reserved_identifier )?:name | ( record_pattern ):pattern ) )
+
+  lambda_expression ::= ( identifier | formal_parameters | inferred_parameters | _reserved_identifier ):parameters '->' ( expression | block ):body
+
+  inferred_parameters ::= '(' ( identifier | _reserved_identifier ) ( ',' ( identifier | _reserved_identifier ) )* ')'
+
+  ternary_expression ::=  >3(  ( expression ):condition '?' ( expression ):consequence ':' ( expression ):alternative )
+
+  unary_expression ::=  <15(  ( '+' ):operator ( expression ):operand )
+	|  <15(  ( '-' ):operator ( expression ):operand )
+	|  <15(  ( '!' ):operator ( expression ):operand )
+	|  <15(  ( '~' ):operator ( expression ):operand )
+
+  update_expression ::=  <15(  expression '++' | expression '--' | '++' expression | '--' expression )
+
+  primary_expression ::= _literal
+	| class_literal
+	| this
+	| identifier
+	| _reserved_identifier
+	| parenthesized_expression
+	| object_creation_expression
+	| field_access
+	| array_access
+	| method_invocation
+	| method_reference
+	| array_creation_expression
+	| template_expression
+
+  array_creation_expression ::= 'new' _annotation* ( _simple_type ):type ( ( dimensions_expr+ ):dimensions ( dimensions )?:dimensions | ( dimensions ):dimensions ( array_initializer ):value )
+
+  dimensions_expr ::= _annotation* '[' expression ']'
+
+  parenthesized_expression ::= '(' expression ')'
+
+  class_literal ::=  ~17(  _unannotated_type '.' 'class' )
+
+  object_creation_expression ::= _unqualified_object_creation_expression
+	| primary_expression '.' _unqualified_object_creation_expression
+
+  _unqualified_object_creation_expression ::= 'new' ( _annotation* ( type_arguments ):type_arguments _annotation* | _annotation* ) ( _simple_type ):type ( argument_list ):arguments class_body?
+
+  field_access ::= ( primary_expression | super ):object ( '.' super )? '.' ( identifier | _reserved_identifier | this ):field
+
+  template_expression ::= ( primary_expression ):template_processor '.' ( string_literal ):template_argument
+
+  array_access ::= ( primary_expression ):array '[' ( expression ):index ']'
+
+  method_invocation ::= ( ( identifier | _reserved_identifier ):name | ( primary_expression | super ):object '.' ( super '.' )? ( type_arguments )?:type_arguments ( identifier | _reserved_identifier ):name ) ( argument_list ):arguments
+
+  argument_list ::= '(' ( expression ( ',' expression )* )? ')'
+
+  method_reference ::= ( _type | primary_expression | super ) '::' type_arguments? ( 'new' | identifier )
+
+  type_arguments ::= '<' ( ( _type | wildcard ) ( ',' ( _type | wildcard ) )* )? '>'
+
+  wildcard ::= _annotation* '?' _wildcard_bounds?
+
+  _wildcard_bounds ::= 'extends' _type
+	| super _type
+
+  dimensions ::= ( _annotation* '[' ']' )+
+
+  switch_expression ::= 'switch' ( parenthesized_expression ):condition ( switch_block ):body
+
+  switch_block ::= '{' ( switch_block_statement_group* | switch_rule* ) '}'
+
+  switch_block_statement_group ::= ( switch_label ':' )+ statement*
+
+  switch_rule ::= switch_label '->' ( expression_statement | throw_statement | block )
+
+  switch_label ::= 'case' ( pattern | expression ( ',' expression )* ) guard?
+	| 'default'
+
+  pattern ::= type_pattern
+	| record_pattern
+
+  type_pattern ::= _unannotated_type ( identifier | _reserved_identifier )
+
+  record_pattern ::= ( identifier | _reserved_identifier | generic_type ) record_pattern_body
+
+  record_pattern_body ::= '(' ( ( record_pattern_component | record_pattern ) ( ',' ( record_pattern_component | record_pattern ) )* )? ')'
+
+  record_pattern_component ::= underscore_pattern
+	| _unannotated_type ( identifier | _reserved_identifier )
+
+  underscore_pattern ::= '_'
+
+  guard ::= 'when' expression
+
+  statement ::= declaration
+	| expression_statement
+	| labeled_statement
+	| if_statement
+	| while_statement
+	| for_statement
+	| enhanced_for_statement
+	| block
+	| ';'
+	| assert_statement
+	| do_statement
+	| break_statement
+	| continue_statement
+	| return_statement
+	| yield_statement
+	| switch_expression
+	| synchronized_statement
+	| local_variable_declaration
+	| throw_statement
+	| try_statement
+	| try_with_resources_statement
+
+  block ::= '{' statement* '}'
+
+  expression_statement ::= expression ';'
+
+  labeled_statement ::= identifier ':' statement
+
+  assert_statement ::= 'assert' expression ';'
+	| 'assert' expression ':' expression ';'
+
+  do_statement ::= 'do' ( statement ):body 'while' ( parenthesized_expression ):condition ';'
+
+  break_statement ::= 'break' identifier? ';'
+
+  continue_statement ::= 'continue' identifier? ';'
+
+  return_statement ::= 'return' expression? ';'
+
+  yield_statement ::= 'yield' expression ';'
+
+  synchronized_statement ::= 'synchronized' parenthesized_expression ( block ):body
+
+  throw_statement ::= 'throw' expression ';'
+
+  try_statement ::= 'try' ( block ):body ( catch_clause+ | catch_clause* finally_clause )
+
+  catch_clause ::= 'catch' '(' catch_formal_parameter ')' ( block ):body
+
+  catch_formal_parameter ::= modifiers? catch_type _variable_declarator_id
+
+  catch_type ::= _unannotated_type ( '|' _unannotated_type )*
+
+  finally_clause ::= 'finally' block
+
+  try_with_resources_statement ::= 'try' ( resource_specification ):resources ( block ):body catch_clause* finally_clause?
+
+  resource_specification ::= '(' resource ( ';' resource )* ';'? ')'
+
+  resource ::= modifiers? ( _unannotated_type ):type _variable_declarator_id '=' ( expression ):value
+	| identifier
+	| field_access
+
+  if_statement ::= 'if' ( parenthesized_expression ):condition ( statement ):consequence ( 'else' ( statement ):alternative )?
+
+  while_statement ::= 'while' ( parenthesized_expression ):condition ( statement ):body
+
+  for_statement ::= 'for' '(' ( ( local_variable_declaration ):init | ( ( expression ):init ( ',' ( expression ):init )* )? ';' ) ( expression )?:condition ';' ( ( expression ):update ( ',' ( expression ):update )* )? ')' ( statement ):body
+
+  enhanced_for_statement ::= 'for' '(' modifiers? ( _unannotated_type ):type _variable_declarator_id ':' ( expression ):value ')' ( statement ):body
+
+  _annotation ::= marker_annotation
+	| annotation
+
+  marker_annotation ::= '@' ( _name ):name
+
+  annotation ::= '@' ( _name ):name ( annotation_argument_list ):arguments
+
+  annotation_argument_list ::= '(' ( _element_value | element_value_pair ( ',' element_value_pair )* ) ')'
+
+  element_value_pair ::= ( identifier ):key '=' ( _element_value ):value
+
+  _element_value ::=  2(  expression | element_value_array_initializer | _annotation )
+
+  element_value_array_initializer ::= '{' ( _element_value ( ',' _element_value )* )? ','? '}'
+
+  declaration ::=  2(  module_declaration | package_declaration | import_declaration | class_declaration | record_declaration | interface_declaration | annotation_type_declaration | enum_declaration )
+
+  module_declaration ::= _annotation* 'open'? 'module' ( _name ):name ( module_body ):body
+
+  module_body ::= '{' module_directive* '}'
+
+  module_directive ::= requires_module_directive
+	| exports_module_directive
+	| opens_module_directive
+	| uses_module_directive
+	| provides_module_directive
+
+  requires_module_directive ::= 'requires' ( requires_modifier )*:modifiers ( _name ):module ';'
+
+  requires_modifier ::= 'transitive'
+	| 'static'
+
+  exports_module_directive ::= 'exports' ( _name ):package ( 'to' ( _name ):modules ( ',' ( _name ):modules )* )? ';'
+
+  opens_module_directive ::= 'opens' ( _name ):package ( 'to' ( _name ):modules ( ',' ( _name ):modules )* )? ';'
+
+  uses_module_directive ::= 'uses' ( _name ):type ';'
+
+  provides_module_directive ::= 'provides' ( _name ):provided 'with' _name ( ',' ( _name ):provider )* ';'
+
+  package_declaration ::= _annotation* 'package' _name ';'
+
+  import_declaration ::= 'import' 'static'? _name ( '.' asterisk )? ';'
+
+  asterisk ::= '*'
+
+  enum_declaration ::= modifiers? 'enum' ( identifier ):name ( super_interfaces )?:interfaces ( enum_body ):body
+
+  enum_body ::= '{' ( enum_constant ( ',' enum_constant )* )? ','? enum_body_declarations? '}'
+
+  enum_body_declarations ::= ';' _class_body_declaration*
+
+  enum_constant ::= modifiers? ( identifier ):name ( argument_list )?:arguments ( class_body )?:body
+
+  class_declaration ::= modifiers? 'class' ( identifier ):name ( type_parameters )?:type_parameters ( superclass )?:superclass ( super_interfaces )?:interfaces ( permits )?:permits ( class_body ):body
+
+  modifiers ::= ( _annotation | 'public' | 'protected' | 'private' | 'abstract' | 'static' | 'final' | 'strictfp' | 'default' | 'synchronized' | 'native' | 'transient' | 'volatile' | 'sealed' | 'non-sealed' )+
+
+  type_parameters ::= '<' type_parameter ( ',' type_parameter )* '>'
+
+  type_parameter ::= _annotation* identifier -> "type_identifier" type_bound?
+
+  type_bound ::= 'extends' _type ( '&' _type )*
+
+  superclass ::= 'extends' _type
+
+  super_interfaces ::= 'implements' type_list
+
+  type_list ::= _type ( ',' _type )*
+
+  permits ::= 'permits' type_list
+
+  class_body ::= '{' _class_body_declaration* '}'
+
+  _class_body_declaration ::= field_declaration
+	| record_declaration
+	| method_declaration
+	| compact_constructor_declaration
+	| class_declaration
+	| interface_declaration
+	| annotation_type_declaration
+	| enum_declaration
+	| block
+	| static_initializer
+	| constructor_declaration
+	| ';'
+
+  static_initializer ::= 'static' block
+
+  constructor_declaration ::= modifiers? _constructor_declarator throws? ( constructor_body ):body
+
+  _constructor_declarator ::= ( type_parameters )?:type_parameters ( identifier ):name ( formal_parameters ):parameters
+
+  constructor_body ::= '{' explicit_constructor_invocation? statement* '}'
+
+  explicit_constructor_invocation ::= ( ( type_arguments )?:type_arguments ( this | super ):constructor | ( primary_expression ):object '.' ( type_arguments )?:type_arguments ( super ):constructor ) ( argument_list ):arguments ';'
+
+  _name ::= identifier
+	| _reserved_identifier
+	| scoped_identifier
+
+  scoped_identifier ::= ( _name ):scope '.' ( identifier ):name
+
+  field_declaration ::= modifiers? ( _unannotated_type ):type _variable_declarator_list ';'
+
+  record_declaration ::= modifiers? 'record' ( identifier ):name ( type_parameters )?:type_parameters ( formal_parameters ):parameters ( super_interfaces )?:interfaces ( class_body ):body
+
+  annotation_type_declaration ::= modifiers? '@interface' ( identifier ):name ( annotation_type_body ):body
+
+  annotation_type_body ::= '{' ( annotation_type_element_declaration | constant_declaration | class_declaration | interface_declaration | enum_declaration | annotation_type_declaration | ';' )* '}'
+
+  annotation_type_element_declaration ::= modifiers? ( _unannotated_type ):type ( identifier | _reserved_identifier ):name '(' ')' ( dimensions )?:dimensions _default_value? ';'
+
+  _default_value ::= 'default' ( _element_value ):value
+
+  interface_declaration ::= modifiers? 'interface' ( identifier ):name ( type_parameters )?:type_parameters extends_interfaces? ( permits )?:permits ( interface_body ):body
+
+  extends_interfaces ::= 'extends' type_list
+
+  interface_body ::= '{' ( constant_declaration | enum_declaration | method_declaration | class_declaration | interface_declaration | record_declaration | annotation_type_declaration | ';' )* '}'
+
+  constant_declaration ::= modifiers? ( _unannotated_type ):type _variable_declarator_list ';'
+
+  _variable_declarator_list ::= ( variable_declarator ):declarator ( ',' ( variable_declarator ):declarator )*
+
+  variable_declarator ::= _variable_declarator_id ( '=' ( _variable_initializer ):value )?
+
+  _variable_declarator_id ::= ( identifier | _reserved_identifier | underscore_pattern ):name ( dimensions )?:dimensions
+
+  _variable_initializer ::= expression
+	| array_initializer
+
+  array_initializer ::= '{' ( _variable_initializer ( ',' _variable_initializer )* )? ','? '}'
+
+  _type ::= _unannotated_type
+	| annotated_type
+
+  _unannotated_type ::= _simple_type
+	| array_type
+
+  _simple_type ::= void_type
+	| integral_type
+	| floating_point_type
+	| boolean_type
+	| identifier -> "type_identifier"
+	| scoped_type_identifier
+	| generic_type
+
+  annotated_type ::= _annotation+ _unannotated_type
+
+  scoped_type_identifier ::= ( identifier -> "type_identifier" | scoped_type_identifier | generic_type ) '.' _annotation* identifier -> "type_identifier"
+
+  generic_type ::=  ~10(  ( identifier -> "type_identifier" | scoped_type_identifier ) type_arguments )
+
+  array_type ::= ( _unannotated_type ):element ( dimensions ):dimensions
+
+  integral_type ::= 'byte'
+	| 'short'
+	| 'int'
+	| 'long'
+	| 'char'
+
+  floating_point_type ::= 'float'
+	| 'double'
+
+  boolean_type ::= 'boolean'
+
+  void_type ::= 'void'
+
+  _method_header ::= ( ( type_parameters ):type_parameters _annotation* )? ( _unannotated_type ):type _method_declarator throws?
+
+  _method_declarator ::= ( identifier | _reserved_identifier ):name ( formal_parameters ):parameters ( dimensions )?:dimensions
+
+  formal_parameters ::= '(' ( receiver_parameter | ( receiver_parameter ',' )? ( ( formal_parameter | spread_parameter ) ( ',' ( formal_parameter | spread_parameter ) )* )? ) ')'
+
+  formal_parameter ::= modifiers? ( _unannotated_type ):type _variable_declarator_id
+
+  receiver_parameter ::= _annotation* _unannotated_type ( identifier '.' )* this
+
+  spread_parameter ::= modifiers? _unannotated_type '...' variable_declarator
+
+  throws ::= 'throws' _type ( ',' _type )*
+
+  local_variable_declaration ::= modifiers? ( _unannotated_type ):type _variable_declarator_list ';'
+
+  method_declaration ::= modifiers? _method_header ( ( block ):body | ';' )
+
+  compact_constructor_declaration ::= modifiers? ( identifier ):name ( block ):body
+
+  _reserved_identifier ::=  -3(  ( 'open' | 'module' | 'record' | 'with' | 'yield' | 'sealed' ) -> "identifier" )
+
+  this ::= 'this'
+
+  super ::= 'super'
+
+  identifier ::= /[\p{XID_Start}_$][\p{XID_Continue}\u00A2_$]*/
+
+  comment ::= line_comment
+	| block_comment
+
+  line_comment ::= @( '//' /[^\n]*/ )
+
+  block_comment ::= @( '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/' )
+

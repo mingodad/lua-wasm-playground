@@ -52,7 +52,14 @@ const sampleList = [
 	["Lua parser", "lua-ast-playground.lua", "fact.lua", "ace/mode/lua"],
 	["C11 parser", "c11-ast-playground.lua", "fact.c", "ace/mode/c_cpp"],
 	["Json parser**", "json-ast-playground.lua", "sample.json.txt", "ace/mode/json"],
-	["Tree-sitter-ebnf-generator", "tree-sitter-ebnf-generator.lua", "scala.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Scala", "tree-sitter-ebnf-generator.lua", "scala.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Javascript", "tree-sitter-ebnf-generator.lua", "javascript.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Java", "tree-sitter-ebnf-generator.lua", "java.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Kotlin", "tree-sitter-ebnf-generator.lua", "kotlin.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-C", "tree-sitter-ebnf-generator.lua", "c.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-CPP", "tree-sitter-ebnf-generator.lua", "cpp.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Haxe", "tree-sitter-ebnf-generator.lua", "haxe.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Rust", "tree-sitter-ebnf-generator.lua", "rust.ebnf", "ace/mode/text"],
 ];
 
 function loadLua_sample(self) {

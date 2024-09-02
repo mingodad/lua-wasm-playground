@@ -1,0 +1,1055 @@
+; From tree-sitter-cpp/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	raw_string_delimiter
+	raw_string_content
+	}
+
+extras ::= {
+	/\s|\\\r?\n/
+	comment
+	}
+
+precedences ::= {
+	{ argument_list type_qualifier }
+	{ _expression_not_binary _class_name }
+	}
+
+supertypes ::= {
+	expression
+	statement
+	type_specifier
+	_declarator
+	_field_declarator
+	_type_declarator
+	_abstract_declarator
+	}
+
+inline ::= {
+	_type_identifier
+	_field_identifier
+	_statement_identifier
+	_non_case_statement
+	_assignment_left_expression
+	_expression_not_binary
+	_namespace_identifier
+	}
+
+conflicts ::= {
+	{ type_specifier _declarator }
+	{ type_specifier expression }
+	{ sized_type_specifier }
+	{ attributed_statement }
+	{ _declaration_modifiers attributed_statement }
+	{ _top_level_item _top_level_statement }
+	{ _block_item statement }
+	{ template_function template_type }
+	{ template_function template_type expression }
+	{ template_function template_type qualified_identifier }
+	{ template_type qualified_type_identifier }
+	{ qualified_type_identifier qualified_identifier }
+	{ comma_expression initializer_list }
+	{ expression _declarator }
+	{ expression structured_binding_declarator }
+	{ expression _declarator type_specifier }
+	{ parameter_list argument_list }
+	{ type_specifier call_expression }
+	{ _declaration_specifiers _constructor_specifiers }
+	{ _binary_fold_operator _fold_operator }
+	{ _function_declarator_seq }
+	{ type_specifier sized_type_specifier }
+	{ initializer_pair comma_expression }
+	{ expression_statement _for_statement_body }
+	{ init_statement _for_statement_body }
+	{ field_expression template_method template_type }
+	{ qualified_field_identifier template_method template_type }
+	}
+
+word ::= identifier
+
+rules:
+
+  translation_unit ::= _top_level_item*
+
+  _top_level_item ::= function_definition
+	| linkage_specification
+	| declaration
+	| _top_level_statement
+	| attributed_statement
+	| type_definition
+	| _empty_declaration
+	| preproc_if
+	| preproc_ifdef
+	| preproc_include
+	| preproc_def
+	| preproc_function_def
+	| preproc_call
+	| namespace_definition
+	| concept_definition
+	| namespace_alias_definition
+	| using_declaration
+	| alias_declaration
+	| static_assert_declaration
+	| template_declaration
+	| template_instantiation
+	| constructor_or_destructor_definition -> "function_definition"
+	| operator_cast_definition -> "function_definition"
+	| operator_cast_declaration -> "declaration"
+
+  _block_item ::= function_definition
+	| linkage_specification
+	| declaration
+	| statement
+	| attributed_statement
+	| type_definition
+	| _empty_declaration
+	| preproc_if
+	| preproc_ifdef
+	| preproc_include
+	| preproc_def
+	| preproc_function_def
+	| preproc_call
+	| namespace_definition
+	| concept_definition
+	| namespace_alias_definition
+	| using_declaration
+	| alias_declaration
+	| static_assert_declaration
+	| template_declaration
+	| template_instantiation
+	| constructor_or_destructor_definition -> "function_definition"
+	| operator_cast_definition -> "function_definition"
+	| operator_cast_declaration -> "declaration"
+
+  preproc_include ::= /#[ \t]*include/ -> "#include" ( string_literal | system_lib_string | identifier | preproc_call_expression -> "call_expression" ):path !( /\r?\n/ )
+
+  preproc_def ::= /#[ \t]*define/ -> "#define" ( identifier ):name ( preproc_arg )?:value !( /\r?\n/ )
+
+  preproc_function_def ::= /#[ \t]*define/ -> "#define" ( identifier ):name ( preproc_params ):parameters ( preproc_arg )?:value !( /\r?\n/ )
+
+  preproc_params ::= !( '(' ) ( ( identifier | '...' ) ( ',' ( identifier | '...' ) )* )? ')'
+
+  preproc_call ::= ( preproc_directive ):directive ( preproc_arg )?:argument !( /\r?\n/ )
+
+  preproc_if ::= /#[ \t]*if/ -> "#if" ( _preproc_expression ):condition '\n'  _block_item* ( preproc_else | preproc_elif | preproc_elifdef )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_ifdef ::= ( /#[ \t]*ifdef/ -> "#ifdef" | /#[ \t]*ifndef/ -> "#ifndef" ) ( identifier ):name _block_item* ( preproc_else | preproc_elif | preproc_elifdef )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_else ::= /#[ \t]*else/ -> "#else" _block_item*
+
+  preproc_elif ::= /#[ \t]*elif/ -> "#elif" ( _preproc_expression ):condition '\n'  _block_item* ( preproc_else | preproc_elif | preproc_elifdef )?:alternative
+
+  preproc_elifdef ::= ( /#[ \t]*elifdef/ -> "#elifdef" | /#[ \t]*elifndef/ -> "#elifndef" ) ( identifier ):name _block_item* ( preproc_else | preproc_elif | preproc_elifdef )?:alternative
+
+  preproc_if_in_field_declaration_list ::= /#[ \t]*if/ -> "#if" ( _preproc_expression ):condition '\n'  _field_declaration_list_item* ( preproc_else_in_field_declaration_list -> "preproc_else" | preproc_elif_in_field_declaration_list -> "preproc_elif" | preproc_elifdef_in_field_declaration_list -> "preproc_elifdef" )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_ifdef_in_field_declaration_list ::= ( /#[ \t]*ifdef/ -> "#ifdef" | /#[ \t]*ifndef/ -> "#ifndef" ) ( identifier ):name _field_declaration_list_item* ( preproc_else_in_field_declaration_list -> "preproc_else" | preproc_elif_in_field_declaration_list -> "preproc_elif" | preproc_elifdef_in_field_declaration_list -> "preproc_elifdef" )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_else_in_field_declaration_list ::= /#[ \t]*else/ -> "#else" _field_declaration_list_item*
+
+  preproc_elif_in_field_declaration_list ::= /#[ \t]*elif/ -> "#elif" ( _preproc_expression ):condition '\n'  _field_declaration_list_item* ( preproc_else_in_field_declaration_list -> "preproc_else" | preproc_elif_in_field_declaration_list -> "preproc_elif" | preproc_elifdef_in_field_declaration_list -> "preproc_elifdef" )?:alternative
+
+  preproc_elifdef_in_field_declaration_list ::= ( /#[ \t]*elifdef/ -> "#elifdef" | /#[ \t]*elifndef/ -> "#elifndef" ) ( identifier ):name _field_declaration_list_item* ( preproc_else_in_field_declaration_list -> "preproc_else" | preproc_elif_in_field_declaration_list -> "preproc_elif" | preproc_elifdef_in_field_declaration_list -> "preproc_elifdef" )?:alternative
+
+  preproc_if_in_enumerator_list ::= /#[ \t]*if/ -> "#if" ( _preproc_expression ):condition '\n'  ( enumerator ',' )* ( preproc_else_in_enumerator_list -> "preproc_else" | preproc_elif_in_enumerator_list -> "preproc_elif" | preproc_elifdef_in_enumerator_list -> "preproc_elifdef" )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_ifdef_in_enumerator_list ::= ( /#[ \t]*ifdef/ -> "#ifdef" | /#[ \t]*ifndef/ -> "#ifndef" ) ( identifier ):name ( enumerator ',' )* ( preproc_else_in_enumerator_list -> "preproc_else" | preproc_elif_in_enumerator_list -> "preproc_elif" | preproc_elifdef_in_enumerator_list -> "preproc_elifdef" )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_else_in_enumerator_list ::= /#[ \t]*else/ -> "#else" ( enumerator ',' )*
+
+  preproc_elif_in_enumerator_list ::= /#[ \t]*elif/ -> "#elif" ( _preproc_expression ):condition '\n'  ( enumerator ',' )* ( preproc_else_in_enumerator_list -> "preproc_else" | preproc_elif_in_enumerator_list -> "preproc_elif" | preproc_elifdef_in_enumerator_list -> "preproc_elifdef" )?:alternative
+
+  preproc_elifdef_in_enumerator_list ::= ( /#[ \t]*elifdef/ -> "#elifdef" | /#[ \t]*elifndef/ -> "#elifndef" ) ( identifier ):name ( enumerator ',' )* ( preproc_else_in_enumerator_list -> "preproc_else" | preproc_elif_in_enumerator_list -> "preproc_elif" | preproc_elifdef_in_enumerator_list -> "preproc_elifdef" )?:alternative
+
+  preproc_if_in_enumerator_list_no_comma ::=  -1(  /#[ \t]*if/ -> "#if" ( _preproc_expression ):condition '\n'  enumerator* ( preproc_else_in_enumerator_list_no_comma -> "preproc_else" | preproc_elif_in_enumerator_list_no_comma -> "preproc_elif" | preproc_elifdef_in_enumerator_list_no_comma -> "preproc_elifdef" )?:alternative /#[ \t]*endif/ -> "#endif" )
+
+  preproc_ifdef_in_enumerator_list_no_comma ::=  -1(  ( /#[ \t]*ifdef/ -> "#ifdef" | /#[ \t]*ifndef/ -> "#ifndef" ) ( identifier ):name enumerator* ( preproc_else_in_enumerator_list_no_comma -> "preproc_else" | preproc_elif_in_enumerator_list_no_comma -> "preproc_elif" | preproc_elifdef_in_enumerator_list_no_comma -> "preproc_elifdef" )?:alternative /#[ \t]*endif/ -> "#endif" )
+
+  preproc_else_in_enumerator_list_no_comma ::=  -1(  /#[ \t]*else/ -> "#else" enumerator* )
+
+  preproc_elif_in_enumerator_list_no_comma ::=  -1(  /#[ \t]*elif/ -> "#elif" ( _preproc_expression ):condition '\n'  enumerator* ( preproc_else_in_enumerator_list_no_comma -> "preproc_else" | preproc_elif_in_enumerator_list_no_comma -> "preproc_elif" | preproc_elifdef_in_enumerator_list_no_comma -> "preproc_elifdef" )?:alternative )
+
+  preproc_elifdef_in_enumerator_list_no_comma ::=  -1(  ( /#[ \t]*elifdef/ -> "#elifdef" | /#[ \t]*elifndef/ -> "#elifndef" ) ( identifier ):name enumerator* ( preproc_else_in_enumerator_list_no_comma -> "preproc_else" | preproc_elif_in_enumerator_list_no_comma -> "preproc_elif" | preproc_elifdef_in_enumerator_list_no_comma -> "preproc_elifdef" )?:alternative )
+
+  preproc_arg ::= @(  -1(  /\S([^/\n]|\/[^*]|\\\r?\n)*/ )  )
+
+  preproc_directive ::= /#[ \t]*[a-zA-Z0-9]\w*/
+
+  _preproc_expression ::= identifier
+	| preproc_call_expression -> "call_expression"
+	| number_literal
+	| char_literal
+	| preproc_defined
+	| preproc_unary_expression -> "unary_expression"
+	| preproc_binary_expression -> "binary_expression"
+	| preproc_parenthesized_expression -> "parenthesized_expression"
+
+  preproc_parenthesized_expression ::= '(' _preproc_expression ')'
+
+  preproc_defined ::=  15(  'defined' '(' identifier ')' )
+	| 'defined' identifier
+
+  preproc_unary_expression ::=  <14(  ( '!' | '~' | '-' | '+' ):operator ( _preproc_expression ):argument )
+
+  preproc_call_expression ::=  15(  ( identifier ):function ( preproc_argument_list -> "argument_list" ):arguments )
+
+  preproc_argument_list ::= '(' ( _preproc_expression ( ',' _preproc_expression )* )? ')'
+
+  preproc_binary_expression ::=  <10(  ( _preproc_expression ):left ( '+' ):operator ( _preproc_expression ):right )
+	|  <10(  ( _preproc_expression ):left ( '-' ):operator ( _preproc_expression ):right )
+	|  <11(  ( _preproc_expression ):left ( '*' ):operator ( _preproc_expression ):right )
+	|  <11(  ( _preproc_expression ):left ( '/' ):operator ( _preproc_expression ):right )
+	|  <11(  ( _preproc_expression ):left ( '%' ):operator ( _preproc_expression ):right )
+	|  <1(  ( _preproc_expression ):left ( '||' ):operator ( _preproc_expression ):right )
+	|  <2(  ( _preproc_expression ):left ( '&&' ):operator ( _preproc_expression ):right )
+	|  <3(  ( _preproc_expression ):left ( '|' ):operator ( _preproc_expression ):right )
+	|  <4(  ( _preproc_expression ):left ( '^' ):operator ( _preproc_expression ):right )
+	|  <5(  ( _preproc_expression ):left ( '&' ):operator ( _preproc_expression ):right )
+	|  <6(  ( _preproc_expression ):left ( '==' ):operator ( _preproc_expression ):right )
+	|  <6(  ( _preproc_expression ):left ( '!=' ):operator ( _preproc_expression ):right )
+	|  <7(  ( _preproc_expression ):left ( '>' ):operator ( _preproc_expression ):right )
+	|  <7(  ( _preproc_expression ):left ( '>=' ):operator ( _preproc_expression ):right )
+	|  <7(  ( _preproc_expression ):left ( '<=' ):operator ( _preproc_expression ):right )
+	|  <7(  ( _preproc_expression ):left ( '<' ):operator ( _preproc_expression ):right )
+	|  <9(  ( _preproc_expression ):left ( '<<' ):operator ( _preproc_expression ):right )
+	|  <9(  ( _preproc_expression ):left ( '>>' ):operator ( _preproc_expression ):right )
+
+  function_definition ::= ms_call_modifier? _declaration_specifiers ms_call_modifier? ( _declarator ):declarator ( compound_statement | try_statement ):body
+
+  _old_style_function_definition ::= ms_call_modifier? _declaration_specifiers ( _old_style_function_declarator -> "function_declarator" ):declarator declaration* ( compound_statement ):body
+
+  declaration ::= _declaration_specifiers ( _declarator gnu_asm_expression? | init_declarator ):declarator ( ',' ( _declarator gnu_asm_expression? | init_declarator ):declarator )* ';'
+
+  type_definition ::= '__extension__'? 'typedef' _type_definition_type _type_definition_declarators attribute_specifier* ';'
+
+  _type_definition_type ::= type_qualifier* ( type_specifier ):type type_qualifier*
+
+  _type_definition_declarators ::= ( _type_declarator ):declarator ( ',' ( _type_declarator ):declarator )*
+
+  _declaration_modifiers ::= storage_class_specifier
+	| type_qualifier
+	| attribute_specifier
+	| attribute_declaration
+	| ms_declspec_modifier
+	| virtual
+
+  _declaration_specifiers ::= _declaration_modifiers* ( type_specifier ):type _declaration_modifiers*
+
+  linkage_specification ::= 'extern' ( string_literal ):value ( function_definition | declaration | declaration_list ):body
+
+  attribute_specifier ::= '__attribute__' '(' argument_list ')'
+
+  attribute ::= ( ( identifier ):prefix '::' )? ( identifier ):name argument_list?
+
+  attribute_declaration ::= '[[' attribute ( ',' attribute )* ']]'
+
+  ms_declspec_modifier ::= '__declspec' '(' identifier ')'
+
+  ms_based_modifier ::= '__based' argument_list
+
+  ms_call_modifier ::= '__cdecl'
+	| '__clrcall'
+	| '__stdcall'
+	| '__fastcall'
+	| '__thiscall'
+	| '__vectorcall'
+
+  ms_restrict_modifier ::= '__restrict'
+
+  ms_unsigned_ptr_modifier ::= '__uptr'
+
+  ms_signed_ptr_modifier ::= '__sptr'
+
+  ms_unaligned_ptr_modifier ::= '_unaligned'
+	| '__unaligned'
+
+  ms_pointer_modifier ::= ms_unaligned_ptr_modifier
+	| ms_restrict_modifier
+	| ms_unsigned_ptr_modifier
+	| ms_signed_ptr_modifier
+
+  declaration_list ::= '{' _block_item* '}'
+
+  _declarator ::= attributed_declarator
+	| pointer_declarator
+	| function_declarator
+	| array_declarator
+	| parenthesized_declarator
+	| identifier
+	| reference_declarator
+	| qualified_identifier
+	| template_function
+	| operator_name
+	| destructor_name
+	| structured_binding_declarator
+
+  _declaration_declarator ::= attributed_declarator
+	| pointer_declarator
+	| _function_declaration_declarator -> "function_declarator"
+	| array_declarator
+	| parenthesized_declarator
+	| identifier
+
+  _field_declarator ::= attributed_field_declarator -> "attributed_declarator"
+	| pointer_field_declarator -> "pointer_declarator"
+	| function_field_declarator -> "function_declarator"
+	| array_field_declarator -> "array_declarator"
+	| parenthesized_field_declarator -> "parenthesized_declarator"
+	| _field_identifier
+	| reference_field_declarator -> "reference_declarator"
+	| template_method
+	| operator_name
+
+  _type_declarator ::= attributed_type_declarator -> "attributed_declarator"
+	| pointer_type_declarator -> "pointer_declarator"
+	| function_type_declarator -> "function_declarator"
+	| array_type_declarator -> "array_declarator"
+	| parenthesized_type_declarator -> "parenthesized_declarator"
+	| _type_identifier
+	| ( 'signed' | 'unsigned' | 'long' | 'short' ) -> "primitive_type"
+	| primitive_type
+	| reference_type_declarator -> "reference_declarator"
+
+  _abstract_declarator ::= abstract_pointer_declarator
+	| abstract_function_declarator
+	| abstract_array_declarator
+	| abstract_parenthesized_declarator
+	| abstract_reference_declarator
+
+  parenthesized_declarator ::=  ~-10(  '(' ms_call_modifier? _declarator ')' )
+
+  parenthesized_field_declarator ::=  ~-10(  '(' ms_call_modifier? _field_declarator ')' )
+
+  parenthesized_type_declarator ::=  ~-10(  '(' ms_call_modifier? _type_declarator ')' )
+
+  abstract_parenthesized_declarator ::=  1(  '(' ms_call_modifier? _abstract_declarator ')' )
+
+  attributed_declarator ::= _declarator attribute_declaration+
+
+  attributed_field_declarator ::= _field_declarator attribute_declaration+
+
+  attributed_type_declarator ::= _type_declarator attribute_declaration+
+
+  pointer_declarator ::=  ~1(  ms_based_modifier? '*' ms_pointer_modifier* type_qualifier* ( _declarator ):declarator )
+
+  pointer_field_declarator ::=  ~1(  ms_based_modifier? '*' ms_pointer_modifier* type_qualifier* ( _field_declarator ):declarator )
+
+  pointer_type_declarator ::=  ~1(  ms_based_modifier? '*' ms_pointer_modifier* type_qualifier* ( _type_declarator ):declarator )
+
+  abstract_pointer_declarator ::=  ~1(  '*' ms_pointer_modifier* type_qualifier* ( _abstract_declarator )?:declarator )
+
+  function_declarator ::=  ~1(  ( _declarator ):declarator _function_declarator_seq )
+
+  _function_declaration_declarator ::=  >1(  ( _declarator ):declarator ( parameter_list ):parameters gnu_asm_expression? attribute_specifier* )
+
+  function_field_declarator ::=  ~1(  ( _field_declarator ):declarator _function_declarator_seq )
+
+  function_type_declarator ::=  1(  ( _type_declarator ):declarator ( parameter_list ):parameters )
+
+  abstract_function_declarator ::= ( _abstract_declarator )?:declarator _function_declarator_seq
+
+  _old_style_function_declarator ::= ( _declarator ):declarator ( _old_style_parameter_list -> "parameter_list" ):parameters
+
+  array_declarator ::=  1(  ( _declarator ):declarator '[' ( type_qualifier | 'static' )* ( expression | '*' )?:size ']' )
+
+  array_field_declarator ::=  1(  ( _field_declarator ):declarator '[' ( type_qualifier | 'static' )* ( expression | '*' )?:size ']' )
+
+  array_type_declarator ::=  1(  ( _type_declarator ):declarator '[' ( type_qualifier | 'static' )* ( expression | '*' )?:size ']' )
+
+  abstract_array_declarator ::=  1(  ( _abstract_declarator )?:declarator '[' ( type_qualifier | 'static' )* ( expression | '*' )?:size ']' )
+
+  init_declarator ::= ( _declarator ):declarator '=' ( initializer_list | expression ):value
+	| ( _declarator ):declarator ( argument_list | initializer_list ):value
+
+  compound_statement ::=  -1(  '{' _block_item* '}' )
+
+  storage_class_specifier ::= 'extern'
+	| 'static'
+	| 'register'
+	| 'inline'
+	| '__inline'
+	| '__inline__'
+	| '__forceinline'
+	| 'thread_local'
+	| '__thread'
+	| 'thread_local'
+
+  type_qualifier ::= 'const'
+	| 'constexpr'
+	| 'volatile'
+	| 'restrict'
+	| '__restrict__'
+	| '__extension__'
+	| '_Atomic'
+	| '_Noreturn'
+	| 'noreturn'
+	| alignas_qualifier
+	| 'mutable'
+	| 'constinit'
+	| 'consteval'
+
+  alignas_qualifier ::= ( 'alignas' | '_Alignas' ) '(' ( expression | type_descriptor ) ')'
+
+  type_specifier ::= struct_specifier
+	| union_specifier
+	| enum_specifier
+	| class_specifier
+	| sized_type_specifier
+	| primitive_type
+	| template_type
+	| dependent_type
+	| placeholder_type_specifier
+	| decltype
+	| qualified_type_identifier -> "qualified_identifier" | _type_identifier
+
+  sized_type_specifier ::= ( 'signed' | 'unsigned' | 'long' | 'short' )* (  ~-1(  _type_identifier )  | primitive_type )?:type ( 'signed' | 'unsigned' | 'long' | 'short' )+
+	| ( 'signed' | 'unsigned' | 'long' | 'short' )+ (  ~-1(  _type_identifier )  | primitive_type )?:type ( 'signed' | 'unsigned' | 'long' | 'short' )*
+
+  primitive_type ::= @( 'bool' | 'char' | 'int' | 'float' | 'double' | 'void' | 'size_t' | 'ssize_t' | 'ptrdiff_t' | 'intptr_t' | 'uintptr_t' | 'charptr_t' | 'nullptr_t' | 'max_align_t' | 'int8_t' | 'int16_t' | 'int32_t' | 'int64_t' | 'uint8_t' | 'uint16_t' | 'uint32_t' | 'uint64_t' | 'char8_t' | 'char16_t' | 'char32_t' | 'char64_t' )
+
+  enum_specifier ::= 'enum' ( 'class' | 'struct' )? ( ( _class_name ):name _enum_base_clause? ( enumerator_list )?:body | ( enumerator_list ):body ) attribute_specifier?
+
+  enumerator_list ::= '{' ( enumerator ',' | preproc_if_in_enumerator_list -> "preproc_if" | preproc_ifdef_in_enumerator_list -> "preproc_ifdef" | preproc_call ',' )* ( ( enumerator | preproc_if_in_enumerator_list_no_comma -> "preproc_if" | preproc_ifdef_in_enumerator_list_no_comma -> "preproc_ifdef" | preproc_call ) )? '}'
+
+  struct_specifier ::= 'struct' _class_declaration
+
+  union_specifier ::= 'union' _class_declaration
+
+  field_declaration_list ::= '{' _field_declaration_list_item* '}'
+
+  _field_declaration_list_item ::= field_declaration
+	| preproc_def
+	| preproc_function_def
+	| preproc_call
+	| preproc_if_in_field_declaration_list -> "preproc_if"
+	| preproc_ifdef_in_field_declaration_list -> "preproc_ifdef"
+	| template_declaration
+	| inline_method_definition -> "function_definition"
+	| constructor_or_destructor_definition -> "function_definition"
+	| constructor_or_destructor_declaration -> "declaration"
+	| operator_cast_definition -> "function_definition"
+	| operator_cast_declaration -> "declaration"
+	| friend_declaration
+	| access_specifier ':'
+	| alias_declaration
+	| using_declaration
+	| type_definition
+	| static_assert_declaration
+
+  field_declaration ::= _declaration_specifiers ( ( _field_declarator ):declarator ( bitfield_clause | ( initializer_list ):default_value | '=' ( expression | initializer_list ):default_value )? ( ',' ( _field_declarator ):declarator ( bitfield_clause | ( initializer_list ):default_value | '=' ( expression | initializer_list ):default_value )? )* )? attribute_specifier? ';'
+
+  _field_declaration_declarator ::= ( _field_declarator ):declarator bitfield_clause? ( ',' ( _field_declarator ):declarator bitfield_clause? )*
+
+  bitfield_clause ::= ':' expression
+
+  enumerator ::= ( identifier ):name ( '=' ( expression ):value )?
+
+  variadic_parameter ::= '...'
+
+  parameter_list ::= '(' ( ( parameter_declaration | optional_parameter_declaration | variadic_parameter_declaration | '...' ) ( ',' ( parameter_declaration | optional_parameter_declaration | variadic_parameter_declaration | '...' ) )* )? ')'
+
+  _old_style_parameter_list ::= '(' ( ( identifier | variadic_parameter ) ( ',' ( identifier | variadic_parameter ) )* )? ')'
+
+  parameter_declaration ::= _declaration_specifiers ( _declarator | _abstract_declarator )?:declarator
+
+  attributed_statement ::= attribute_declaration+ statement
+
+  statement ::= case_statement
+	| _non_case_statement
+
+  _non_case_statement ::= attributed_statement
+	| labeled_statement
+	| compound_statement
+	| expression_statement
+	| if_statement
+	| switch_statement
+	| do_statement
+	| while_statement
+	| for_statement
+	| return_statement
+	| break_statement
+	| continue_statement
+	| goto_statement
+	| seh_try_statement
+	| seh_leave_statement
+	| co_return_statement
+	| co_yield_statement
+	| for_range_loop
+	| try_statement
+	| throw_statement
+
+  _top_level_statement ::= case_statement
+	| attributed_statement
+	| labeled_statement
+	| compound_statement
+	| _top_level_expression_statement -> "expression_statement"
+	| if_statement
+	| switch_statement
+	| do_statement
+	| while_statement
+	| for_statement
+	| return_statement
+	| break_statement
+	| continue_statement
+	| goto_statement
+	| co_return_statement
+	| co_yield_statement
+	| for_range_loop
+	| try_statement
+	| throw_statement
+
+  labeled_statement ::= ( _statement_identifier ):label ':' statement
+
+  _top_level_expression_statement ::= _expression_not_binary ';'
+
+  expression_statement ::= ( expression | comma_expression )? ';'
+
+  if_statement ::= 'if' 'constexpr'? ( condition_clause ):condition ( statement ):consequence ( else_clause )?:alternative
+
+  else_clause ::= 'else' statement
+
+  switch_statement ::= 'switch' ( condition_clause ):condition ( compound_statement ):body
+
+  case_statement ::= ( 'case' ( expression ):value | 'default' ) ':' ( _non_case_statement | declaration | type_definition )*
+
+  while_statement ::= 'while' ( condition_clause ):condition ( statement ):body
+
+  do_statement ::= 'do' ( statement ):body 'while' ( parenthesized_expression ):condition ';'
+
+  for_statement ::= 'for' '(' _for_statement_body ')' ( statement ):body
+
+  _for_statement_body ::=  ~1(  ( ( declaration ):initializer | ( expression | comma_expression )?:initializer ';' ) ( expression | comma_expression )?:condition ';' ( expression | comma_expression )?:update )
+
+  return_statement ::= ( 'return' ( expression | comma_expression )? ';' | 'return' initializer_list ';' )
+
+  break_statement ::= 'break' ';'
+
+  continue_statement ::= 'continue' ';'
+
+  goto_statement ::= 'goto' ( _statement_identifier ):label ';'
+
+  seh_try_statement ::= '__try' ( compound_statement ):body ( seh_except_clause | seh_finally_clause )
+
+  seh_except_clause ::= '__except' ( parenthesized_expression ):filter ( compound_statement ):body
+
+  seh_finally_clause ::= '__finally' ( compound_statement ):body
+
+  seh_leave_statement ::= '__leave' ';'
+
+  expression ::= _expression_not_binary
+	| binary_expression
+
+  _expression_not_binary ::= conditional_expression
+	| assignment_expression
+	| unary_expression
+	| update_expression
+	| cast_expression
+	| pointer_expression
+	| sizeof_expression
+	| alignof_expression
+	| offsetof_expression
+	| generic_expression
+	| subscript_expression
+	| call_expression
+	| field_expression
+	| compound_literal_expression
+	| identifier
+	| number_literal
+	| _string
+	| true
+	| false
+	| null
+	| char_literal
+	| parenthesized_expression
+	| gnu_asm_expression
+	| co_await_expression
+	| requires_expression
+	| requires_clause
+	| template_function
+	| qualified_identifier
+	| new_expression
+	| delete_expression
+	| lambda_expression
+	| parameter_pack_expansion
+	| this
+	| raw_string_literal
+	| user_defined_literal
+	| fold_expression
+
+  _string ::= string_literal | concatenated_string
+
+  comma_expression ::= ( expression ):left ',' ( expression | comma_expression ):right
+
+  conditional_expression ::=  >-1(  ( expression ):condition '?' ( expression | comma_expression )?:consequence ':' ( expression ):alternative )
+
+  _assignment_left_expression ::= identifier
+	| call_expression
+	| field_expression
+	| pointer_expression
+	| subscript_expression
+	| parenthesized_expression
+	| qualified_identifier
+	| user_defined_literal
+
+  assignment_expression ::=  >-2(  ( _assignment_left_expression ):left ( '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '&=' | '^=' | '|=' | 'and_eq' | 'or_eq' | 'xor_eq' ):operator ( expression | initializer_list ):right )
+
+  pointer_expression ::=  <12(  ( '*' | '&' ):operator ( expression ):argument )
+
+  unary_expression ::=  <14(  ( '!' | '~' | '-' | '+' ):operator ( expression ):argument )
+	|  <14(  ( 'not' | 'compl' ):operator ( expression ):argument )
+
+  binary_expression ::=  <10(  ( expression ):left ( '+' ):operator ( expression ):right )
+	|  <10(  ( expression ):left ( '-' ):operator ( expression ):right )
+	|  <11(  ( expression ):left ( '*' ):operator ( expression ):right )
+	|  <11(  ( expression ):left ( '/' ):operator ( expression ):right )
+	|  <11(  ( expression ):left ( '%' ):operator ( expression ):right )
+	|  <1(  ( expression ):left ( '||' ):operator ( expression ):right )
+	|  <2(  ( expression ):left ( '&&' ):operator ( expression ):right )
+	|  <3(  ( expression ):left ( '|' ):operator ( expression ):right )
+	|  <4(  ( expression ):left ( '^' ):operator ( expression ):right )
+	|  <5(  ( expression ):left ( '&' ):operator ( expression ):right )
+	|  <6(  ( expression ):left ( '==' ):operator ( expression ):right )
+	|  <6(  ( expression ):left ( '!=' ):operator ( expression ):right )
+	|  <7(  ( expression ):left ( '>' ):operator ( expression ):right )
+	|  <7(  ( expression ):left ( '>=' ):operator ( expression ):right )
+	|  <7(  ( expression ):left ( '<=' ):operator ( expression ):right )
+	|  <7(  ( expression ):left ( '<' ):operator ( expression ):right )
+	|  <9(  ( expression ):left ( '<<' ):operator ( expression ):right )
+	|  <9(  ( expression ):left ( '>>' ):operator ( expression ):right )
+	|  <8(  ( expression ):left ( '<=>' ):operator ( expression ):right )
+	|  <1(  ( expression ):left ( 'or' ):operator ( expression ):right )
+	|  <2(  ( expression ):left ( 'and' ):operator ( expression ):right )
+	|  <3(  ( expression ):left ( 'bitor' ):operator ( expression ):right )
+	|  <4(  ( expression ):left ( 'xor' ):operator ( expression ):right )
+	|  <5(  ( expression ):left ( 'bitand' ):operator ( expression ):right )
+	|  <6(  ( expression ):left ( 'not_eq' ):operator ( expression ):right )
+
+  update_expression ::=  >14(  ( '--' | '++' ):operator ( expression ):argument | ( expression ):argument ( '--' | '++' ):operator )
+
+  cast_expression ::=  12(  '(' ( type_descriptor ):type ')' ( expression ):value )
+
+  type_descriptor ::= type_qualifier* ( type_specifier ):type type_qualifier* ( _abstract_declarator )?:declarator
+
+  sizeof_expression ::=  >13(   13(  'sizeof' ( ( expression ):value | '(' ( type_descriptor ):type ')' ) )  | 'sizeof' '...' '(' ( identifier ):value ')' )
+
+  alignof_expression ::=  13(  ( '__alignof__' | '__alignof' | '_alignof' | 'alignof' | '_Alignof' ) '(' ( type_descriptor ):type ')' )
+
+  offsetof_expression ::=  8(  'offsetof' '(' ( type_descriptor ):type ',' ( _field_identifier ):member ')' )
+
+  generic_expression ::=  15(  '_Generic' '(' expression ',' type_descriptor ':' expression ( ',' type_descriptor ':' expression )* ')' )
+
+  subscript_expression ::=  17(  ( expression ):argument ( subscript_argument_list ):indices )
+
+  call_expression ::=  15(  ( expression ):function ( argument_list ):arguments )
+	| ( primitive_type ):function ( argument_list ):arguments
+
+  gnu_asm_expression ::=  15(  ( 'asm' | '__asm__' ) gnu_asm_qualifier* '(' ( _string ):assembly_code ( ( gnu_asm_output_operand_list ):output_operands ( ( gnu_asm_input_operand_list ):input_operands ( ( gnu_asm_clobber_list ):clobbers ( gnu_asm_goto_list )?:goto_labels )? )? )? ')' )
+
+  gnu_asm_qualifier ::= 'volatile'
+	| 'inline'
+	| 'goto'
+
+  gnu_asm_output_operand_list ::= ':' ( ( gnu_asm_output_operand ):operand ( ',' ( gnu_asm_output_operand ):operand )* )?
+
+  gnu_asm_output_operand ::= ( '[' ( identifier ):symbol ']' )? ( string_literal ):constraint '(' ( identifier ):value ')'
+
+  gnu_asm_input_operand_list ::= ':' ( ( gnu_asm_input_operand ):operand ( ',' ( gnu_asm_input_operand ):operand )* )?
+
+  gnu_asm_input_operand ::= ( '[' ( identifier ):symbol ']' )? ( string_literal ):constraint '(' ( expression ):value ')'
+
+  gnu_asm_clobber_list ::= ':' ( ( _string ):register ( ',' ( _string ):register )* )?
+
+  gnu_asm_goto_list ::= ':' ( ( identifier ):label ( ',' ( identifier ):label )* )?
+
+  argument_list ::= '(' ( ( '__extension__'? expression | initializer_list | compound_statement ) ( ',' ( '__extension__'? expression | initializer_list | compound_statement ) )* )? ')'
+
+  field_expression ::=  16(  ( expression ):argument ( '.' | '.*' | '->' ):operator )  (  ~1(  _field_identifier )  | qualified_field_identifier -> "qualified_identifier" | destructor_name | template_method | dependent_field_identifier -> "dependent_name" ):field
+
+  compound_literal_expression ::= '(' ( type_descriptor ):type ')' ( initializer_list ):value
+	| ( _class_name | primitive_type ):type ( initializer_list ):value
+
+  parenthesized_expression ::= '(' ( expression | comma_expression ) ')'
+	| '(' _assignment_expression_lhs -> "assignment_expression" ')'
+
+  initializer_list ::= '{' ( ( initializer_pair | expression | initializer_list ) ( ',' ( initializer_pair | expression | initializer_list ) )* )? ','? '}'
+
+  initializer_pair ::= ( ( subscript_designator | field_designator | subscript_range_designator )+ ):designator '=' ( expression | initializer_list ):value
+	| ( _field_identifier ):designator ':' ( expression | initializer_list ):value
+
+  subscript_designator ::= '[' expression ']'
+
+  subscript_range_designator ::= '[' ( expression ):start '...' ( expression ):end ']'
+
+  field_designator ::= '.' _field_identifier
+
+  number_literal ::= @( /[-\+]/? ( ( ( '0b' | '0B' ) /[01]/+ ( "'"  /[01]/+ )* | /[1-9]/ /[0-9]/* ( "'"  /[0-9]/+ )* | ( '0x' | '0X' ) /[0-9a-fA-F]/+ ( "'"  /[0-9a-fA-F]/+ )* | '0' /[0-7]/* ( "'"  /[0-7]/+ )* ) /(ll|LL)[uU]?|[uU](ll|LL)?|[uU][lL]?|[uU][zZ]?|[lL][uU]?|[zZ][uU]?/? | ( /[0-9]/+ ( "'"  /[0-9]/+ )* /[eE]/ /[-\+]/? /[0-9]/+ ( "'"  /[0-9]/+ )* | /[0-9]/+ ( "'"  /[0-9]/+ )* '.' ( /[0-9]/+ ( "'"  /[0-9]/+ )* )? ( /[eE]/ /[-\+]/? /[0-9]/+ ( "'"  /[0-9]/+ )* )? | '.' /[0-9]/+ ( "'"  /[0-9]/+ )* ( /[eE]/ /[-\+]/? /[0-9]/+ ( "'"  /[0-9]/+ )* )? | ( '0x' | '0X' ) ( /[0-9a-fA-F]/+ ( "'"  /[0-9a-fA-F]/+ )* | /[0-9a-fA-F]/+ ( "'"  /[0-9a-fA-F]/+ )* '.' ( /[0-9a-fA-F]/+ ( "'"  /[0-9a-fA-F]/+ )* )? | '.' /[0-9a-fA-F]/+ ( "'"  /[0-9a-fA-F]/+ )* ) /[pP]/ /[-\+]/? /[0-9]/+ ( "'"  /[0-9]/+ )* ) /([fF](16|32|64|128)?)|[lL]|(bf16|BF16)/? ) )
+
+  char_literal ::= ( "L'" | "u'" | "U'" | "u8'" | "'"  ) ( escape_sequence | !( /[^\n']/ ) -> "character" )+ "'"
+
+  concatenated_string ::= ( identifier | string_literal | raw_string_literal ) ( string_literal | raw_string_literal ) ( identifier | string_literal | raw_string_literal )*
+
+  string_literal ::= ( 'L"' | 'u"' | 'U"' | 'u8"' | '"'  ) ( !(  1(  /[^\\"\n]+/ )  ) -> "string_content" | escape_sequence )* '"'
+
+  escape_sequence ::= @(  1(  '\\'  ( /[^xuU]/ | /\d{2,3}/ | /x[0-9a-fA-F]{2,}/ | /u[0-9a-fA-F]{4}/ | /U[0-9a-fA-F]{8}/ ) )  )
+
+  system_lib_string ::= @( '<' ( /[^>\n]/ | '\>' )* '>' )
+
+  true ::= @( 'TRUE' | 'true' )
+
+  false ::= @( 'FALSE' | 'false' )
+
+  null ::= 'NULL'
+	| 'nullptr'
+
+  identifier ::= /(\p{XID_Start}|\$|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\$|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/
+
+  _type_identifier ::= identifier -> "type_identifier"
+
+  _field_identifier ::= identifier -> "field_identifier"
+
+  _statement_identifier ::= identifier -> "statement_identifier"
+
+  _empty_declaration ::= type_specifier ';'
+
+  macro_type_specifier ::=  ~-1(  ( identifier ):name '(' ( type_descriptor ):type ')' )
+
+  comment ::= @( '//' /(\\+(.|\r?\n)|[^\\\n])*/ | '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/' )
+
+  placeholder_type_specifier ::=  1(  ( type_specifier )?:constraint ( auto | decltype_auto -> "decltype" ) )
+
+  auto ::= 'auto'
+
+  decltype_auto ::= 'decltype' '(' auto ')'
+
+  decltype ::= 'decltype' '(' expression ')'
+
+  _class_declaration ::= ( attribute_specifier | alignas_qualifier )* ms_declspec_modifier? attribute_declaration* _class_declaration_item
+
+  _class_declaration_item ::= ( ( _class_name ):name | ( _class_name )?:name virtual_specifier? base_class_clause? ( field_declaration_list ):body ) attribute_specifier?
+
+  class_specifier ::= 'class' _class_declaration
+
+  _class_name ::= _type_identifier | template_type | qualified_type_identifier -> "qualified_identifier"
+
+  virtual_specifier ::= 'final'
+	| 'override'
+
+  virtual ::= 'virtual'
+
+  explicit_function_specifier ::= 'explicit'
+	|  15(  'explicit' '(' expression ')' )
+
+  base_class_clause ::= ':' attribute_declaration* ( access_specifier | access_specifier virtual? | virtual access_specifier? )? _class_name '...'? ( ',' attribute_declaration* ( access_specifier | access_specifier virtual? | virtual access_specifier? )? _class_name '...'? )*
+
+  _enum_base_clause ::= ':' ( qualified_type_identifier -> "qualified_identifier" | _type_identifier | primitive_type | sized_type_specifier ):base
+
+  dependent_type ::=  ~-1(  'typename' type_specifier )
+
+  template_declaration ::= 'template' ( template_parameter_list ):parameters requires_clause? ( _empty_declaration | alias_declaration | declaration | template_declaration | function_definition | concept_definition | friend_declaration | constructor_or_destructor_declaration -> "declaration" | constructor_or_destructor_definition -> "function_definition" | operator_cast_declaration -> "declaration" | operator_cast_definition -> "function_definition" )
+
+  template_instantiation ::= 'template' _declaration_specifiers? ( _declarator ):declarator ';'
+
+  template_parameter_list ::= '<' ( ( parameter_declaration | optional_parameter_declaration | type_parameter_declaration | variadic_parameter_declaration | variadic_type_parameter_declaration | optional_type_parameter_declaration | template_template_parameter_declaration ) ( ',' ( parameter_declaration | optional_parameter_declaration | type_parameter_declaration | variadic_parameter_declaration | variadic_type_parameter_declaration | optional_type_parameter_declaration | template_template_parameter_declaration ) )* )? @(  1(  '>' )  ) -> ">"
+
+  type_parameter_declaration ::=  1(  ( 'typename' | 'class' ) _type_identifier? )
+
+  variadic_type_parameter_declaration ::=  1(  ( 'typename' | 'class' ) '...' _type_identifier? )
+
+  optional_type_parameter_declaration ::= ( 'typename' | 'class' ) ( _type_identifier )?:name '=' ( type_specifier ):default_type
+
+  template_template_parameter_declaration ::= 'template' ( template_parameter_list ):parameters ( type_parameter_declaration | variadic_type_parameter_declaration | optional_type_parameter_declaration )
+
+  optional_parameter_declaration ::= _declaration_specifiers ( _declarator | abstract_reference_declarator )?:declarator '=' ( expression ):default_value
+
+  variadic_parameter_declaration ::= _declaration_specifiers ( variadic_declarator | variadic_reference_declarator -> "reference_declarator" ):declarator
+
+  variadic_declarator ::= '...' identifier?
+
+  variadic_reference_declarator ::= ( '&&' | '&' ) variadic_declarator
+
+  operator_cast ::=  >1(  'operator' _declaration_specifiers ( _abstract_declarator ):declarator )
+
+  field_initializer_list ::= ':' field_initializer ( ',' field_initializer )*
+
+  field_initializer ::=  1(  ( _field_identifier | template_method | qualified_field_identifier -> "qualified_identifier" ) ( initializer_list | argument_list ) '...'? )
+
+  inline_method_definition ::= _declaration_specifiers ( _field_declarator ):declarator ( ( compound_statement | try_statement ):body | default_method_clause | delete_method_clause | pure_virtual_clause )
+
+  _constructor_specifiers ::= _declaration_modifiers
+	| explicit_function_specifier
+
+  operator_cast_definition ::= _constructor_specifiers* ( operator_cast | qualified_operator_cast_identifier -> "qualified_identifier" ):declarator ( compound_statement | try_statement ):body
+
+  operator_cast_declaration ::=  1(  _constructor_specifiers* ( operator_cast | qualified_operator_cast_identifier -> "qualified_identifier" ):declarator ( '=' ( expression ):default_value )? ';' )
+
+  constructor_try_statement ::= 'try' field_initializer_list? ( compound_statement ):body catch_clause+
+
+  constructor_or_destructor_definition ::= _constructor_specifiers* ( function_declarator ):declarator ( field_initializer_list? ( compound_statement ):body | constructor_try_statement -> "try_statement" | default_method_clause | delete_method_clause | pure_virtual_clause )
+
+  constructor_or_destructor_declaration ::= _constructor_specifiers* ( function_declarator ):declarator ';'
+
+  default_method_clause ::= '=' 'default' ';'
+
+  delete_method_clause ::= '=' 'delete' ';'
+
+  pure_virtual_clause ::= '=' '0' ';'
+
+  friend_declaration ::= 'friend' ( declaration | function_definition | ( 'class' | 'struct' | 'union' )? _class_name ';' )
+
+  access_specifier ::= 'public'
+	| 'private'
+	| 'protected'
+
+  reference_declarator ::=  ~1(  ( '&' | '&&' ) _declarator )
+
+  reference_field_declarator ::=  ~1(  ( '&' | '&&' ) _field_declarator )
+
+  reference_type_declarator ::=  ~1(  ( '&' | '&&' ) _type_declarator )
+
+  abstract_reference_declarator ::= ( '&' | '&&' ) _abstract_declarator?
+
+  structured_binding_declarator ::=  ~-1(  '[' identifier ( ',' identifier )* ']' )
+
+  ref_qualifier ::= '&'
+	| '&&'
+
+  _function_declarator_seq ::= ( parameter_list ):parameters _function_attributes_start? ref_qualifier? _function_exception_specification? _function_attributes_end? trailing_return_type? _function_postfix?
+
+  _function_attributes_start ::=  1(  attribute_specifier+ type_qualifier* | attribute_specifier* type_qualifier+ )
+
+  _function_exception_specification ::= noexcept
+	| throw_specifier
+
+  _function_attributes_end ::= gnu_asm_expression? ( attribute_specifier+ attribute_declaration* | attribute_specifier* attribute_declaration+ )
+
+  _function_postfix ::= virtual_specifier+ | requires_clause
+
+  trailing_return_type ::= '->' type_descriptor
+
+  noexcept ::= 'noexcept' ( '(' expression? ')' )?
+
+  throw_specifier ::= 'throw' '(' ( type_descriptor ( ',' type_descriptor )* )? ')'
+
+  template_type ::= ( _type_identifier ):name ( template_argument_list ):arguments
+
+  template_method ::= ( _field_identifier | operator_name ):name ( template_argument_list ):arguments
+
+  template_function ::= ( identifier ):name ( template_argument_list ):arguments
+
+  template_argument_list ::= '<' ( (  ~3(  type_descriptor )  |  ~2(  type_parameter_pack_expansion -> "parameter_pack_expansion" )  |  ~1(  expression )  ) ( ',' (  ~3(  type_descriptor )  |  ~2(  type_parameter_pack_expansion -> "parameter_pack_expansion" )  |  ~1(  expression )  ) )* )? @(  1(  '>' )  ) -> ">"
+
+  namespace_definition ::= 'inline'? 'namespace' attribute_declaration? ( _namespace_identifier | nested_namespace_specifier )?:name ( declaration_list ):body
+
+  namespace_alias_definition ::= 'namespace' ( _namespace_identifier ):name '=' ( _namespace_identifier | nested_namespace_specifier ) ';'
+
+  _namespace_specifier ::= 'inline'? _namespace_identifier
+
+  nested_namespace_specifier ::=  1(  _namespace_specifier? '::' ( nested_namespace_specifier | _namespace_specifier ) )
+
+  using_declaration ::= 'using' ( 'namespace' | 'enum' )? ( identifier | qualified_identifier ) ';'
+
+  alias_declaration ::= 'using' ( _type_identifier ):name attribute_declaration* '=' ( type_descriptor ):type ';'
+
+  static_assert_declaration ::= 'static_assert' '(' ( expression ):condition ( ',' ( string_literal | raw_string_literal | concatenated_string ):message )? ')' ';'
+
+  concept_definition ::= 'concept' ( identifier ):name '=' expression ';'
+
+  for_range_loop ::= 'for' '(' _for_range_loop_body ')' ( statement ):body
+
+  _for_range_loop_body ::= ( init_statement )?:initializer _declaration_specifiers ( _declarator ):declarator ':' ( expression | initializer_list ):right
+
+  init_statement ::= alias_declaration
+	| type_definition
+	| declaration
+	| expression_statement
+
+  condition_clause ::= '(' ( init_statement )?:initializer ( expression | comma_expression | condition_declaration -> "declaration" ):value ')'
+
+  condition_declaration ::= _declaration_specifiers ( _declarator ):declarator ( '=' ( expression ):value | ( initializer_list ):value )
+
+  co_return_statement ::= 'co_return' expression? ';'
+
+  co_yield_statement ::= 'co_yield' expression ';'
+
+  throw_statement ::= 'throw' expression? ';'
+
+  try_statement ::= 'try' ( compound_statement ):body catch_clause+
+
+  catch_clause ::= 'catch' ( parameter_list ):parameters ( compound_statement ):body
+
+  raw_string_literal ::= ( 'R"' | 'LR"' | 'uR"' | 'UR"' | 'u8R"' ) ( ( raw_string_delimiter ):delimiter '(' raw_string_content ')' raw_string_delimiter | '(' raw_string_content ')' ) '"'
+
+  subscript_argument_list ::= '[' ( ( expression | initializer_list ) ( ',' ( expression | initializer_list ) )* )? ']'
+
+  co_await_expression ::=  <14(  ( 'co_await' ):operator ( expression ):argument )
+
+  new_expression ::=  >16(  '::'? 'new' ( argument_list )?:placement ( type_specifier ):type ( new_declarator )?:declarator ( argument_list | initializer_list )?:arguments )
+
+  new_declarator ::= '[' ( expression ):length ']' new_declarator?
+
+  delete_expression ::= '::'? 'delete' ( '[' ']' )? expression
+
+  type_requirement ::= 'typename' _class_name
+
+  compound_requirement ::= '{' expression '}' 'noexcept'? trailing_return_type? ';'
+
+  _requirement ::= expression_statement -> "simple_requirement"
+	| type_requirement
+	| compound_requirement
+
+  requirement_seq ::= '{' _requirement* '}'
+
+  constraint_conjunction ::=  <2(  ( _requirement_clause_constraint ):left ( '&&' | 'and' ):operator ( _requirement_clause_constraint ):right )
+
+  constraint_disjunction ::=  <1(  ( _requirement_clause_constraint ):left ( '||' | 'or' ):operator ( _requirement_clause_constraint ):right )
+
+  _requirement_clause_constraint ::= true
+	| false
+	| _class_name
+	| fold_expression
+	| lambda_expression
+	| requires_expression
+	| '(' expression ')'
+	| constraint_conjunction
+	| constraint_disjunction
+
+  requires_clause ::= 'requires' ( _requirement_clause_constraint ):constraint
+
+  requires_parameter_list ::= '(' ( ( parameter_declaration | optional_parameter_declaration | variadic_parameter_declaration ) ( ',' ( parameter_declaration | optional_parameter_declaration | variadic_parameter_declaration ) )* )? ')'
+
+  requires_expression ::= 'requires' ( requires_parameter_list -> "parameter_list" )?:parameters ( requirement_seq ):requirements
+
+  lambda_expression ::= ( lambda_capture_specifier ):captures ( ( template_parameter_list ):template_parameters ( requires_clause )?:constraint )? ( abstract_function_declarator )?:declarator ( compound_statement ):body
+
+  lambda_capture_specifier ::=  18(  '[' ( lambda_default_capture | expression ( ',' expression )* | lambda_default_capture ',' expression ( ',' expression )* ) ']' )
+
+  lambda_default_capture ::= '='
+	| '&'
+
+  _fold_operator ::= '+'
+	| '-'
+	| '*'
+	| '/'
+	| '%'
+	| '^'
+	| '&'
+	| '|'
+	| '='
+	| '<'
+	| '>'
+	| '<<'
+	| '>>'
+	| '+='
+	| '-='
+	| '*='
+	| '/='
+	| '%='
+	| '^='
+	| '&='
+	| '|='
+	| '>>='
+	| '<<='
+	| '=='
+	| '!='
+	| '<='
+	| '>='
+	| '&&'
+	| '||'
+	| ','
+	| '.*'
+	| '->*'
+	| 'or'
+	| 'and'
+	| 'bitor'
+	| 'xor'
+	| 'bitand'
+	| 'not_eq'
+
+  _binary_fold_operator ::= ( '+' ):operator '...' '+'
+	| ( '-' ):operator '...' '-'
+	| ( '*' ):operator '...' '*'
+	| ( '/' ):operator '...' '/'
+	| ( '%' ):operator '...' '%'
+	| ( '^' ):operator '...' '^'
+	| ( '&' ):operator '...' '&'
+	| ( '|' ):operator '...' '|'
+	| ( '=' ):operator '...' '='
+	| ( '<' ):operator '...' '<'
+	| ( '>' ):operator '...' '>'
+	| ( '<<' ):operator '...' '<<'
+	| ( '>>' ):operator '...' '>>'
+	| ( '+=' ):operator '...' '+='
+	| ( '-=' ):operator '...' '-='
+	| ( '*=' ):operator '...' '*='
+	| ( '/=' ):operator '...' '/='
+	| ( '%=' ):operator '...' '%='
+	| ( '^=' ):operator '...' '^='
+	| ( '&=' ):operator '...' '&='
+	| ( '|=' ):operator '...' '|='
+	| ( '>>=' ):operator '...' '>>='
+	| ( '<<=' ):operator '...' '<<='
+	| ( '==' ):operator '...' '=='
+	| ( '!=' ):operator '...' '!='
+	| ( '<=' ):operator '...' '<='
+	| ( '>=' ):operator '...' '>='
+	| ( '&&' ):operator '...' '&&'
+	| ( '||' ):operator '...' '||'
+	| ( ',' ):operator '...' ','
+	| ( '.*' ):operator '...' '.*'
+	| ( '->*' ):operator '...' '->*'
+	| ( 'or' ):operator '...' 'or'
+	| ( 'and' ):operator '...' 'and'
+	| ( 'bitor' ):operator '...' 'bitor'
+	| ( 'xor' ):operator '...' 'xor'
+	| ( 'bitand' ):operator '...' 'bitand'
+	| ( 'not_eq' ):operator '...' 'not_eq'
+
+  _unary_left_fold ::= ( '...' ):left ( _fold_operator ):operator ( expression ):right
+
+  _unary_right_fold ::= ( expression ):left ( _fold_operator ):operator ( '...' ):right
+
+  _binary_fold ::= ( expression ):left _binary_fold_operator ( expression ):right
+
+  fold_expression ::= '(' ( _unary_right_fold | _unary_left_fold | _binary_fold ) ')'
+
+  parameter_pack_expansion ::=  -1(  ( expression ):pattern '...' )
+
+  type_parameter_pack_expansion ::= ( type_descriptor ):pattern '...'
+
+  destructor_name ::=  1(  '~' identifier )
+
+  dependent_identifier ::= 'template' template_function
+
+  dependent_field_identifier ::= 'template' template_method
+
+  dependent_type_identifier ::= 'template' template_type
+
+  _scope_resolution ::=  1(  ( _namespace_identifier | template_type | decltype | dependent_type_identifier -> "dependent_name" )?:scope '::' )
+
+  qualified_field_identifier ::= _scope_resolution ( dependent_field_identifier -> "dependent_name" | qualified_field_identifier -> "qualified_identifier" | template_method |  ~1(  _field_identifier )  ):name
+
+  qualified_identifier ::= _scope_resolution ( dependent_identifier -> "dependent_name" | qualified_identifier | template_function | 'template'? identifier | operator_name | destructor_name | pointer_type_declarator ):name
+
+  qualified_type_identifier ::= _scope_resolution ( dependent_type_identifier -> "dependent_name" | qualified_type_identifier -> "qualified_identifier" | template_type | _type_identifier ):name
+
+  qualified_operator_cast_identifier ::= _scope_resolution ( qualified_operator_cast_identifier -> "qualified_identifier" | operator_cast ):name
+
+  _assignment_expression_lhs ::= ( expression ):left ( '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '&=' | '^=' | '|=' | 'and_eq' | 'or_eq' | 'xor_eq' ):operator ( expression | initializer_list ):right
+
+  operator_name ::=  1(  'operator' ( 'co_await' | '+' | '-' | '*' | '/' | '%' | '^' | '&' | '|' | '~' | '!' | '=' | '<' | '>' | '+=' | '-=' | '*=' | '/=' | '%=' | '^=' | '&=' | '|=' | '<<' | '>>' | '>>=' | '<<=' | '==' | '!=' | '<=' | '>=' | '<=>' | '&&' | '||' | '++' | '--' | ',' | '->*' | '->' | '()' | '[]' | 'xor' | 'bitand' | 'bitor' | 'compl' | 'not' | 'xor_eq' | 'and_eq' | 'or_eq' | 'not_eq' | 'and' | 'or' | ( 'new' | 'delete' ) '[]'? | '""' identifier ) )
+
+  this ::= 'this'
+
+  literal_suffix ::= !( /[a-zA-Z_]\w*/ )
+
+  user_defined_literal ::= ( number_literal | char_literal | string_literal | raw_string_literal | concatenated_string ) literal_suffix
+
+  _namespace_identifier ::= identifier -> "namespace_identifier"
+

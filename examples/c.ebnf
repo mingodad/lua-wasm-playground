@@ -1,0 +1,615 @@
+; From tree-sitter-c-dad/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	}
+
+extras ::= {
+	/\s|\\\r?\n/
+	comment
+	preproc_linemark
+	}
+
+supertypes ::= {
+	_expression
+	_statement
+	_type_specifier
+	_declarator
+	_field_declarator
+	_type_declarator
+	_abstract_declarator
+	}
+
+inline ::= {
+	_statement
+	_block_item
+	_top_level_item
+	_top_level_statement
+	_type_identifier
+	_field_identifier
+	_statement_identifier
+	_non_case_statement
+	_assignment_left_expression
+	}
+
+conflicts ::= {
+	{ _type_specifier _declarator }
+	{ _type_specifier _declarator macro_type_specifier }
+	{ _type_specifier _expression_not_binary }
+	{ _type_specifier _expression_not_binary macro_type_specifier }
+	{ _type_specifier macro_type_specifier }
+	{ _type_specifier sized_type_specifier }
+	{ sized_type_specifier }
+	{ attributed_statement }
+	{ _declaration_modifiers attributed_statement }
+	{ enum_specifier }
+	{ _type_specifier _old_style_parameter_list }
+	{ parameter_list _old_style_parameter_list }
+	{ _expression_not_binary concatenated_string }
+	}
+
+word ::= identifier
+
+rules:
+
+  translation_unit ::= _top_level_item*
+
+  _top_level_item ::= function_definition
+	| _old_style_function_definition -> "function_definition"
+	| linkage_specification
+	| declaration
+	| _top_level_statement
+	| attributed_statement
+	| type_definition
+	| _empty_declaration
+	| preproc_if
+	| preproc_ifdef
+	| preproc_include
+	| preproc_def
+	| preproc_function_def
+	| preproc_call
+
+  _block_item ::= function_definition
+	| _old_style_function_definition -> "function_definition"
+	| linkage_specification
+	| declaration
+	| _statement
+	| attributed_statement
+	| type_definition
+	| _empty_declaration
+	| preproc_if
+	| preproc_ifdef
+	| preproc_include
+	| preproc_def
+	| preproc_function_def
+	| preproc_call
+
+  preproc_linemark ::= /# / ( number_literal ):line ( string_literal ):path ( number_literal )*:flag !( /\r?\n/ )
+
+  preproc_include ::= /#[ \t]*include/ -> "#include" ( string_literal | system_lib_string | identifier | preproc_call_expression -> "call_expression" ):path !( /\r?\n/ )
+
+  preproc_def ::= /#[ \t]*define/ -> "#define" ( identifier ):name ( preproc_arg )?:value !( /\r?\n/ )
+
+  preproc_function_def ::= /#[ \t]*define/ -> "#define" ( identifier ):name ( preproc_params ):parameters ( preproc_arg )?:value !( /\r?\n/ )
+
+  preproc_params ::= !( '(' ) ( ( identifier ( ',' identifier )* )? ( ',' '...' )? | '...' ) ')'
+
+  preproc_call ::= ( preproc_directive ):directive ( preproc_arg )?:argument !( /\r?\n/ )
+
+  preproc_if ::= /#[ \t]*if/ -> "#if" ( _preproc_expression ):condition '\n'  _block_item* ( preproc_else | preproc_elif )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_ifdef ::= ( /#[ \t]*ifdef/ -> "#ifdef" | /#[ \t]*ifndef/ -> "#ifndef" ) ( identifier ):name _block_item* ( preproc_else | preproc_elif | preproc_elifdef )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_else ::= /#[ \t]*else/ -> "#else" _block_item*
+
+  preproc_elif ::= /#[ \t]*elif/ -> "#elif" ( _preproc_expression ):condition '\n'  _block_item* ( preproc_else | preproc_elif )?:alternative
+
+  preproc_elifdef ::= ( /#[ \t]*elifdef/ -> "#elifdef" | /#[ \t]*elifndef/ -> "#elifndef" ) ( identifier ):name _block_item* ( preproc_else | preproc_elif )?:alternative
+
+  preproc_if_in_field_declaration_list ::= /#[ \t]*if/ -> "#if" ( _preproc_expression ):condition '\n'  _field_declaration_list_item* ( preproc_else_in_field_declaration_list -> "preproc_else" | preproc_elif_in_field_declaration_list -> "preproc_elif" )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_ifdef_in_field_declaration_list ::= ( /#[ \t]*ifdef/ -> "#ifdef" | /#[ \t]*ifndef/ -> "#ifndef" ) ( identifier ):name _field_declaration_list_item* ( preproc_else_in_field_declaration_list -> "preproc_else" | preproc_elif_in_field_declaration_list -> "preproc_elif" | preproc_elifdef_in_field_declaration_list -> "preproc_elifdef" )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_else_in_field_declaration_list ::= /#[ \t]*else/ -> "#else" _field_declaration_list_item*
+
+  preproc_elif_in_field_declaration_list ::= /#[ \t]*elif/ -> "#elif" ( _preproc_expression ):condition '\n'  _field_declaration_list_item* ( preproc_else_in_field_declaration_list -> "preproc_else" | preproc_elif_in_field_declaration_list -> "preproc_elif" )?:alternative
+
+  preproc_elifdef_in_field_declaration_list ::= ( /#[ \t]*elifdef/ -> "#elifdef" | /#[ \t]*elifndef/ -> "#elifndef" ) ( identifier ):name _field_declaration_list_item* ( preproc_else_in_field_declaration_list -> "preproc_else" | preproc_elif_in_field_declaration_list -> "preproc_elif" )?:alternative
+
+  preproc_if_in_enumerator_list ::= /#[ \t]*if/ -> "#if" ( _preproc_expression ):condition '\n'  ( enumerator ',' )* ( preproc_else_in_enumerator_list -> "preproc_else" | preproc_elif_in_enumerator_list -> "preproc_elif" )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_ifdef_in_enumerator_list ::= ( /#[ \t]*ifdef/ -> "#ifdef" | /#[ \t]*ifndef/ -> "#ifndef" ) ( identifier ):name ( enumerator ',' )* ( preproc_else_in_enumerator_list -> "preproc_else" | preproc_elif_in_enumerator_list -> "preproc_elif" | preproc_elifdef_in_enumerator_list -> "preproc_elifdef" )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_else_in_enumerator_list ::= /#[ \t]*else/ -> "#else" ( enumerator ',' )*
+
+  preproc_elif_in_enumerator_list ::= /#[ \t]*elif/ -> "#elif" ( _preproc_expression ):condition '\n'  ( enumerator ',' )* ( preproc_else_in_enumerator_list -> "preproc_else" | preproc_elif_in_enumerator_list -> "preproc_elif" )?:alternative
+
+  preproc_elifdef_in_enumerator_list ::= ( /#[ \t]*elifdef/ -> "#elifdef" | /#[ \t]*elifndef/ -> "#elifndef" ) ( identifier ):name ( enumerator ',' )* ( preproc_else_in_enumerator_list -> "preproc_else" | preproc_elif_in_enumerator_list -> "preproc_elif" )?:alternative
+
+  preproc_if_in_enumerator_list_no_comma ::=  -1(  /#[ \t]*if/ -> "#if" ( _preproc_expression ):condition '\n'  enumerator* ( preproc_else_in_enumerator_list_no_comma -> "preproc_else" | preproc_elif_in_enumerator_list_no_comma -> "preproc_elif" )?:alternative /#[ \t]*endif/ -> "#endif" )
+
+  preproc_ifdef_in_enumerator_list_no_comma ::=  -1(  ( /#[ \t]*ifdef/ -> "#ifdef" | /#[ \t]*ifndef/ -> "#ifndef" ) ( identifier ):name enumerator* ( preproc_else_in_enumerator_list_no_comma -> "preproc_else" | preproc_elif_in_enumerator_list_no_comma -> "preproc_elif" | preproc_elifdef_in_enumerator_list_no_comma -> "preproc_elifdef" )?:alternative /#[ \t]*endif/ -> "#endif" )
+
+  preproc_else_in_enumerator_list_no_comma ::=  -1(  /#[ \t]*else/ -> "#else" enumerator* )
+
+  preproc_elif_in_enumerator_list_no_comma ::=  -1(  /#[ \t]*elif/ -> "#elif" ( _preproc_expression ):condition '\n'  enumerator* ( preproc_else_in_enumerator_list_no_comma -> "preproc_else" | preproc_elif_in_enumerator_list_no_comma -> "preproc_elif" )?:alternative )
+
+  preproc_elifdef_in_enumerator_list_no_comma ::=  -1(  ( /#[ \t]*elifdef/ -> "#elifdef" | /#[ \t]*elifndef/ -> "#elifndef" ) ( identifier ):name enumerator* ( preproc_else_in_enumerator_list_no_comma -> "preproc_else" | preproc_elif_in_enumerator_list_no_comma -> "preproc_elif" )?:alternative )
+
+  preproc_arg ::= @(  -1(  /\S([^\/\n]|\/[^*]|\\\r?\n)*/ )  )
+
+  preproc_directive ::= /#[ \t]*[a-zA-Z][a-zA-Z0-9]\w*/
+
+  _preproc_expression ::= identifier
+	| preproc_call_expression -> "call_expression"
+	| number_literal
+	| char_literal
+	| preproc_defined
+	| preproc_unary_expression -> "unary_expression"
+	| preproc_binary_expression -> "binary_expression"
+	| preproc_parenthesized_expression -> "parenthesized_expression"
+
+  preproc_parenthesized_expression ::= '(' _preproc_expression ')'
+
+  preproc_defined ::=  15(  'defined' '(' identifier ')' )
+	| 'defined' identifier
+
+  preproc_unary_expression ::=  <14(  ( '!' | '~' | '-' | '+' ):operator ( _preproc_expression ):argument )
+
+  preproc_call_expression ::=  15(  ( identifier ):function ( preproc_argument_list -> "argument_list" ):arguments )
+
+  preproc_argument_list ::= '(' ( _preproc_expression ( ',' _preproc_expression )* )? ')'
+
+  preproc_binary_expression ::=  <10(  ( _preproc_expression ):left ( '+' ):operator ( _preproc_expression ):right )
+	|  <10(  ( _preproc_expression ):left ( '-' ):operator ( _preproc_expression ):right )
+	|  <11(  ( _preproc_expression ):left ( '*' ):operator ( _preproc_expression ):right )
+	|  <11(  ( _preproc_expression ):left ( '/' ):operator ( _preproc_expression ):right )
+	|  <11(  ( _preproc_expression ):left ( '%' ):operator ( _preproc_expression ):right )
+	|  <1(  ( _preproc_expression ):left ( '||' ):operator ( _preproc_expression ):right )
+	|  <2(  ( _preproc_expression ):left ( '&&' ):operator ( _preproc_expression ):right )
+	|  <3(  ( _preproc_expression ):left ( '|' ):operator ( _preproc_expression ):right )
+	|  <4(  ( _preproc_expression ):left ( '^' ):operator ( _preproc_expression ):right )
+	|  <5(  ( _preproc_expression ):left ( '&' ):operator ( _preproc_expression ):right )
+	|  <6(  ( _preproc_expression ):left ( '==' ):operator ( _preproc_expression ):right )
+	|  <6(  ( _preproc_expression ):left ( '!=' ):operator ( _preproc_expression ):right )
+	|  <7(  ( _preproc_expression ):left ( '>' ):operator ( _preproc_expression ):right )
+	|  <7(  ( _preproc_expression ):left ( '>=' ):operator ( _preproc_expression ):right )
+	|  <7(  ( _preproc_expression ):left ( '<=' ):operator ( _preproc_expression ):right )
+	|  <7(  ( _preproc_expression ):left ( '<' ):operator ( _preproc_expression ):right )
+	|  <9(  ( _preproc_expression ):left ( '<<' ):operator ( _preproc_expression ):right )
+	|  <9(  ( _preproc_expression ):left ( '>>' ):operator ( _preproc_expression ):right )
+
+  function_definition ::= ms_call_modifier? _declaration_specifiers ( _declarator ):declarator ( compound_statement ):body
+
+  _old_style_function_definition ::= ms_call_modifier? _declaration_specifiers ( _old_style_function_declarator -> "function_declarator" ):declarator declaration* ( compound_statement ):body
+
+  declaration ::= _declaration_specifiers _declaration_declarator ';'
+
+  _declaration_declarator ::= ( _declarator gnu_asm_expression? | init_declarator ):declarator ( ',' ( _declarator gnu_asm_expression? | init_declarator ):declarator )*
+
+  type_definition ::= '__extension__'? 'typedef' _type_definition_type _type_definition_declarators attribute_specifier* ';'
+
+  _type_definition_type ::= type_qualifier* ( _type_specifier ):type type_qualifier*
+
+  _type_definition_declarators ::= ( _type_declarator ):declarator ( ',' ( _type_declarator ):declarator )*
+
+  _declaration_modifiers ::= storage_class_specifier
+	| type_qualifier
+	| attribute_specifier
+	| attribute_declaration
+	| ms_declspec_modifier
+
+  _declaration_specifiers ::= _declaration_modifiers* ( _type_specifier ):type _declaration_modifiers*
+
+  linkage_specification ::= 'extern' ( string_literal ):value ( function_definition | declaration | declaration_list ):body
+
+  attribute_specifier ::= '__attribute__' '(' argument_list ')'
+
+  attribute ::= ( ( identifier ):prefix '::' )? ( identifier ):name argument_list?
+
+  attribute_declaration ::= '[[' attribute ( ',' attribute )* ']]'
+
+  ms_declspec_modifier ::= '__declspec' '(' identifier ')'
+
+  ms_based_modifier ::= '__based' argument_list
+
+  ms_call_modifier ::= '__cdecl'
+	| '__clrcall'
+	| '__stdcall'
+	| '__fastcall'
+	| '__thiscall'
+	| '__vectorcall'
+
+  ms_restrict_modifier ::= '__restrict'
+
+  ms_unsigned_ptr_modifier ::= '__uptr'
+
+  ms_signed_ptr_modifier ::= '__sptr'
+
+  ms_unaligned_ptr_modifier ::= '_unaligned'
+	| '__unaligned'
+
+  ms_pointer_modifier ::= ms_unaligned_ptr_modifier
+	| ms_restrict_modifier
+	| ms_unsigned_ptr_modifier
+	| ms_signed_ptr_modifier
+
+  declaration_list ::= '{' _block_item* '}'
+
+  _declarator ::= attributed_declarator
+	| pointer_declarator
+	| function_declarator
+	| array_declarator
+	| parenthesized_declarator
+	| identifier
+
+  _field_declarator ::= attributed_field_declarator -> "attributed_declarator"
+	| pointer_field_declarator -> "pointer_declarator"
+	| function_field_declarator -> "function_declarator"
+	| array_field_declarator -> "array_declarator"
+	| parenthesized_field_declarator -> "parenthesized_declarator"
+	| _field_identifier
+
+  _type_declarator ::= attributed_type_declarator -> "attributed_declarator"
+	| pointer_type_declarator -> "pointer_declarator"
+	| function_type_declarator -> "function_declarator"
+	| array_type_declarator -> "array_declarator"
+	| parenthesized_type_declarator -> "parenthesized_declarator"
+	| _type_identifier
+	| ( 'signed' | 'unsigned' | 'long' | 'short' ) -> "primitive_type"
+	| primitive_type
+
+  _abstract_declarator ::= abstract_pointer_declarator
+	| abstract_function_declarator
+	| abstract_array_declarator
+	| abstract_parenthesized_declarator
+
+  parenthesized_declarator ::=  ~-10(  '(' _declarator ')' )
+
+  parenthesized_field_declarator ::=  ~-10(  '(' _field_declarator ')' )
+
+  parenthesized_type_declarator ::=  ~-10(  '(' _type_declarator ')' )
+
+  abstract_parenthesized_declarator ::=  1(  '(' _abstract_declarator ')' )
+
+  attributed_declarator ::= _declarator attribute_declaration+
+
+  attributed_field_declarator ::= _field_declarator attribute_declaration+
+
+  attributed_type_declarator ::= _type_declarator attribute_declaration+
+
+  pointer_declarator ::=  ~1(  ms_based_modifier? '*' ms_pointer_modifier* type_qualifier* ( _declarator ):declarator )
+
+  pointer_field_declarator ::=  ~1(  ms_based_modifier? '*' ms_pointer_modifier* type_qualifier* ( _field_declarator ):declarator )
+
+  pointer_type_declarator ::=  ~1(  ms_based_modifier? '*' ms_pointer_modifier* type_qualifier* ( _type_declarator ):declarator )
+
+  abstract_pointer_declarator ::=  ~1(  '*' ms_pointer_modifier* type_qualifier* ( _abstract_declarator )?:declarator )
+
+  function_declarator ::=  >1(  ( _declarator ):declarator ( parameter_list ):parameters gnu_asm_expression? attribute_specifier* )
+
+  function_field_declarator ::=  1(  ( _field_declarator ):declarator ( parameter_list ):parameters )
+
+  function_type_declarator ::=  1(  ( _type_declarator ):declarator ( parameter_list ):parameters )
+
+  abstract_function_declarator ::=  1(  ( _abstract_declarator )?:declarator ( parameter_list ):parameters )
+
+  _old_style_function_declarator ::= ( _declarator ):declarator ( _old_style_parameter_list -> "parameter_list" ):parameters
+
+  array_declarator ::=  1(  ( _declarator ):declarator '[' type_qualifier* ( _expression | '*' )?:size ']' )
+
+  array_field_declarator ::=  1(  ( _field_declarator ):declarator '[' type_qualifier* ( _expression | '*' )?:size ']' )
+
+  array_type_declarator ::=  1(  ( _type_declarator ):declarator '[' type_qualifier* ( _expression | '*' )?:size ']' )
+
+  abstract_array_declarator ::=  1(  ( _abstract_declarator )?:declarator '[' type_qualifier* ( _expression | '*' )?:size ']' )
+
+  init_declarator ::= ( _declarator ):declarator '=' ( initializer_list | _expression ):value
+
+  compound_statement ::= '{' _block_item* '}'
+
+  storage_class_specifier ::= 'extern'
+	| 'static'
+	| 'auto'
+	| 'register'
+	| 'inline'
+	| '__inline'
+	| '__inline__'
+	| '__forceinline'
+	| 'thread_local'
+	| '__thread'
+
+  type_qualifier ::= 'const'
+	| 'constexpr'
+	| 'volatile'
+	| 'restrict'
+	| '__restrict__'
+	| '__extension__'
+	| '_Atomic'
+	| '_Noreturn'
+	| 'noreturn'
+
+  _type_specifier ::= struct_specifier
+	| union_specifier
+	| enum_specifier
+	| macro_type_specifier
+	| sized_type_specifier
+	| primitive_type
+	| _type_identifier
+
+  sized_type_specifier ::= ( 'signed' | 'unsigned' | 'long' | 'short' )* (  ~-1(  _type_identifier )  | primitive_type )?:type ( 'signed' | 'unsigned' | 'long' | 'short' )+
+	| ( 'signed' | 'unsigned' | 'long' | 'short' )+ (  ~-1(  _type_identifier )  | primitive_type )?:type ( 'signed' | 'unsigned' | 'long' | 'short' )*
+
+  primitive_type ::= @( 'bool' | 'char' | 'int' | 'float' | 'double' | 'void' | 'size_t' | 'ssize_t' | 'ptrdiff_t' | 'intptr_t' | 'uintptr_t' | 'charptr_t' | 'nullptr_t' | 'max_align_t' | 'int8_t' | 'int16_t' | 'int32_t' | 'int64_t' | 'uint8_t' | 'uint16_t' | 'uint32_t' | 'uint64_t' | 'char8_t' | 'char16_t' | 'char32_t' | 'char64_t' )
+
+  enum_specifier ::= 'enum' ( ( _type_identifier ):name ( ':' ( primitive_type ):underlying_type )? ( enumerator_list )?:body | ( enumerator_list ):body ) attribute_specifier?
+
+  enumerator_list ::= '{' ( enumerator ',' | preproc_if_in_enumerator_list -> "preproc_if" | preproc_ifdef_in_enumerator_list -> "preproc_ifdef" | preproc_call ',' )* ( ( enumerator | preproc_if_in_enumerator_list_no_comma -> "preproc_if" | preproc_ifdef_in_enumerator_list_no_comma -> "preproc_ifdef" | preproc_call ) )? '}'
+
+  struct_specifier ::= 'struct' attribute_specifier? ms_declspec_modifier? ( ( _type_identifier ):name ( field_declaration_list )?:body | ( field_declaration_list ):body ) attribute_specifier?
+
+  union_specifier ::= 'union' ms_declspec_modifier? ( ( _type_identifier ):name ( field_declaration_list )?:body | ( field_declaration_list ):body ) attribute_specifier?
+
+  field_declaration_list ::= '{' _field_declaration_list_item* '}'
+
+  _field_declaration_list_item ::= field_declaration
+	| preproc_def
+	| preproc_function_def
+	| preproc_call
+	| preproc_if_in_field_declaration_list -> "preproc_if"
+	| preproc_ifdef_in_field_declaration_list -> "preproc_ifdef"
+
+  field_declaration ::= _declaration_specifiers _field_declaration_declarator? attribute_specifier? ';'
+
+  _field_declaration_declarator ::= ( _field_declarator ):declarator bitfield_clause? ( ',' ( _field_declarator ):declarator bitfield_clause? )*
+
+  bitfield_clause ::= ':' _expression
+
+  enumerator ::= ( identifier ):name ( '=' ( _expression ):value )?
+
+  variadic_parameter ::= '...'
+
+  parameter_list ::= '(' ( ( parameter_declaration ( ',' parameter_declaration )* )? ( ',' variadic_parameter )? | variadic_parameter ) ')'
+
+  _old_style_parameter_list ::= '(' ( ( identifier ( ',' identifier )* )? ( ',' variadic_parameter )? | variadic_parameter ) ')'
+
+  parameter_declaration ::= _declaration_specifiers ( _declarator | _abstract_declarator )?:declarator
+
+  attributed_statement ::= attribute_declaration+ _statement
+
+  _statement ::= case_statement
+	| _non_case_statement
+
+  _non_case_statement ::= attributed_statement
+	| labeled_statement
+	| compound_statement
+	| expression_statement
+	| if_statement
+	| switch_statement
+	| do_statement
+	| while_statement
+	| for_statement
+	| return_statement
+	| fallthrough_statement
+	| break_statement
+	| continue_statement
+	| goto_statement
+	| seh_try_statement
+	| seh_leave_statement
+
+  _top_level_statement ::= case_statement
+	| attributed_statement
+	| labeled_statement
+	| compound_statement
+	| _top_level_expression_statement -> "expression_statement"
+	| if_statement
+	| switch_statement
+	| do_statement
+	| while_statement
+	| for_statement
+	| return_statement
+	| break_statement
+	| continue_statement
+	| goto_statement
+
+  labeled_statement ::= ( _statement_identifier ):label ':' _statement
+
+  _top_level_expression_statement ::= _expression_not_binary ';'
+
+  expression_statement ::= ( _expression | comma_expression )? ';'
+
+  if_statement ::= 'if' ( parenthesized_expression ):condition ( _statement ):consequence ( else_clause )?:alternative
+
+  else_clause ::= 'else' _statement
+
+  switch_statement ::= 'switch' ( parenthesized_expression ):condition ( compound_statement ):body
+
+  case_statement ::= ( 'case' ( _expression ):value | 'default' ) ':' ( _non_case_statement | declaration | type_definition )*
+
+  while_statement ::= 'while' ( parenthesized_expression ):condition ( _statement ):body
+
+  do_statement ::= 'do' ( _statement ):body 'while' ( parenthesized_expression ):condition ';'
+
+  for_statement ::= 'for' '(' _for_statement_body ')' ( _statement ):body
+
+  _for_statement_body ::= ( ( declaration ):initializer | ( _expression | comma_expression )?:initializer ';' ) ( _expression | comma_expression )?:condition ';' ( _expression | comma_expression )?:update
+
+  return_statement ::= 'return' ( _expression | comma_expression )? ';'
+
+  fallthrough_statement ::= '__attribute__((fallthrough))' ';'
+
+  break_statement ::= 'break' ';'
+
+  continue_statement ::= 'continue' ';'
+
+  goto_statement ::= 'goto' ( _statement_identifier ):label ';'
+
+  seh_try_statement ::= '__try' ( compound_statement ):body ( seh_except_clause | seh_finally_clause )
+
+  seh_except_clause ::= '__except' ( parenthesized_expression ):filter ( compound_statement ):body
+
+  seh_finally_clause ::= '__finally' ( compound_statement ):body
+
+  seh_leave_statement ::= '__leave' ';'
+
+  _expression ::= _expression_not_binary
+	| binary_expression
+
+  _expression_not_binary ::= conditional_expression
+	| assignment_expression
+	| unary_expression
+	| update_expression
+	| cast_expression
+	| pointer_expression
+	| sizeof_expression
+	| alignof_expression
+	| offsetof_expression
+	| va_arg_expression
+	| generic_expression
+	| subscript_expression
+	| call_expression
+	| field_expression
+	| compound_literal_expression
+	| identifier
+	| number_literal
+	| string_literal
+	| true
+	| false
+	| null
+	| concatenated_string
+	| char_literal
+	| parenthesized_expression
+	| gnu_asm_expression
+
+  comma_expression ::= ( _expression ):left ',' ( _expression | comma_expression ):right
+
+  conditional_expression ::=  >-1(  ( _expression ):condition '?' ( _expression | comma_expression )?:consequence ':' ( _expression ):alternative )
+
+  _assignment_left_expression ::= identifier
+	| call_expression
+	| field_expression
+	| pointer_expression
+	| subscript_expression
+	| parenthesized_expression
+
+  assignment_expression ::=  >-2(  ( _assignment_left_expression ):left ( '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ):operator ( _expression ):right )
+
+  pointer_expression ::=  <12(  ( '*' | '&' ):operator ( _expression ):argument )
+
+  unary_expression ::=  <14(  ( '!' | '~' | '-' | '+' ):operator ( _expression ):argument )
+
+  binary_expression ::=  <10(  ( _expression ):left ( '+' ):operator ( _expression ):right )
+	|  <10(  ( _expression ):left ( '-' ):operator ( _expression ):right )
+	|  <11(  ( _expression ):left ( '*' ):operator ( _expression ):right )
+	|  <11(  ( _expression ):left ( '/' ):operator ( _expression ):right )
+	|  <11(  ( _expression ):left ( '%' ):operator ( _expression ):right )
+	|  <1(  ( _expression ):left ( '||' ):operator ( _expression ):right )
+	|  <2(  ( _expression ):left ( '&&' ):operator ( _expression ):right )
+	|  <3(  ( _expression ):left ( '|' ):operator ( _expression ):right )
+	|  <4(  ( _expression ):left ( '^' ):operator ( _expression ):right )
+	|  <5(  ( _expression ):left ( '&' ):operator ( _expression ):right )
+	|  <6(  ( _expression ):left ( '==' ):operator ( _expression ):right )
+	|  <6(  ( _expression ):left ( '!=' ):operator ( _expression ):right )
+	|  <7(  ( _expression ):left ( '>' ):operator ( _expression ):right )
+	|  <7(  ( _expression ):left ( '>=' ):operator ( _expression ):right )
+	|  <7(  ( _expression ):left ( '<=' ):operator ( _expression ):right )
+	|  <7(  ( _expression ):left ( '<' ):operator ( _expression ):right )
+	|  <9(  ( _expression ):left ( '<<' ):operator ( _expression ):right )
+	|  <9(  ( _expression ):left ( '>>' ):operator ( _expression ):right )
+
+  update_expression ::=  >14(  ( '--' | '++' ):operator ( _expression ):argument | ( _expression ):argument ( '--' | '++' ):operator )
+
+  cast_expression ::=  12(  '(' ( type_descriptor ):type ')' ( _expression ):value )
+
+  type_descriptor ::= type_qualifier* ( _type_specifier ):type type_qualifier* ( _abstract_declarator )?:declarator
+
+  sizeof_expression ::=  13(  'sizeof' ( ( _expression ):value | '(' ( type_descriptor ):type ')' ) )
+
+  alignof_expression ::=  13(  ( '__alignof__' | '__alignof' | '_alignof' | 'alignof' | '_Alignof' ) '(' ( type_descriptor ):type ')' )
+
+  offsetof_expression ::=  8(  'offsetof' '(' ( type_descriptor ):type ',' ( _field_identifier ):member ')' )
+
+  va_arg_expression ::=  15(  ( 'va_arg' | '__builtin_va_arg' ) '(' ( _field_identifier ):member ',' ( type_descriptor ):type ')' )
+
+  generic_expression ::=  15(  '_Generic' '(' _expression ',' type_descriptor ':' _expression ( ',' type_descriptor ':' _expression )* ')' )
+
+  subscript_expression ::=  17(  ( _expression ):argument '[' ( _expression ):index ']' )
+
+  call_expression ::=  15(  ( _expression ):function ( argument_list ):arguments )
+
+  gnu_asm_expression ::=  15(  ( 'asm' | '__asm__' ) gnu_asm_qualifier* '(' ( string_literal | concatenated_string ):assembly_code ( ( gnu_asm_output_operand_list ):output_operands ( ( gnu_asm_input_operand_list ):input_operands ( ( gnu_asm_clobber_list ):clobbers ( gnu_asm_goto_list )?:goto_labels )? )? )? ')' )
+
+  gnu_asm_qualifier ::= 'volatile'
+	| 'inline'
+	| 'goto'
+
+  gnu_asm_output_operand_list ::= ':' ( ( gnu_asm_output_operand ):operand ( ',' ( gnu_asm_output_operand ):operand )* )?
+
+  gnu_asm_output_operand ::= ( '[' ( identifier ):symbol ']' )? ( string_literal ):constraint '(' ( identifier ):value ')'
+
+  gnu_asm_input_operand_list ::= ':' ( ( gnu_asm_input_operand ):operand ( ',' ( gnu_asm_input_operand ):operand )* )?
+
+  gnu_asm_input_operand ::= ( '[' ( identifier ):symbol ']' )? ( string_literal ):constraint '(' ( _expression ):value ')'
+
+  gnu_asm_clobber_list ::= ':' ( ( string_literal ):register ( ',' ( string_literal ):register )* )?
+
+  gnu_asm_goto_list ::= ':' ( ( identifier ):label ( ',' ( identifier ):label )* )?
+
+  argument_list ::= '(' ( ( '__extension__'? _expression | compound_statement ) ( ',' ( '__extension__'? _expression | compound_statement ) )* )? ')'
+
+  field_expression ::=  16(  ( _expression ):argument ( '.' | '->' ):operator )  ( _field_identifier ):field
+
+  compound_literal_expression ::= '(' ( type_descriptor ):type ')' ( initializer_list ):value
+
+  parenthesized_expression ::= '(' ( _expression | comma_expression ) ')'
+
+  initializer_list ::= '{' ( ( initializer_pair | _expression | initializer_list ) ( ',' ( initializer_pair | _expression | initializer_list ) )* )? ','? '}'
+
+  initializer_pair ::= ( ( subscript_designator | field_designator | subscript_range_designator )+ ):designator '=' ( _expression | initializer_list ):value
+	| ( _field_identifier ):designator ':' ( _expression | initializer_list ):value
+
+  subscript_designator ::= '[' _expression ']'
+
+  subscript_range_designator ::= '[' ( _expression ):start '...' ( _expression ):end ']'
+
+  field_designator ::= '.' _field_identifier
+
+  number_literal ::= @( /[-\+]/? ( /0[xX]/ | /0[bB]/ )? ( ( /[0-9]/+ ( "'"  /[0-9]/+ )* | /0[bB]/ /[0-9]/+ ( "'"  /[0-9]/+ )* | /0[xX]/ /[0-9a-fA-F]/+ ( "'"  /[0-9a-fA-F]/+ )* ) ( '.' ( /[0-9a-fA-F]/+ ( "'"  /[0-9a-fA-F]/+ )* )? )? | '.' /[0-9]/+ ( "'"  /[0-9]/+ )* ) ( /[eEpP]/ ( /[-\+]/? /[0-9a-fA-F]/+ ( "'"  /[0-9a-fA-F]/+ )* )? )? /[uUlLwWfFbBdD]*/ )
+
+  char_literal ::= ( "L'" | "u'" | "U'" | "u8'" | "'"  ) ( escape_sequence | !( /[^\n']/ ) -> "character" )+ "'"
+
+  concatenated_string ::= identifier string_literal ( string_literal | identifier )* | string_literal ( string_literal | identifier )+
+
+  string_literal ::= ( 'L"' | 'u"' | 'U"' | 'u8"' | '"'  ) ( !(  1(  /[^\\"\n]+/ )  ) -> "string_content" | escape_sequence )* '"'
+
+  escape_sequence ::= @(  1(  '\\'  ( /[^xuU]/ | /\d{2,3}/ | /x[0-9a-fA-F]{2,}/ | /u[0-9a-fA-F]{4}/ | /U[0-9a-fA-F]{8}/ ) )  )
+
+  system_lib_string ::= @( '<' ( /[^>\n]/ | '\>' )* '>' )
+
+  true ::= @( 'TRUE' | 'true' )
+
+  false ::= @( 'FALSE' | 'false' )
+
+  null ::= 'NULL'
+	| 'nullptr'
+
+  identifier ::= /(\p{XID_Start}|\$|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\$|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/
+
+  _type_identifier ::= identifier -> "type_identifier"
+
+  _field_identifier ::= identifier -> "field_identifier"
+
+  _statement_identifier ::= identifier -> "statement_identifier"
+
+  _empty_declaration ::= _type_specifier ';'
+
+  macro_type_specifier ::=  ~-1(  ( identifier ):name '(' ( type_descriptor ):type ')' )
+
+  comment ::= @( '//' /(\\+(.|\r?\n)|[^\\\n])*/ | '/*' /[^*]*\*+([^\/*][^*]*\*+)*/ '/' )
+

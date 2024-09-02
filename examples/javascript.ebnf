@@ -1,0 +1,499 @@
+; From tree-sitter-javascript/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	_automatic_semicolon
+	_template_chars
+	_ternary_qmark
+	html_comment
+	undefined
+	escape_sequence
+	regex_pattern
+	jsx_text
+	}
+
+extras ::= {
+	comment
+	html_comment
+	/[\s\p{Zs}\uFEFF\u2028\u2029\u2060\u200B]/
+	}
+
+precedences ::= {
+	{ undefined undefined undefined update_expression undefined undefined undefined undefined undefined undefined undefined undefined undefined undefined undefined undefined undefined undefined sequence_expression arrow_function }
+	{ undefined primary_expression }
+	{ undefined undefined undefined undefined expression }
+	{ undefined undefined }
+	{ primary_expression statement_block undefined }
+	{ meta_property import }
+	{ import_statement import }
+	{ export_statement primary_expression }
+	{ lexical_declaration primary_expression }
+	}
+
+supertypes ::= {
+	statement
+	declaration
+	expression
+	primary_expression
+	pattern
+	}
+
+inline ::= {
+	_call_signature
+	_formal_parameter
+	_expressions
+	_semicolon
+	_identifier
+	_reserved_identifier
+	_jsx_attribute
+	_jsx_element_name
+	_jsx_child
+	_jsx_element
+	_jsx_attribute_name
+	_jsx_attribute_value
+	_jsx_identifier
+	_lhs_expression
+	}
+
+conflicts ::= {
+	{ primary_expression _property_name }
+	{ primary_expression _property_name arrow_function }
+	{ primary_expression arrow_function }
+	{ primary_expression method_definition }
+	{ primary_expression rest_pattern }
+	{ primary_expression pattern }
+	{ primary_expression _for_header }
+	{ variable_declarator _for_header }
+	{ array array_pattern }
+	{ object object_pattern }
+	{ assignment_expression pattern }
+	{ assignment_expression object_assignment_pattern }
+	{ labeled_statement _property_name }
+	{ computed_property_name array }
+	{ binary_expression _initializer }
+	{ class_static_block _property_name }
+	}
+
+word ::= identifier
+
+rules:
+
+  program ::= hash_bang_line? statement*
+
+  hash_bang_line ::= /#!.*/
+
+  export_statement ::= 'export' ( '*' _from_clause | namespace_export _from_clause | export_clause _from_clause | export_clause ) _semicolon
+	| ( decorator )*:decorator 'export' ( ( declaration ):declaration | 'default' ( ( declaration ):declaration | ( expression ):value _semicolon ) )
+
+  namespace_export ::= '*' 'as' _module_export_name
+
+  export_clause ::= '{' ( export_specifier ( ',' export_specifier )* )? ','? '}'
+
+  export_specifier ::= ( _module_export_name ):name ( 'as' ( _module_export_name ):alias )?
+
+  _module_export_name ::= identifier
+	| string
+
+  declaration ::= function_declaration
+	| generator_function_declaration
+	| class_declaration
+	| lexical_declaration
+	| variable_declaration
+
+  import ::= @( 'import' )
+
+  import_statement ::= 'import' ( import_clause _from_clause | ( string ):source ) import_attribute? _semicolon
+
+  import_clause ::= namespace_import
+	| named_imports
+	| identifier ( ',' ( namespace_import | named_imports ) )?
+
+  _from_clause ::= 'from' ( string ):source
+
+  namespace_import ::= '*' 'as' identifier
+
+  named_imports ::= '{' ( import_specifier ( ',' import_specifier )* )? ','? '}'
+
+  import_specifier ::= ( identifier ):name
+	| ( _module_export_name ):name 'as' ( identifier ):alias
+
+  import_attribute ::= 'with' object
+
+  statement ::= export_statement
+	| import_statement
+	| debugger_statement
+	| expression_statement
+	| declaration
+	| statement_block
+	| if_statement
+	| switch_statement
+	| for_statement
+	| for_in_statement
+	| while_statement
+	| do_statement
+	| try_statement
+	| with_statement
+	| break_statement
+	| continue_statement
+	| return_statement
+	| throw_statement
+	| empty_statement
+	| labeled_statement
+
+  expression_statement ::= _expressions _semicolon
+
+  variable_declaration ::= 'var' variable_declarator ( ',' variable_declarator )* _semicolon
+
+  lexical_declaration ::= ( 'let' | 'const' ):kind variable_declarator ( ',' variable_declarator )* _semicolon
+
+  variable_declarator ::= ( identifier | _destructuring_pattern ):name _initializer?
+
+  statement_block ::= '{' statement* '}' _automatic_semicolon?
+
+  else_clause ::= 'else' statement
+
+  if_statement ::= 'if' ( parenthesized_expression ):condition ( statement ):consequence ( else_clause )?:alternative
+
+  switch_statement ::= 'switch' ( parenthesized_expression ):value ( switch_body ):body
+
+  for_statement ::= 'for' '(' ( ( lexical_declaration | variable_declaration ):initializer | ( _expressions ):initializer ';' | ( empty_statement ):initializer ) ( _expressions ';' | empty_statement ):condition ( _expressions )?:increment ')' ( statement ):body
+
+  for_in_statement ::= 'for' 'await'? _for_header ( statement ):body
+
+  _for_header ::= '(' ( ( _lhs_expression | parenthesized_expression ):left | ( 'var' ):kind ( identifier | _destructuring_pattern ):left _initializer? | ( 'let' | 'const' ):kind ( identifier | _destructuring_pattern ):left _automatic_semicolon? ) ( 'in' | 'of' ):operator ( _expressions ):right ')'
+
+  while_statement ::= 'while' ( parenthesized_expression ):condition ( statement ):body
+
+  do_statement ::= 'do' ( statement ):body 'while' ( parenthesized_expression ):condition _semicolon?
+
+  try_statement ::= 'try' ( statement_block ):body ( catch_clause )?:handler ( finally_clause )?:finalizer
+
+  with_statement ::= 'with' ( parenthesized_expression ):object ( statement ):body
+
+  break_statement ::= 'break' ( identifier -> "statement_identifier" )?:label _semicolon
+
+  continue_statement ::= 'continue' ( identifier -> "statement_identifier" )?:label _semicolon
+
+  debugger_statement ::= 'debugger' _semicolon
+
+  return_statement ::= 'return' _expressions? _semicolon
+
+  throw_statement ::= 'throw' _expressions _semicolon
+
+  empty_statement ::= ';'
+
+  labeled_statement ::=  ~-1(  ( ( identifier | _reserved_identifier ) -> "statement_identifier" ):label ':' ( statement ):body )
+
+  switch_body ::= '{' ( switch_case | switch_default )* '}'
+
+  switch_case ::= 'case' ( _expressions ):value ':' ( statement* ):body
+
+  switch_default ::= 'default' ':' ( statement* ):body
+
+  catch_clause ::= 'catch' ( '(' ( identifier | _destructuring_pattern ):parameter ')' )? ( statement_block ):body
+
+  finally_clause ::= 'finally' ( statement_block ):body
+
+  parenthesized_expression ::= '(' _expressions ')'
+
+  _expressions ::= expression
+	| sequence_expression
+
+  expression ::= primary_expression
+	| glimmer_template
+	| _jsx_element
+	| assignment_expression
+	| augmented_assignment_expression
+	| await_expression
+	| unary_expression
+	| binary_expression
+	| ternary_expression
+	| update_expression
+	| new_expression
+	| yield_expression
+
+  primary_expression ::= subscript_expression
+	| member_expression
+	| parenthesized_expression
+	| _identifier
+	| _reserved_identifier -> "identifier"
+	| this
+	| super
+	| number
+	| string
+	| template_string
+	| regex
+	| true
+	| false
+	| null
+	| object
+	| array
+	| function_expression
+	| arrow_function
+	| generator_function
+	| class
+	| meta_property
+	| call_expression
+
+  yield_expression ::= 'yield' ( '*' expression | expression )
+
+  object ::=  object(  '{' ( ( pair | spread_element | method_definition | ( identifier | _reserved_identifier ) -> "shorthand_property_identifier" )? ( ',' ( pair | spread_element | method_definition | ( identifier | _reserved_identifier ) -> "shorthand_property_identifier" )? )* )? '}' )
+
+  object_pattern ::=  object(  '{' ( ( pair_pattern | rest_pattern | object_assignment_pattern | ( identifier | _reserved_identifier ) -> "shorthand_property_identifier_pattern" )? ( ',' ( pair_pattern | rest_pattern | object_assignment_pattern | ( identifier | _reserved_identifier ) -> "shorthand_property_identifier_pattern" )? )* )? '}' )
+
+  assignment_pattern ::= ( pattern ):left '=' ( expression ):right
+
+  object_assignment_pattern ::= ( ( _reserved_identifier | identifier ) -> "shorthand_property_identifier_pattern" | _destructuring_pattern ):left '=' ( expression ):right
+
+  array ::= '[' ( ( expression | spread_element )? ( ',' ( expression | spread_element )? )* )? ']'
+
+  array_pattern ::= '[' ( ( pattern | assignment_pattern )? ( ',' ( pattern | assignment_pattern )? )* )? ']'
+
+  glimmer_template ::= ( glimmer_opening_tag ):open_tag ( _glimmer_template_content* ):content ( glimmer_closing_tag ):close_tag
+	| ( glimmer_opening_tag ):open_tag ( glimmer_closing_tag ):close_tag
+
+  _glimmer_template_content ::= /.{1,}/
+
+  glimmer_opening_tag ::= '<template>'
+
+  glimmer_closing_tag ::= '</template>'
+
+  _jsx_element ::= jsx_element
+	| jsx_self_closing_element
+
+  jsx_element ::= ( jsx_opening_element ):open_tag _jsx_child* ( jsx_closing_element ):close_tag
+
+  html_character_reference ::= /&(#([xX][0-9a-fA-F]{1,6}|[0-9]{1,5})|[A-Za-z]{1,30});/
+
+  jsx_expression ::= '{' ( expression | sequence_expression | spread_element )? '}'
+
+  _jsx_child ::= jsx_text
+	| html_character_reference
+	| _jsx_element
+	| jsx_expression
+
+  jsx_opening_element ::=  ~-1(  '<' ( ( _jsx_element_name ):name ( _jsx_attribute )*:attribute )? '>' )
+
+  jsx_identifier ::= /[a-zA-Z_$][a-zA-Z\d_$]*-[a-zA-Z\d_$\-]*/
+
+  _jsx_identifier ::= jsx_identifier -> "identifier"
+	| identifier
+
+  nested_identifier ::=  member(  ( identifier | nested_identifier -> "member_expression" ):object '.' ( identifier -> "property_identifier" ):property )
+
+  jsx_namespace_name ::= _jsx_identifier ':' _jsx_identifier
+
+  _jsx_element_name ::= _jsx_identifier
+	| nested_identifier -> "member_expression"
+	| jsx_namespace_name
+
+  jsx_closing_element ::= '</' ( _jsx_element_name )?:name '>'
+
+  jsx_self_closing_element ::= '<' ( _jsx_element_name ):name ( _jsx_attribute )*:attribute '/>'
+
+  _jsx_attribute ::= jsx_attribute
+	| jsx_expression
+
+  _jsx_attribute_name ::= _jsx_identifier -> "property_identifier"
+	| jsx_namespace_name
+
+  jsx_attribute ::= _jsx_attribute_name ( '=' _jsx_attribute_value )?
+
+  _jsx_string ::= '"'  ( unescaped_double_jsx_string_fragment -> "string_fragment" | html_character_reference )* '"'
+	| "'"  ( unescaped_single_jsx_string_fragment -> "string_fragment" | html_character_reference )* "'"
+
+  unescaped_double_jsx_string_fragment ::= !(  1(  /([^"&]|&[^#A-Za-z])+/ )  )
+
+  unescaped_single_jsx_string_fragment ::= !(  1(  /([^'&]|&[^#A-Za-z])+/ )  )
+
+  _jsx_attribute_value ::= _jsx_string -> "string"
+	| jsx_expression
+	| _jsx_element
+
+  class ::=  literal(  ( decorator )*:decorator 'class' ( identifier )?:name class_heritage? ( class_body ):body )
+
+  class_declaration ::=  declaration(  ( decorator )*:decorator 'class' ( identifier ):name class_heritage? ( class_body ):body _automatic_semicolon? )
+
+  class_heritage ::= 'extends' expression
+
+  function_expression ::=  literal(  'async'? 'function' ( identifier )?:name _call_signature ( statement_block ):body )
+
+  function_declaration ::=  >declaration(  'async'? 'function' ( identifier ):name _call_signature ( statement_block ):body _automatic_semicolon? )
+
+  generator_function ::=  literal(  'async'? 'function' '*' ( identifier )?:name _call_signature ( statement_block ):body )
+
+  generator_function_declaration ::=  >declaration(  'async'? 'function' '*' ( identifier ):name _call_signature ( statement_block ):body _automatic_semicolon? )
+
+  arrow_function ::= 'async'? ( ( _reserved_identifier -> "identifier" | identifier ):parameter | _call_signature ) '=>' ( expression | statement_block ):body
+
+  _call_signature ::= ( formal_parameters ):parameters
+
+  _formal_parameter ::= pattern
+	| assignment_pattern
+
+  optional_chain ::= '?.'
+
+  call_expression ::=  call(  ( expression | import ):function ( arguments ):arguments )
+	|  template_call(  ( primary_expression | new_expression ):function ( template_string ):arguments )
+	|  member(  ( primary_expression ):function ( optional_chain ):optional_chain ( arguments ):arguments )
+
+  new_expression ::=  >new(  'new' ( primary_expression | new_expression ):constructor (  ~1(  arguments )  )?:arguments )
+
+  await_expression ::=  unary_void(  'await' expression )
+
+  member_expression ::=  member(  ( expression | primary_expression | import ):object ( '.' | ( optional_chain ):optional_chain ) ( private_property_identifier | identifier -> "property_identifier" ):property )
+
+  subscript_expression ::=  >member(  ( expression | primary_expression ):object ( optional_chain )?:optional_chain '[' ( _expressions ):index ']' )
+
+  _lhs_expression ::= member_expression
+	| subscript_expression
+	| _identifier
+	| _reserved_identifier -> "identifier"
+	| _destructuring_pattern
+
+  assignment_expression ::=  >assign(  ( parenthesized_expression | _lhs_expression ):left '=' ( expression ):right )
+
+  _augmented_assignment_lhs ::= member_expression
+	| subscript_expression
+	| _reserved_identifier -> "identifier"
+	| identifier
+	| parenthesized_expression
+
+  augmented_assignment_expression ::=  >assign(  ( _augmented_assignment_lhs ):left ( '+=' | '-=' | '*=' | '/=' | '%=' | '^=' | '&=' | '|=' | '>>=' | '>>>=' | '<<=' | '**=' | '&&=' | '||=' | '??=' ):operator ( expression ):right )
+
+  _initializer ::= '=' ( expression ):value
+
+  _destructuring_pattern ::= object_pattern
+	| array_pattern
+
+  spread_element ::= '...' expression
+
+  ternary_expression ::=  >ternary(  ( expression ):condition _ternary_qmark -> "?" ( expression ):consequence ':' ( expression ):alternative )
+
+  binary_expression ::=  <logical_and(  ( expression ):left ( '&&' ):operator ( expression ):right )
+	|  <logical_or(  ( expression ):left ( '||' ):operator ( expression ):right )
+	|  <binary_shift(  ( expression ):left ( '>>' ):operator ( expression ):right )
+	|  <binary_shift(  ( expression ):left ( '>>>' ):operator ( expression ):right )
+	|  <binary_shift(  ( expression ):left ( '<<' ):operator ( expression ):right )
+	|  <bitwise_and(  ( expression ):left ( '&' ):operator ( expression ):right )
+	|  <bitwise_xor(  ( expression ):left ( '^' ):operator ( expression ):right )
+	|  <bitwise_or(  ( expression ):left ( '|' ):operator ( expression ):right )
+	|  <binary_plus(  ( expression ):left ( '+' ):operator ( expression ):right )
+	|  <binary_plus(  ( expression ):left ( '-' ):operator ( expression ):right )
+	|  <binary_times(  ( expression ):left ( '*' ):operator ( expression ):right )
+	|  <binary_times(  ( expression ):left ( '/' ):operator ( expression ):right )
+	|  <binary_times(  ( expression ):left ( '%' ):operator ( expression ):right )
+	|  >binary_exp(  ( expression ):left ( '**' ):operator ( expression ):right )
+	|  <binary_relation(  ( expression ):left ( '<' ):operator ( expression ):right )
+	|  <binary_relation(  ( expression ):left ( '<=' ):operator ( expression ):right )
+	|  <binary_equality(  ( expression ):left ( '==' ):operator ( expression ):right )
+	|  <binary_equality(  ( expression ):left ( '===' ):operator ( expression ):right )
+	|  <binary_equality(  ( expression ):left ( '!=' ):operator ( expression ):right )
+	|  <binary_equality(  ( expression ):left ( '!==' ):operator ( expression ):right )
+	|  <binary_relation(  ( expression ):left ( '>=' ):operator ( expression ):right )
+	|  <binary_relation(  ( expression ):left ( '>' ):operator ( expression ):right )
+	|  <ternary(  ( expression ):left ( '??' ):operator ( expression ):right )
+	|  <binary_relation(  ( expression ):left ( 'instanceof' ):operator ( expression ):right )
+	|  <binary_relation(  ( expression | private_property_identifier ):left ( 'in' ):operator ( expression ):right )
+
+  unary_expression ::=  <unary_void(  ( '!' | '~' | '-' | '+' | 'typeof' | 'void' | 'delete' ):operator ( expression ):argument )
+
+  update_expression ::= ( expression ):argument ( '++' | '--' ):operator | ( '++' | '--' ):operator ( expression ):argument
+
+  sequence_expression ::= expression ( ',' expression )*
+
+  string ::= '"'  ( unescaped_double_string_fragment -> "string_fragment" | escape_sequence )* '"'
+	| "'"  ( unescaped_single_string_fragment -> "string_fragment" | escape_sequence )* "'"
+
+  unescaped_double_string_fragment ::= !(  1(  /[^"\\\r\n]+/ )  )
+
+  unescaped_single_string_fragment ::= !(  1(  /[^'\\\r\n]+/ )  )
+
+  escape_sequence ::= !( '\\'  ( /[^xu0-7]/ | /[0-7]{1,3}/ | /x[0-9a-fA-F]{2}/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F]+\}/ | /[\r?][\n\u2028\u2029]/ ) )
+
+  comment ::= @( '//' /[^\r\n\u2028\u2029]*/ | '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/' )
+
+  template_string ::= '`' ( _template_chars -> "string_fragment" | escape_sequence | template_substitution )* '`'
+
+  template_substitution ::= '${' _expressions '}'
+
+  regex ::= '/' ( regex_pattern ):pattern !(  1(  '/' )  ) ( regex_flags )?:flags
+
+  regex_pattern ::= !(  -1(  ( '[' ( '\\'  /./ | /[^\]\n\\]/ )* ']' | '\\'  /./ | /[^/\\\[\n]/ )+ )  )
+
+  regex_flags ::= !( /[a-z]+/ )
+
+  number ::= @( ( '0x' | '0X' ) /[\da-fA-F](_?[\da-fA-F])*/ | ( '0' | '0'? /[1-9]/ ( '_'? /\d(_?\d)*/ )? ) '.' /\d(_?\d)*/? ( ( 'e' | 'E' ) ( '-' | '+' )? /\d(_?\d)*/ )? | '.' /\d(_?\d)*/ ( ( 'e' | 'E' ) ( '-' | '+' )? /\d(_?\d)*/ )? | ( '0' | '0'? /[1-9]/ ( '_'? /\d(_?\d)*/ )? ) ( 'e' | 'E' ) ( '-' | '+' )? /\d(_?\d)*/ | /\d(_?\d)*/ | ( '0b' | '0B' ) /[0-1](_?[0-1])*/ | ( '0o' | '0O' ) /[0-7](_?[0-7])*/ | ( ( '0x' | '0X' ) /[\da-fA-F](_?[\da-fA-F])*/ | ( '0b' | '0B' ) /[0-1](_?[0-1])*/ | ( '0o' | '0O' ) /[0-7](_?[0-7])*/ | /\d(_?\d)*/ ) 'n' )
+
+  _identifier ::= undefined
+	| identifier
+
+  identifier ::= @( /[^\x00-\x1F\s\p{Zs}0-9:;`"'@#.,|^&<=>+\-*/\\%?!~()\[\]{}\uFEFF\u2060\u200B\u2028\u2029]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]+\}/ /[^\x00-\x1F\s\p{Zs}:;`"'@#.,|^&<=>+\-*/\\%?!~()\[\]{}\uFEFF\u2060\u200B\u2028\u2029]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]+\}/* )
+
+  private_property_identifier ::= @( '#' /[^\x00-\x1F\s\p{Zs}0-9:;`"'@#.,|^&<=>+\-*/\\%?!~()\[\]{}\uFEFF\u2060\u200B\u2028\u2029]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]+\}/ /[^\x00-\x1F\s\p{Zs}:;`"'@#.,|^&<=>+\-*/\\%?!~()\[\]{}\uFEFF\u2060\u200B\u2028\u2029]|\\u[0-9a-fA-F]{4}|\\u\{[0-9a-fA-F]+\}/* )
+
+  meta_property ::= 'new' '.' 'target'
+	| 'import' '.' 'meta'
+
+  this ::= 'this'
+
+  super ::= 'super'
+
+  true ::= 'true'
+
+  false ::= 'false'
+
+  null ::= 'null'
+
+  undefined ::= 'undefined'
+
+  arguments ::= '(' ( ( expression | spread_element )? ( ',' ( expression | spread_element )? )* )? ')'
+
+  decorator ::= '@' ( identifier | decorator_member_expression -> "member_expression" | decorator_call_expression -> "call_expression" )
+
+  decorator_member_expression ::=  member(  ( identifier | decorator_member_expression -> "member_expression" ):object '.' ( identifier -> "property_identifier" ):property )
+
+  decorator_call_expression ::=  call(  ( identifier | decorator_member_expression -> "member_expression" ):function ( arguments ):arguments )
+
+  class_body ::= '{' ( ( method_definition ):member ';'? | ( field_definition ):member _semicolon | ( class_static_block ):member | ( glimmer_template ):template | ';' )* '}'
+
+  field_definition ::= ( decorator )*:decorator 'static'? ( _property_name ):property _initializer?
+
+  formal_parameters ::= '(' ( _formal_parameter ( ',' _formal_parameter )* ','? )? ')'
+
+  class_static_block ::= 'static' _automatic_semicolon? ( statement_block ):body
+
+  pattern ::=  ~-1(  _lhs_expression | rest_pattern )
+
+  rest_pattern ::= '...' _lhs_expression
+
+  method_definition ::= ( decorator )*:decorator ( 'static' | @( 'static' /\s+/ 'get' /\s*\n/ ) -> "static get" )? 'async'? ( 'get' | 'set' | '*' )? ( _property_name ):name ( formal_parameters ):parameters ( statement_block ):body
+
+  pair ::= ( _property_name ):key ':' ( expression ):value
+
+  pair_pattern ::= ( _property_name ):key ':' ( pattern | assignment_pattern ):value
+
+  _property_name ::= ( identifier | _reserved_identifier ) -> "property_identifier"
+	| private_property_identifier
+	| string
+	| number
+	| computed_property_name
+
+  computed_property_name ::= '[' expression ']'
+
+  _reserved_identifier ::= 'get'
+	| 'set'
+	| 'async'
+	| 'static'
+	| 'export'
+	| 'let'
+
+  _semicolon ::= _automatic_semicolon
+	| ';'
+

@@ -1,0 +1,255 @@
+; From tree-sitter-haxe/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	}
+
+extras ::= {
+	comment
+	/[\s\uFEFF\u2060\u200B\u00A0]/
+	}
+
+supertypes ::= {
+	declaration
+	}
+
+inline ::= {
+	statement
+	expression
+	}
+
+conflicts ::= {
+	{ block object }
+	{ typedef_declaration type }
+	{ call_expression _constructor_call }
+	{ _rhs_expression pair }
+	{ _literal pair }
+	{ pair pair }
+	{ function_declaration }
+	{ function_type variable_declaration }
+	{ type function_type variable_declaration }
+	{ type _function_type_args }
+	{ structure_type_pair _function_type_args }
+	{ function_declaration variable_declaration }
+	{ _prefixUnaryOperator _arithmeticOperator }
+	{ _prefixUnaryOperator _postfixUnaryOperator }
+	}
+
+word ::= identifier
+
+rules:
+
+  module ::= statement*
+
+  statement ::= ( preprocessor_statement | import_statement | using_statement | package_statement | declaration | expression | conditional_statement | case_statement | throw_statement | block ) _semicolon?
+
+  preprocessor_statement ::= '#' ( !( 'if' | 'elseif' ) statement | !( 'else' | 'end' ) )
+
+  package_statement ::= 'package' -> "keyword" ( _lhs_expression ):name _semicolon
+
+  import_statement ::= 'import' -> "keyword" ( _lhs_expression ):name _semicolon
+
+  using_statement ::= 'using' -> "keyword" ( _lhs_expression ):name _semicolon
+
+  throw_statement ::= 'throw' -> "keyword" expression
+
+  _rhs_expression ::= _literal | identifier | member_expression | call_expression
+
+  _unaryExpression ::=  <1(  operator _rhs_expression | _rhs_expression operator )
+
+  runtime_type_check_expression ::=  20(  '(' structure_type_pair -> "type_check" ')' )
+
+  switch_expression ::= 'switch' -> "keyword" ( identifier | _parenthesized_expression )
+
+  switch_block ::= '{' case_statement* '}'
+
+  case_statement ::= 'case' -> "keyword" ( _rhs_expression | '_' -> "_rhs_expression" ) ':' statement | 'default' -> "keyword" ':' statement
+
+  cast_expression ::= 'cast' -> "keyword" _rhs_expression
+	| 'cast' -> "keyword" '(' _rhs_expression ( ',' ( type ):type )? ')'
+
+  type_trace_expression ::= type -> "keyword" '(' _rhs_expression ')'
+
+  _parenthesized_expression ::= '(' expression+ ')'
+
+  range_expression ::=  1(  identifier 'in' -> "keyword" ( integer _rangeOperator integer | identifier ) )
+
+  expression ::= _unaryExpression
+	| subscript_expression
+	| runtime_type_check_expression
+	| cast_expression
+	| type_trace_expression
+	| range_expression
+	| _parenthesized_expression
+	| switch_expression
+	| _rhs_expression ( operator _rhs_expression )*
+
+  subscript_expression ::=  <1(  ( identifier | _parenthesized_expression | member_expression ) '[' ( expression ):index ']' )
+
+  member_expression ::= ( ( 'this' -> "keyword" | identifier ):object | ( _literal ):literal ) ( @( '.' ) | '?' -> "operator" '.' ) ( _lhs_expression )+:member
+
+  _lhs_expression ::=  1(  identifier | member_expression )
+
+  builtin_type ::= 'Void' | 'Int' | 'Float' | 'Bool' | 'Null'
+
+  _function_type_args ::= ( identifier ':' )? type ( ',' ( identifier ':' )? type )*
+
+  function_type ::= '(' ')' '->' type | type '->' ( type ):return_type | '(' _function_type_args ')' '->' type
+
+  type ::= ( ( _lhs_expression ):type_name | ( builtin_type -> "identifier" ):built_in ) type_params? | function_type | '(' type -> "type" ')'
+
+  block ::= '{' statement* '}'
+
+  metadata ::= ( @( '@' ) | @( '@:' ) ) ( _lhs_expression ):name ( '(' expression ')' )?
+
+  _arg_list ::= '(' ( expression ( ',' expression )* )? ')'
+
+  conditional_statement ::=  >1(  ( 'if' -> "keyword" ):name ( _arg_list ):arguments_list block? ( ( 'else' | 'else if' ) -> "keyword" block )? )
+
+  _call ::=  1(  ( _lhs_expression ):object type_params? ( _arg_list ):arguments_list )
+
+  _constructor_call ::= 'new' -> "keyword"? _call
+
+  call_expression ::= _call
+	| _constructor_call
+
+  operator ::= _binaryOperator
+	| _unaryOperator
+
+  _unaryOperator ::= _prefixUnaryOperator | _postfixUnaryOperator
+
+  _prefixUnaryOperator ::= '~'
+	| '!'
+	| '-'
+	| '++'
+	| '--'
+
+  _postfixUnaryOperator ::= '++'
+	| '--'
+
+  _binaryOperator ::= _arithmeticOperator | _bitwiseOperator | _logicalOperator | _comparisonOperator | _miscOperator | _assignmentOperator | _compoundAssignmentOperator | _rangeOperator
+
+  _arithmeticOperator ::= '%'
+	| '*'
+	| '/'
+	| '+'
+	| '-'
+
+  _bitwiseOperator ::= '<<'
+	| '>>'
+	| '>>>'
+	| '&'
+	| '|'
+	| '^'
+
+  _logicalOperator ::= '&&'
+	| '||'
+
+  _comparisonOperator ::= '=='
+	| '!='
+	| '<'
+	| '<='
+	| '>'
+	| '>='
+
+  _miscOperator ::= '=>'
+	| '??'
+
+  _assignmentOperator ::= '='
+
+  _compoundAssignmentOperator ::= ( _arithmeticOperator | _bitwiseOperator ) _assignmentOperator
+
+  _rangeOperator ::= '...'
+
+  declaration ::= interface_declaration
+	| class_declaration
+	| typedef_declaration
+	| function_declaration
+	| variable_declaration
+
+  _access_identifier ::= ( 'default' | 'null' | 'get' | 'set' | 'dynamic' | 'never' ) -> "keyword"
+
+  access_identifiers ::= '(' _access_identifier ( ',' _access_identifier )? ')'
+
+  type_param ::= _lhs_expression
+	| _lhs_expression type_params
+
+  type_params ::=  >1(  '<' type_param ( ',' type_param )* '>' )
+
+  class_declaration ::= metadata* ( 'final' -> "keyword" | 'abstract' -> "keyword" )? 'class' -> "keyword" ( _lhs_expression ):name type_params? ( 'extends' -> "keyword" ( _lhs_expression ):super_class_name )? ( 'implements' -> "keyword" ( _lhs_expression ):interface_name )*? ( block ):body
+
+  interface_declaration ::= 'final' -> "keyword"? 'interface' -> "keyword" ( _lhs_expression ):name type_params? ( 'extends' -> "keyword" ( _lhs_expression ):interface_name )*? ( block ):body
+
+  typedef_declaration ::= metadata* 'typedef' -> "keyword" ( _lhs_expression ):name type_params? '=' ( block | _lhs_expression | type )
+
+  function_declaration ::= metadata* keyword* 'function' -> "keyword" ( ( _lhs_expression ):name | ( 'new' -> "identifier" ):name ) type_params? _function_arg_list ( ':' ( type ):return_type )? ( block )?:body
+
+  _function_arg_list ::=  1(  '(' ( function_arg ( ',' function_arg )* )? ')' )
+
+  function_arg ::=  1(  ( _lhs_expression ):name '?'? ( ':' ( _lhs_expression | type | structure_type ) -> "type" )? ( _assignmentOperator _literal )? )
+
+  variable_declaration ::= metadata* keyword* ( 'var' -> "keyword" | 'final' -> "keyword" ) ( _lhs_expression ):name access_identifiers? ( ':' '('*? ( type ):type ')'*? )? ( operator expression )? _semicolon
+
+  _literal ::= integer
+	| float
+	| string
+	| bool
+	| null
+	| array
+	| map
+	| object
+	| pair
+
+  integer ::= /[\d_]+/
+	| /0x[a-fA-F\d_]+/
+
+  float ::= /[\d_]+[\.]+[\d_]*/
+	| /[\d_]+[\.]+[\d_]*e[\d_]*/
+
+  bool ::= 'true'
+	| 'false'
+
+  string ::= /\'/ ( interpolation | escape_sequence | /[^\']/ )* /\'/
+	| /\"/ ( escape_sequence | /[^\"]/ )* /\"/
+
+  null ::= 'null'
+
+  array ::= '[' ( expression ( ',' expression )* )? ']'
+	| '[' expression identifier ']'
+
+  map ::=  1(  '[' pair ( ',' pair )* ']' )
+
+  object ::=  1(  '{' ( pair ( ',' pair )* )? '}' )
+
+  structure_type ::=  1(  '{' ( structure_type_pair -> "pair" ( ',' structure_type_pair -> "pair" )* )? '}' )
+
+  structure_type_pair ::= ( identifier ) ':' type
+
+  pair ::= ( identifier | string ) ':' expression | ( identifier | _literal ) '=>' expression
+
+  interpolation ::= _interpolated_block
+	| _interpolated_identifier
+
+  _interpolated_block ::= '${' expression '}'
+
+  _interpolated_identifier ::= '$' _lhs_expression
+	| '${' _lhs_expression '}'
+
+  _interpolated_expression ::= '$' !( '{' ) expression '}'
+
+  escape_sequence ::= !( '\\'  ( /[^xu0-7]/ | /[0-7]{1,3}/ | /x[0-9a-fA-F]{2}/ | /u[0-9a-fA-F]{4}/ | /u{[0-9a-fA-F]+}/ ) )
+
+  comment ::= @( '//' /.*/ | '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/' )
+
+  keyword ::= 'abstract' | 'break' | 'case' | 'cast' | 'catch' | 'class' | 'continue' | 'default' | 'do' | 'dynamic' | 'else' | 'enum' | 'extends' | 'extern' | 'final' | 'for' | 'function' | 'if' | 'implements' | 'import' | 'in' | 'inline' | 'interface' | 'macro' | 'new' | 'operator' | 'overload' | 'override' | 'package' | 'private' | 'public' | 'return' | 'static' | 'switch' | 'this' | 'throw' | 'try' | 'typedef' | 'untyped' | 'using' | 'var' | 'while'
+
+  identifier ::= /[a-zA-Z_]+[a-zA-Z0-9]*/
+
+  _semicolon ::= ';'
+
