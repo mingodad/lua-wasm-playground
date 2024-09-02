@@ -60,6 +60,11 @@ const sampleList = [
 	["Tree-sitter-ebnf-generator-CPP", "tree-sitter-ebnf-generator.lua", "cpp.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Haxe", "tree-sitter-ebnf-generator.lua", "haxe.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Rust", "tree-sitter-ebnf-generator.lua", "rust.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-CSS", "tree-sitter-ebnf-generator.lua", "css.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-HTML", "tree-sitter-ebnf-generator.lua", "html.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-PHP", "tree-sitter-ebnf-generator.lua", "php.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Ruby", "tree-sitter-ebnf-generator.lua", "ruby.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Python", "tree-sitter-ebnf-generator.lua", "python.ebnf", "ace/mode/text"],
 ];
 
 function loadLua_sample(self) {
