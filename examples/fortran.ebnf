@@ -23,9 +23,6 @@ extras ::= {
 	preproc_file_line
 	}
 
-supertypes ::= {
-	}
-
 inline ::= {
 	_top_level_item
 	_statement
@@ -61,19 +58,19 @@ rules:
 
   program_statement ::= /[pP][rR][oO][gG][rR][aA][mM]/ -> "program" _name
 
-  end_program_statement ::= ( /[eE][nN][dD]/ /[pP][rR][oO][gG][rR][aA][mM]/? | /[eE][nN][dD][pP][rR][oO][gG][rR][aA][mM]/ ) -> "endprogram" _name? _end_of_statement
+  end_program_statement ::=  >0(  ( /[eE][nN][dD]/ /[pP][rR][oO][gG][rR][aA][mM]/? | /[eE][nN][dD][pP][rR][oO][gG][rR][aA][mM]/ ) -> "endprogram" _name? _end_of_statement )
 
   module ::= module_statement _specification_part* internal_procedures? end_module_statement
 
   module_statement ::= /[mM][oO][dD][uU][lL][eE]/ -> "module" _name
 
-  end_module_statement ::= ( /[eE][nN][dD]/ /[mM][oO][dD][uU][lL][eE]/? | /[eE][nN][dD][mM][oO][dD][uU][lL][eE]/ ) -> "endmodule" _name? _end_of_statement
+  end_module_statement ::=  >0(  ( /[eE][nN][dD]/ /[mM][oO][dD][uU][lL][eE]/? | /[eE][nN][dD][mM][oO][dD][uU][lL][eE]/ ) -> "endmodule" _name? _end_of_statement )
 
   submodule ::= submodule_statement _specification_part* internal_procedures? end_submodule_statement
 
   submodule_statement ::= /[sS][uU][bB][mM][oO][dD][uU][lL][eE]/ -> "submodule" '(' ( module_name ):ancestor ( ':' ( module_name ):parent )? ')' _name
 
-  end_submodule_statement ::= ( /[eE][nN][dD]/ /[sS][uU][bB][mM][oO][dD][uU][lL][eE]/? | /[eE][nN][dD][sS][uU][bB][mM][oO][dD][uU][lL][eE]/ ) -> "endsubmodule" _name? _end_of_statement
+  end_submodule_statement ::=  >0(  ( /[eE][nN][dD]/ /[sS][uU][bB][mM][oO][dD][uU][lL][eE]/? | /[eE][nN][dD][sS][uU][bB][mM][oO][dD][uU][lL][eE]/ ) -> "endsubmodule" _name? _end_of_statement )
 
   module_name ::= _name
 
@@ -81,7 +78,7 @@ rules:
 
   interface_statement ::= abstract_specifier? /[iI][nN][tT][eE][rR][fF][aA][cC][eE]/ -> "interface" ( _name | _generic_procedure )?
 
-  end_interface_statement ::= ( /[eE][nN][dD]/ /[iI][nN][tT][eE][rR][fF][aA][cC][eE]/ | /[eE][nN][dD][iI][nN][tT][eE][rR][fF][aA][cC][eE]/ ) -> "endinterface" ( _name | _generic_procedure )? _end_of_statement
+  end_interface_statement ::=  >0(  ( /[eE][nN][dD]/ /[iI][nN][tT][eE][rR][fF][aA][cC][eE]/ | /[eE][nN][dD][iI][nN][tT][eE][rR][fF][aA][cC][eE]/ ) -> "endinterface" ( _name | _generic_procedure )? _end_of_statement )
 
   assignment ::= /[aA][sS][sS][iI][gG][nN][mM][eE][nN][tT]/ -> "assignment" '(' '=' ')'
 
@@ -97,13 +94,13 @@ rules:
 
   subroutine_statement ::= _callable_interface_qualifers? /[sS][uU][bB][rR][oO][uU][tT][iI][nN][eE]/ -> "subroutine" ( _name ):name ( _parameters )?:parameters language_binding?
 
-  end_subroutine_statement ::= ( /[eE][nN][dD]/ /[sS][uU][bB][rR][oO][uU][tT][iI][nN][eE]/? | /[eE][nN][dD][sS][uU][bB][rR][oO][uU][tT][iI][nN][eE]/ ) -> "endsubroutine" _name? _end_of_statement
+  end_subroutine_statement ::=  >0(  ( /[eE][nN][dD]/ /[sS][uU][bB][rR][oO][uU][tT][iI][nN][eE]/? | /[eE][nN][dD][sS][uU][bB][rR][oO][uU][tT][iI][nN][eE]/ ) -> "endsubroutine" _name? _end_of_statement )
 
   module_procedure ::= module_procedure_statement _end_of_statement _specification_part* _statement* internal_procedures? end_module_procedure_statement
 
   module_procedure_statement ::= _callable_interface_qualifers? /[mM][oO][dD][uU][lL][eE]/ -> "module" /[pP][rR][oO][cC][eE][dD][uU][rR][eE]/ -> "procedure" ( _name ):name
 
-  end_module_procedure_statement ::= ( /[eE][nN][dD]/ /[pP][rR][oO][cC][eE][dD][uU][rR][eE]/? | /[eE][nN][dD][pP][rR][oO][cC][eE][dD][uU][rR][eE]/ ) -> "endprocedure" _name? _end_of_statement
+  end_module_procedure_statement ::=  >0(  ( /[eE][nN][dD]/ /[pP][rR][oO][cC][eE][dD][uU][rR][eE]/? | /[eE][nN][dD][pP][rR][oO][cC][eE][dD][uU][rR][eE]/ ) -> "endprocedure" _name? _end_of_statement )
 
   function ::= function_statement _end_of_statement _specification_part* _statement* internal_procedures? end_function_statement
 
@@ -115,7 +112,7 @@ rules:
 
   procedure_attributes ::=  1(  /[aA][tT][tT][rR][iI][bB][uU][tT][eE][sS]/ -> "attributes" '(' ( /[gG][lL][oO][bB][aA][lL]/ -> "global" | /[dD][eE][vV][iI][cC][eE]/ -> "device" | /[hH][oO][sS][tT]/ -> "host" | /[gG][rR][iI][dD]_[gG][lL][oO][bB][aA][lL]/ -> "grid_global" ) ( ',' ( /[gG][lL][oO][bB][aA][lL]/ -> "global" | /[dD][eE][vV][iI][cC][eE]/ -> "device" | /[hH][oO][sS][tT]/ -> "host" | /[gG][rR][iI][dD]_[gG][lL][oO][bB][aA][lL]/ -> "grid_global" ) )* ')' )
 
-  end_function_statement ::= ( /[eE][nN][dD]/ /[fF][uU][nN][cC][tT][iI][oO][nN]/? | /[eE][nN][dD][fF][uU][nN][cC][tT][iI][oO][nN]/ ) -> "endfunction" _name? _end_of_statement
+  end_function_statement ::=  >0(  ( /[eE][nN][dD]/ /[fF][uU][nN][cC][tT][iI][oO][nN]/? | /[eE][nN][dD][fF][uU][nN][cC][tT][iI][oO][nN]/ ) -> "endfunction" _name? _end_of_statement )
 
   function_result ::= /[rR][eE][sS][uU][lL][tT]/ -> "result" '(' identifier ')'
 
@@ -154,7 +151,7 @@ rules:
 
   implicit_range ::= /[a-zA-Z]/ ( '-' /[a-zA-Z]/ )?
 
-  import_statement ::= /[iI][mM][pP][oO][rR][tT]/ -> "import" _import_names?
+  import_statement ::=  <0(  /[iI][mM][pP][oO][rR][tT]/ -> "import" _import_names? )
 
   _import_names ::= '::'? identifier ( ',' identifier )*
 	| ',' ( /[oO][nN][lL][yY]/ -> "only" ':' identifier ( ',' identifier )* | /[nN][oO][nN][eE]/ -> "none" | /[aA][lL][lL]/ -> "all" )
@@ -175,7 +172,7 @@ rules:
 
   derived_type_statement ::= statement_label? /[tT][yY][pP][eE]/ -> "type" ( '::'? _type_name | ',' _derived_type_qualifier ( ',' _derived_type_qualifier )* '::' _type_name ) _end_of_statement
 
-  end_type_statement ::= ( /[eE][nN][dD]/ /[tT][yY][pP][eE]/? | /[eE][nN][dD][tT][yY][pP][eE]/ ) -> "endtype" _name? _end_of_statement
+  end_type_statement ::=  >0(  ( /[eE][nN][dD]/ /[tT][yY][pP][eE]/? | /[eE][nN][dD][tT][yY][pP][eE]/ ) -> "endtype" _name? _end_of_statement )
 
   _type_name ::= identifier -> "type_name"
 
@@ -195,7 +192,7 @@ rules:
 	| /[pP][rR][oO][pP][eE][rR][tT][yY]/ -> "property"
 	| /[fF][iI][nN][aA][lL]/ -> "final"
 
-  procedure_attribute ::= /[dD][eE][fF][eE][rR][rR][eE][dD]/ -> "deferred" | /[pP][aA][sS][sS]/ -> "pass" ( '(' identifier ')' )? | /[nN][oO][pP][aA][sS][sS]/ -> "nopass" | /[nN][oO][nN]_[oO][vV][eE][rR][rR][iI][dD][aA][bB][lL][eE]/ -> "non_overridable" | /[pP][uU][bB][lL][iI][cC]/ -> "public" | /[pP][rR][iI][vV][aA][tT][eE]/ -> "private" | /[fF][aA][mM][iI][lL][yY]/ -> "family" | /[pP][oO][iI][nN][tT][eE][rR]/ -> "pointer"
+  procedure_attribute ::=  <0(  /[dD][eE][fF][eE][rR][rR][eE][dD]/ -> "deferred" | /[pP][aA][sS][sS]/ -> "pass" ( '(' identifier ')' )? | /[nN][oO][pP][aA][sS][sS]/ -> "nopass" | /[nN][oO][nN]_[oO][vV][eE][rR][rR][iI][dD][aA][bB][lL][eE]/ -> "non_overridable" | /[pP][uU][bB][lL][iI][cC]/ -> "public" | /[pP][rR][iI][vV][aA][tT][eE]/ -> "private" | /[fF][aA][mM][iI][lL][yY]/ -> "family" | /[pP][oO][iI][nN][tT][eE][rR]/ -> "pointer" )
 
   variable_declaration ::= ( _intrinsic_type | derived_type | procedure_declaration -> "procedure" ) ( ',' type_qualifier ( ',' type_qualifier )* )? '::'? _declaration_targets
 
@@ -207,7 +204,7 @@ rules:
 
   _declaration_targets ::= ( identifier |  >1(  identifier character_length )  | call_expression | assignment_statement | pointer_association_statement ) ( ',' ( identifier |  >1(  identifier character_length )  | call_expression | assignment_statement | pointer_association_statement ) )*
 
-  _intrinsic_type ::= intrinsic_type size?
+  _intrinsic_type ::=  >0(  intrinsic_type size? )
 
   intrinsic_type ::= /[bB][yY][tT][eE]/ -> "byte"
 	| /[iI][nN][tT][eE][gG][eE][rR]/ -> "integer"
@@ -230,7 +227,7 @@ rules:
   type_qualifier ::= /[aA][bB][sS][tT][rR][aA][cC][tT]/ -> "abstract"
 	| /[aA][lL][lL][oO][cC][aA][tT][aA][bB][lL][eE]/ -> "allocatable"
 	| /[aA][uU][tT][oO][mM][aA][tT][iI][cC]/ -> "automatic"
-	| /[dD][iI][mM][eE][nN][sS][iI][oO][nN]/ -> "dimension" argument_list?
+	|  >0(  /[dD][iI][mM][eE][nN][sS][iI][oO][nN]/ -> "dimension" argument_list? )
 	| /[cC][oO][nN][sS][tT][aA][nN][tT]/ -> "constant"
 	| /[cC][oO][nN][tT][iI][gG][uU][oO][uU][sS]/ -> "contiguous"
 	| /[dD][eE][vV][iI][cC][eE]/ -> "device"
@@ -305,7 +302,7 @@ rules:
 
   assignment_statement ::=  >-10(  ( _expression ):left '=' ( _expression ):right )
 
-  pointer_association_statement ::= _expression '=>' _expression
+  pointer_association_statement ::=  >0(  _expression '=>' _expression )
 
   subroutine_call ::=  1(  /[cC][aA][lL][lL]/ -> "call" ( _expression ):subroutine cuda_kernel_argument_list? argument_list? )
 
@@ -347,7 +344,7 @@ rules:
 
   _inline_if_statement ::=  >2(  /[iI][fF]/ -> "if" parenthesized_expression _statements )
 
-  arithmetic_if_statement ::= /[iI][fF]/ -> "if" parenthesized_expression statement_label_reference ',' statement_label_reference ',' statement_label_reference
+  arithmetic_if_statement ::=  >0(  /[iI][fF]/ -> "if" parenthesized_expression statement_label_reference ',' statement_label_reference ',' statement_label_reference )
 
   _block_if_statement ::= block_label_start_expression? /[iI][fF]/ -> "if" parenthesized_expression /[tT][hH][eE][nN]/ -> "then" _block_label? _end_of_statement _statement* elseif_clause* else_clause? statement_label? end_if_statement
 
@@ -360,7 +357,7 @@ rules:
   where_statement ::= _inline_where_statement
 	| _block_where_statement
 
-  _inline_where_statement ::= /[wW][hH][eE][rR][eE]/ -> "where" parenthesized_expression _statements
+  _inline_where_statement ::=  >0(  /[wW][hH][eE][rR][eE]/ -> "where" parenthesized_expression _statements )
 
   _block_where_statement ::= block_label_start_expression? /[wW][hH][eE][rR][eE]/ -> "where" parenthesized_expression _end_of_statement _statement* elsewhere_clause* end_where_statement
 
@@ -467,9 +464,9 @@ rules:
 
   _io_expressions ::=  1(  '*' | string_literal | identifier | derived_type_member_expression | concatenation_expression | math_expression | parenthesized_expression | call_expression )
 
-  input_item_list ::= _expression ( ',' _expression )*
+  input_item_list ::=  >0(  _expression ( ',' _expression )* )
 
-  output_item_list ::= _expression ( ',' _expression )*
+  output_item_list ::=  >0(  _expression ( ',' _expression )* )
 
   _expression ::= number_literal
 	| complex_literal
@@ -522,7 +519,7 @@ rules:
 
   unary_expression ::=  <90(  ( '-' | '+' | user_defined_operator ):operator ( _expression ):argument )
 
-  user_defined_operator ::= '.' /[a-zA-Z]+/ '.'
+  user_defined_operator ::=  >0(  '.' /[a-zA-Z]+/ '.' )
 
   call_expression ::=  80(  _expression argument_list+ )
 
@@ -598,3 +595,4 @@ rules:
   _semicolon ::= ';'
 
   _newline ::= '\n'
+

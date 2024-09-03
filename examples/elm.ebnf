@@ -22,12 +22,6 @@ extras ::= {
 	/[\s\uFEFF\u2060\u200B]|\\\r?\n/
 	}
 
-supertypes ::= {
-	}
-
-inline ::= {
-	}
-
 conflicts ::= {
 	{ upper_case_qid value_qid }
 	{ function_call_expr }
@@ -45,7 +39,7 @@ rules:
 
   line_comment ::= @(  1(  /--/ /[^\n]/* )  )
 
-  module_declaration ::= port? module ( upper_case_qid ):name ( exposing_list ):exposing | effect module ( upper_case_qid ):name where record_expr ( exposing_list ):exposing
+  module_declaration ::=  <0(  port? module ( upper_case_qid ):name ( exposing_list ):exposing | effect module ( upper_case_qid ):name where record_expr ( exposing_list ):exposing )
 
   _import_list ::= ( import_clause _virtual_end_decl )+
 
@@ -69,7 +63,7 @@ rules:
 
   _dot_without_leading_whitespace ::= !( '.' )
 
-  upper_case_qid ::= upper_case_identifier ( _dot_without_leading_whitespace -> "dot" _upper_case_identifier_without_leading_whitespace -> "upper_case_identifier" )*
+  upper_case_qid ::=  >0(  upper_case_identifier ( _dot_without_leading_whitespace -> "dot" _upper_case_identifier_without_leading_whitespace -> "upper_case_identifier" )* )
 
   value_qid ::= lower_case_identifier
 	| upper_case_identifier _dot_without_leading_whitespace -> "dot" ( _upper_case_identifier_without_leading_whitespace -> "upper_case_identifier" _dot_without_leading_whitespace -> "dot" )* _lower_case_identifier_without_leading_whitespace -> "lower_case_identifier"
@@ -84,11 +78,11 @@ rules:
 
   function_declaration_left ::=  1(  lower_case_identifier ( ( anything_pattern | lower_pattern | tuple_pattern | unit_expr | list_pattern | record_pattern | _literal_expr_group | _parenthesized_pattern )* ):pattern )
 
-  type_declaration ::= type ( upper_case_identifier ):name ( lower_type_name* ):typeName eq ( union_variant ):unionVariant _more_union_variants*
+  type_declaration ::=  <0(  type ( upper_case_identifier ):name ( lower_type_name* ):typeName eq ( union_variant ):unionVariant _more_union_variants* )
 
   lower_type_name ::= lower_case_identifier
 
-  union_variant ::= ( upper_case_identifier ):name ( line_comment | _single_type_expression )*
+  union_variant ::=  <0(  ( upper_case_identifier ):name ( line_comment | _single_type_expression )* )
 
   _more_union_variants ::= '|' ( union_variant ):unionVariant
 
@@ -125,7 +119,7 @@ rules:
   _expression ::= bin_op_expr
 	| _call_or_atom
 
-  bin_op_expr ::= (  1(  _call_or_atom ( operator _call_or_atom )+ )  ):part
+  bin_op_expr ::= (  1(  _call_or_atom  >0(  ( operator _call_or_atom )+ )  )  ):part
 
   operator ::= operator_identifier
 
@@ -161,11 +155,11 @@ rules:
 	| anonymous_function_expr
 	| glsl_code_expr
 
-  field_access_expr ::= ( _field_access_start ):target _field_access_segment+
+  field_access_expr ::=  <0(  ( _field_access_start ):target _field_access_segment+ )
 
   _field_access_start ::=  1(  field_access_expr | value_expr | parenthesized_expr | record_expr )
 
-  _field_access_segment ::= _dot_without_leading_whitespace -> "dot" _lower_case_identifier_without_leading_whitespace -> "lower_case_identifier"
+  _field_access_segment ::=  <0(  _dot_without_leading_whitespace -> "dot" _lower_case_identifier_without_leading_whitespace -> "lower_case_identifier" )
 
   negate_expr ::= minus_without_trailing_whitespace -> "operator_identifier" _atom
 
@@ -202,7 +196,7 @@ rules:
 
   field ::= ( lower_case_identifier ):name eq ( _expression ):expression
 
-  if_else_expr ::= _if _then 'else' _if _then* _else
+  if_else_expr ::= _if _then  <0(  'else' _if _then ) * _else
 
   _if ::= 'if' ( _expression ):exprList
 
@@ -254,7 +248,7 @@ rules:
 
   list_pattern ::= '[' ( ( pattern ):part ( ',' ( pattern ):part )* )? ']'
 
-  union_pattern ::= ( upper_case_qid ):constructor ( _union_argument_pattern* ):argPattern
+  union_pattern ::=  <0(  ( upper_case_qid ):constructor ( _union_argument_pattern* ):argPattern )
 
   nullary_constructor_argument_pattern ::= upper_case_qid
 
@@ -352,3 +346,4 @@ rules:
 	| '<?>'
 	| '|.'
 	| '|='
+

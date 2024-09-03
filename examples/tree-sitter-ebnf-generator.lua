@@ -278,7 +278,8 @@ local function format_reference(s)
 end
 
 local function replace_dollars(token, debug)
-  if token:find("%$") then
+  -- do not replace in regular expressions
+  if token:find("$", 1 , true) and (token:find("[]{}().+-^\\?#", 1, true) ~= nil)  then
     return token:gsub("%$([(]?)([%w._]+)([)]?)", function(lp, w, rp)
       local value = values[w] or values[format_reference(w)]
       if not value then

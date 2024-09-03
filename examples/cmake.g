@@ -13,18 +13,6 @@ externals ::= {
 	line_comment
 	}
 
-extras ::= {
-	}
-
-supertypes ::= {
-	}
-
-inline ::= {
-	}
-
-conflicts ::= {
-	}
-
 rules:
 
   source_file ::= _untrimmed_command_invocation*
@@ -42,7 +30,7 @@ rules:
   _escape_semicolon ::= ';'
 	| '\;'
 
-  variable ::= ( /[a-zA-Z0-9/_.+-]/ | escape_sequence | variable_ref )+
+  variable ::=  <0(  ( /[a-zA-Z0-9/_.+-]/ | escape_sequence | variable_ref )+ )
 
   variable_ref ::= normal_var
 	| env_var
@@ -70,13 +58,13 @@ rules:
 
   quoted_element ::= ( variable_ref | _quoted_text | escape_sequence )+
 
-  _quoted_text ::= ( '$' | /[^\\"]/ )+
+  _quoted_text ::=  <0(  ( '$' | /[^\\"]/ )+ )
 
-  unquoted_argument ::= ( variable_ref | _unquoted_text | escape_sequence )+
+  unquoted_argument ::=  >0(  ( variable_ref | _unquoted_text | escape_sequence )+ )
 
-  _unquoted_text ::= ( '$' | /[^()#"\\]/ )+
+  _unquoted_text ::=  <0(  ( '$' | /[^()#"\\]/ )+ )
 
-  body ::= _untrimmed_command_invocation+
+  body ::=  >0(  _untrimmed_command_invocation+ )
 
   argument_list ::= _untrimmed_argument+
 
@@ -166,3 +154,4 @@ rules:
   identifier ::= /[A-Za-z_][A-Za-z0-9_]*/
 
   integer ::= /[+-]*\d+/
+

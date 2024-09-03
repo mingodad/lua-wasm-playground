@@ -7,9 +7,6 @@
 ;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
-externals ::= {
-	}
-
 extras ::= {
 	/\s/
 	line_comment
@@ -113,7 +110,7 @@ rules:
 
   receiver ::=  7(  '(' ( mutability_modifiers )?:mutability ( identifier ):name ( _plain_type_without_special -> "plain_type" ):type ')' )
 
-  signature ::= ( parameter_list | type_parameter_list ):parameters ( plain_type )?:result
+  signature ::=  >0(  ( parameter_list | type_parameter_list ):parameters ( plain_type )?:result )
 
   parameter_list ::=  1(  '(' ( parameter_declaration ( ',' parameter_declaration )* )? ')' )
 
@@ -154,7 +151,7 @@ rules:
 
   _interface_body ::= '{' ( struct_field_scope ( '\n'  | '\r'  | '\r\n' )? | struct_field_declaration ( '\n'  | '\r'  | '\r\n' )? | interface_method_definition ( '\n'  | '\r'  | '\r\n' )? )* '}'
 
-  interface_method_definition ::= ( identifier ):name ( generic_parameters )?:generic_parameters ( signature ):signature ( attribute )?:attributes
+  interface_method_definition ::=  >0(  ( identifier ):name ( generic_parameters )?:generic_parameters ( signature ):signature ( attribute )?:attributes )
 
   _expression ::= _expression_without_blocks
 	| _expression_with_blocks
@@ -240,15 +237,15 @@ rules:
 
   keyed_element ::= ( reference_expression -> "field_name" ):key ':' ( _expression ):value
 
-  function_literal ::= 'fn' ( capture_list )?:capture_list ( generic_parameters )?:generic_parameters ( signature ):signature ( block ):body
+  function_literal ::=  >0(  'fn' ( capture_list )?:capture_list ( generic_parameters )?:generic_parameters ( signature ):signature ( block ):body )
 
   capture_list ::= '[' capture ( ',' capture )* ','? ']'
 
   capture ::= mutability_modifiers? reference_expression
 
-  reference_expression ::= identifier
+  reference_expression ::=  <0(  identifier )
 
-  type_reference_expression ::= identifier
+  type_reference_expression ::=  <0(  identifier )
 
   unary_expression ::=  6(  ( '+' | '-' | '!' | '~' | '^' | '*' | '&' ):operator ( _expression ):operand )
 
@@ -309,7 +306,7 @@ rules:
 
   else_branch ::= 'else' ( ( block ):block | if_expression ):else_branch
 
-  compile_time_if_expression ::= '_if' ( _expression '?'? ):condition ( block ):block ( '_else' ( block | compile_time_if_expression ):else_branch )?
+  compile_time_if_expression ::= '$if' ( _expression '?'? ):condition ( block ):block ( '$else' ( block | compile_time_if_expression ):else_branch )?
 
   is_expression ::=  ~2(  ( mutability_modifiers? _expression ):left ( 'is' | '!is' ) ( plain_type ):right )
 
@@ -333,11 +330,11 @@ rules:
 
   select_arm ::= select_arm_statement block
 
-  select_arm_statement ::= select_var_declaration -> "var_declaration" | send_statement | expression_without_blocks_list -> "expression_list" _select_arm_assignment_statement?
+  select_arm_statement ::=  <0(  select_var_declaration -> "var_declaration" | send_statement | expression_without_blocks_list -> "expression_list" _select_arm_assignment_statement? )
 
   _select_arm_assignment_statement ::= ( '*=' | '/=' | '%=' | '<<=' | '>>=' | '>>>=' | '&=' | '&^=' | '+=' | '-=' | '|=' | '^=' | '=' ) expression_without_blocks_list -> "expression_list"
 
-  select_var_declaration ::= ( identifier_list ):var_list ':=' ( expression_without_blocks_list -> "expression_list" ):expression_list
+  select_var_declaration ::=  <0(  ( identifier_list ):var_list ':=' ( expression_without_blocks_list -> "expression_list" ):expression_list )
 
   select_else_arn_clause ::= 'else' block
 
@@ -374,7 +371,7 @@ rules:
 
   identifier ::= @( '@'? '$'? 'C.'? 'JS.'? ( /[a-zA-Zα-ωΑ-Ωµ]/ | '_' ) ( /[a-zA-Zα-ωΑ-Ωµ]/ | '_' | /[0-9]/ )* )
 
-  visibility_modifiers ::= 'pub' | '__global'
+  visibility_modifiers ::=  <0(  'pub' | '__global' )
 
   mutability_modifiers ::=  <1(  'mut' 'static'? 'volatile'? | 'shared' )
 
@@ -388,7 +385,7 @@ rules:
 
   expression_without_blocks_list ::=  1(  _expression_without_blocks ( ',' _expression_without_blocks )* )
 
-  sum_type ::= plain_type ( /\s+/? !( '|' ) plain_type )+
+  sum_type ::=  >0(  plain_type ( /\s+/? !( '|' ) plain_type )+ )
 
   plain_type ::=  >7(  _plain_type_without_special | option_type | result_type | multi_return_type )
 
@@ -398,9 +395,9 @@ rules:
 
   multi_return_type ::= '(' plain_type ( ',' plain_type )* ','? ')'
 
-  result_type ::= '!' plain_type?
+  result_type ::=  >0(  '!' plain_type? )
 
-  option_type ::= '?' plain_type?
+  option_type ::=  >0(  '?' plain_type? )
 
   qualified_type ::= ( reference_expression ):module '.' ( type_reference_expression ):name
 
@@ -424,7 +421,7 @@ rules:
 
   generic_type ::= ( qualified_type | type_reference_expression ) type_parameters
 
-  function_type ::= 'fn' ( signature ):signature
+  function_type ::=  >0(  'fn' ( signature ):signature )
 
   _statement ::= simple_statement
 	| assert_statement
@@ -447,13 +444,13 @@ rules:
 	| assignment_statement
 	| strictly_expression_list -> "expression_list"
 
-  assert_statement ::= 'assert' _expression ( ',' _expression )?
+  assert_statement ::=  <0(  'assert' _expression ( ',' _expression )? )
 
   append_statement ::=  6(  ( _expression ):left '<<' ( _expression ):right )
 
   send_statement ::=  >7(  ( _expression ):channel '<-' ( _expression ):value )
 
-  var_declaration ::= ( expression_list ):var_list ':=' ( expression_list ):expression_list
+  var_declaration ::=  >0(  ( expression_list ):var_list ':=' ( expression_list ):expression_list )
 
   var_definition_list ::= var_definition ( ',' var_definition )*
 
@@ -469,17 +466,17 @@ rules:
 
   goto_statement ::= 'goto' label_reference
 
-  break_statement ::= 'break' label_reference?
+  break_statement ::=  >0(  'break' label_reference? )
 
-  continue_statement ::= 'continue' label_reference?
+  continue_statement ::=  >0(  'continue' label_reference? )
 
-  return_statement ::= 'return' ( expression_list )?:expression_list
+  return_statement ::=  >0(  'return' ( expression_list )?:expression_list )
 
   label_definition ::= identifier ':'
 
-  labeled_statement ::= label_definition _statement?
+  labeled_statement ::=  >0(  label_definition _statement? )
 
-  compile_time_for_statement ::= '_for' range_clause ( block ):body
+  compile_time_for_statement ::= '$for' range_clause ( block ):body
 
   for_statement ::= 'for' ( range_clause | for_clause | is_clause | _expression )? ( block ):body
 
@@ -487,7 +484,7 @@ rules:
 
   range_clause ::=  <7(  ( var_definition_list ):left 'in' ( _definite_range -> "range" | _expression ):right )
 
-  for_clause ::= ( simple_statement )?:initializer ';' ( _expression )?:condition ';' ( simple_statement )?:update
+  for_clause ::=  <0(  ( simple_statement )?:initializer ';' ( _expression )?:condition ';' ( simple_statement )?:update )
 
   _definite_range ::=  5(  ( _expression ):start ( '..' | '...' ):operator ( _expression ):end )
 

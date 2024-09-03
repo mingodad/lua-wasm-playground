@@ -152,9 +152,9 @@ rules:
 
   decimal_floating_point_literal ::= @( @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) '.' @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) ( /[eE]/ ( '-' | '+' )? @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) )? | '.' @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) ( /[eE]/ ( '-' | '+' )? @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) )? | @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) /[eE]/ ( '-' | '+' )? @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) | @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) ( /[eE]/ ( '-' | '+' )? @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) )? )
 
-  true ::= 'true'
+  true ::=  0(  'true' )
 
-  false ::= 'false'
+  false ::=  0(  'false' )
 
   string_literal ::= ( _string_literal_double_quotes | _string_literal_single_quotes | _string_literal_double_quotes_multiple | _string_literal_single_quotes_multiple | _raw_string_literal_double_quotes | _raw_string_literal_single_quotes | _raw_string_literal_double_quotes_multiple | _raw_string_literal_single_quotes_multiple )+
 
@@ -162,17 +162,17 @@ rules:
 
   _string_literal_single_quotes ::= "'"  ( _template_chars_single_single | '"'  | escape_sequence | _sub_string_test | template_substitution )* "'"
 
-  _string_literal_double_quotes_multiple ::= '"""' ( _template_chars_double | "'"  | '"'  | escape_sequence | _sub_string_test | template_substitution )* '"""'
+  _string_literal_double_quotes_multiple ::=  <0(  '"""' ( _template_chars_double | "'"  | '"'  | escape_sequence | _sub_string_test | template_substitution )* '"""' )
 
-  _string_literal_single_quotes_multiple ::= "'''" ( _template_chars_single | '"'  | "'"  | escape_sequence | _sub_string_test | template_substitution )* "'''"
+  _string_literal_single_quotes_multiple ::=  <0(  "'''" ( _template_chars_single | '"'  | "'"  | escape_sequence | _sub_string_test | template_substitution )* "'''" )
 
   _raw_string_literal_double_quotes ::= 'r"' ( _template_chars_double_single | "'"  | _template_chars_raw_slash | _unused_escape_sequence | _sub_string_test | '$' )* '"'
 
   _raw_string_literal_single_quotes ::= "r'" ( _template_chars_single_single | '"'  | _template_chars_raw_slash | _unused_escape_sequence | _sub_string_test | '$' )* "'"
 
-  _raw_string_literal_double_quotes_multiple ::= 'r"""' ( _template_chars_double | "'"  | _template_chars_raw_slash | '"'  | _unused_escape_sequence | _sub_string_test | '$' )* '"""'
+  _raw_string_literal_double_quotes_multiple ::=  <0(  'r"""' ( _template_chars_double | "'"  | _template_chars_raw_slash | '"'  | _unused_escape_sequence | _sub_string_test | '$' )* '"""' )
 
-  _raw_string_literal_single_quotes_multiple ::= "r'''" ( _template_chars_single | '"'  | "'"  | _template_chars_raw_slash | _unused_escape_sequence | _sub_string_test | '$' )* "'''"
+  _raw_string_literal_single_quotes_multiple ::=  <0(  "r'''" ( _template_chars_single | '"'  | "'"  | _template_chars_raw_slash | _unused_escape_sequence | _sub_string_test | '$' )* "'''" )
 
   _triple_quote_end ::= @( "'''" )
 
@@ -200,7 +200,7 @@ rules:
 	| if_element
 	| for_element
 
-  null_literal ::= 'null'
+  null_literal ::=  0(  'null' )
 
   record_literal ::= const_builtin? _record_literal_no_const
 
@@ -339,7 +339,7 @@ rules:
   _postfix_expression ::= _primary selector*
 	| postfix_expression
 
-  postfix_expression ::= assignable_expression postfix_operator | constructor_invocation selector*
+  postfix_expression ::=  >0(  assignable_expression postfix_operator | constructor_invocation selector* )
 
   postfix_operator ::= increment_operator
 
@@ -347,7 +347,7 @@ rules:
 
   spread_element ::= '...' '?'? _expression
 
-  selector ::= _exclamation_operator | _assignable_selector | argument_part | type_arguments
+  selector ::=  >0(  _exclamation_operator | _assignable_selector | argument_part | type_arguments )
 
   prefix_operator ::= minus_operator
 	| negation_operator
@@ -393,13 +393,13 @@ rules:
   _compound_access ::= '.'
 	| '?.'
 
-  constructor_invocation ::= _type_name type_arguments '.' identifier arguments | _type_name '.' _new_builtin arguments
+  constructor_invocation ::=  >0(  _type_name type_arguments '.' identifier arguments | _type_name '.' _new_builtin arguments )
 
-  constructor_tearoff ::= _type_name type_arguments? '.' _new_builtin
+  constructor_tearoff ::=  >0(  _type_name type_arguments? '.' _new_builtin )
 
   arguments ::= '(' _argument_list? ')'
 
-  _argument_list ::= _any_argument ( ',' _any_argument )* ','?
+  _argument_list ::=  >0(  _any_argument ( ',' _any_argument )* ','? )
 
   _any_argument ::= argument
 	| named_argument
@@ -437,7 +437,7 @@ rules:
   _wildcard_bounds ::= 'extends' _type
 	| super _type
 
-  dimensions ::= ( _metadata? '[' ']' )+
+  dimensions ::=  >0(  ( _metadata? '[' ']' )+ )
 
   _statement ::= block
 	|  ~1(  local_function_declaration )
@@ -590,9 +590,9 @@ rules:
 
   finally_clause ::= 'finally' block
 
-  if_element ::= 'if' '(' _expression ( 'case' _guarded_pattern )? ')' ( _element ):consequence ( 'else' ( _element ):alternative )?
+  if_element ::=  >0(  'if' '(' _expression ( 'case' _guarded_pattern )? ')' ( _element ):consequence ( 'else' ( _element ):alternative )? )
 
-  if_statement ::= 'if' '(' _expression ( 'case' _guarded_pattern )? ')' ( _statement ):consequence ( 'else' ( _statement ):alternative )?
+  if_statement ::=  >0(  'if' '(' _expression ( 'case' _guarded_pattern )? ')' ( _statement ):consequence ( 'else' ( _statement ):alternative )? )
 
   while_statement ::= 'while' ( parenthesized_expression ):condition ( _statement ):body
 
@@ -606,7 +606,7 @@ rules:
 
   for_element ::= 'await'? 'for' for_loop_parts ( _element ):body
 
-  annotation ::= '@' ( identifier | scoped_identifier ):name ( type_arguments arguments | arguments )
+  annotation ::=  >0(  '@' ( identifier | scoped_identifier ):name ( type_arguments arguments | arguments ) )
 
   _declaration ::=  1(  import_specification | class_definition | enum_declaration )
 
@@ -659,7 +659,7 @@ rules:
 
   extension_declaration ::= _metadata? 'extension' ( identifier )?:name ( type_parameters )?:type_parameters 'on' ( _type ):class ( extension_body ):body
 
-  _metadata ::= annotation+
+  _metadata ::=  >0(  annotation+ )
 
   type_parameters ::= '<' type_parameter ( ',' type_parameter )* '>'
 
@@ -774,7 +774,7 @@ rules:
 
   variable_declaration ::= _declared_identifier ( ',' identifier ( ',' identifier )* )?
 
-  initialized_variable_definition ::= _declared_identifier ( '=' ( _expression ):value )? ( ',' initialized_identifier )*
+  initialized_variable_definition ::= _declared_identifier (  0(  '=' )  ( _expression ):value )? ( ',' initialized_identifier )*
 
   _declared_identifier ::= _metadata? _covariant? _final_const_var_or_type ( identifier ):name
 
@@ -833,13 +833,13 @@ rules:
 
   typed_identifier ::= _type identifier
 
-  nullable_type ::= '?'
+  nullable_type ::=  0(  '?' )
 
-  nullable_selector ::= '?'
+  nullable_selector ::=  0(  '?' )
 
   floating_point_type ::= @( 'double' )
 
-  boolean_type ::= 'bool'
+  boolean_type ::=  0(  'bool' )
 
   void_type ::= @( 'void' )
 
@@ -850,7 +850,7 @@ rules:
 	| final_builtin
 	| final_builtin? _type
 
-  inferred_type ::= 'var'
+  inferred_type ::=  0(  'var' )
 
   function_body ::= 'async'? '=>' _expression _semicolon
 	| ( 'async' | 'async*' | 'sync*' )? block
@@ -913,7 +913,7 @@ rules:
   qualified ::= _type_name '.' _identifier_or_new
 	| _type_name '.' _type_name '.' _identifier_or_new
 
-  _as ::= 'as'
+  _as ::=  0(  'as' )
 
   break_builtin ::= @( 'break' )
 
@@ -925,69 +925,69 @@ rules:
 
   part_of_builtin ::= @( 'part of' )
 
-  _covariant ::= 'covariant'
+  _covariant ::=  0(  'covariant' )
 
-  _deferred ::= 'deferred'
+  _deferred ::=  0(  'deferred' )
 
-  _dynamic ::= 'dynamic'
+  _dynamic ::=  0(  'dynamic' )
 
-  _export ::= 'export'
+  _export ::=  0(  'export' )
 
   _external ::= _external_builtin
 
-  _factory ::= 'factory'
+  _factory ::=  0(  'factory' )
 
-  _function_builtin_identifier ::= 'Function'
+  _function_builtin_identifier ::=  0(  'Function' )
 
-  _get ::= 'get'
+  _get ::=  0(  'get' )
 
   _native ::= 'native' string_literal?
 
-  _implements ::= 'implements'
+  _implements ::=  0(  'implements' )
 
-  _import ::= 'import'
+  _import ::=  0(  'import' )
 
-  interface ::= 'interface'
+  interface ::=  0(  'interface' )
 
-  base ::= 'base'
+  base ::=  0(  'base' )
 
-  abstract ::= 'abstract'
+  abstract ::=  0(  'abstract' )
 
-  sealed ::= 'sealed'
+  sealed ::=  0(  'sealed' )
 
-  _library ::= 'library'
+  _library ::=  0(  'library' )
 
-  _operator ::= 'operator'
+  _operator ::=  0(  'operator' )
 
-  mixin ::= 'mixin'
+  mixin ::=  0(  'mixin' )
 
-  _part ::= 'part'
+  _part ::=  0(  'part' )
 
-  _required ::= 'required'
+  _required ::=  0(  'required' )
 
-  _set ::= 'set'
+  _set ::=  0(  'set' )
 
-  _static ::= 'static'
+  _static ::=  0(  'static' )
 
-  _typedef ::= 'typedef'
+  _typedef ::=  0(  'typedef' )
 
-  _new_builtin ::= 'new'
+  _new_builtin ::=  0(  'new' )
 
-  logical_and_operator ::= '&&'
+  logical_and_operator ::=  0(  '&&' )
 
-  logical_or_operator ::= '||'
+  logical_or_operator ::=  0(  '||' )
 
   const_builtin ::= @( 'const' )
 
   final_builtin ::= @( 'final' )
 
-  _late_builtin ::= 'late'
+  _late_builtin ::=  0(  'late' )
 
-  _external_builtin ::= 'external'
+  _external_builtin ::=  0(  'external' )
 
-  this ::= 'this'
+  this ::=  0(  'this' )
 
-  super ::= 'super'
+  super ::=  0(  'super' )
 
   label ::= identifier ':'
 

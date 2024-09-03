@@ -22,9 +22,6 @@ extras ::= {
 	/[\s\n]/
 	}
 
-supertypes ::= {
-	}
-
 inline ::= {
 	scope
 	_partypelist
@@ -253,7 +250,7 @@ rules:
   boolean ::= 'true'
 	| 'false'
 
-  _short_string_content ::= ( format_specifier | escape_sequence | !(  1(  '%' )  ) | _short_string_char )+ -> "string_content"
+  _short_string_content ::= ( format_specifier | escape_sequence | !(  1(  '%' )  ) |  0(  _short_string_char )  )+ -> "string_content"
 
   _long_string_content ::= ( format_specifier | _long_string_char | !(  1(  '%' )  ) )+ -> "string_content"
 
@@ -264,3 +261,4 @@ rules:
   escape_sequence ::= !(  3(  '\\'  ( /[abfnrtvz"'\\]/ | 'x' /[0-9a-fA-F]{2}/ | 'd' /[0-7]{3}/ | 'u{' /[0-9a-fA-F]{1,8}/ '}' ) )  )
 
   nil ::= 'nil'
+

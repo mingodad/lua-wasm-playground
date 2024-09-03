@@ -29,9 +29,6 @@ precedences ::= {
 	{ 'unary' 'power' 'multiply' 'add' 'shift' 'compare' 'bitwise_and' 'exclusive_or' 'inclusive_or' 'logical_or' 'logical_and' 'ternary' 'assignment' }
 	}
 
-supertypes ::= {
-	}
-
 inline ::= {
 	_identifier_or_template_instance
 	_for1
@@ -512,15 +509,15 @@ rules:
 	| _attribute+ _declaration2
 	| _attribute+ '{' _declaration* '}'
 
-  _declaration2 ::= alias_declaration | alias_this | anonymous_enum_declaration | attribute_declaration | class_declaration | conditional_declaration | constructor | debug_specification | destructor | postblit | function_declaration | enum_declaration | import_declaration | interface_declaration | invariant_declaration | mixin_declaration | mixin_template_declaration | pragma_declaration | struct_declaration | template_declaration | template_mixin | union_declaration | unittest_declaration | variable_declaration | manifest_constant | version_specification | static_assert | auto_declaration | static_foreach_declaration | alias_reassign | ';'
+  _declaration2 ::=  <0(  alias_declaration | alias_this | anonymous_enum_declaration | attribute_declaration | class_declaration | conditional_declaration | constructor | debug_specification | destructor | postblit | function_declaration | enum_declaration | import_declaration | interface_declaration | invariant_declaration | mixin_declaration | mixin_template_declaration | pragma_declaration | struct_declaration | template_declaration | template_mixin | union_declaration | unittest_declaration | variable_declaration | manifest_constant | version_specification | static_assert | auto_declaration | static_foreach_declaration | alias_reassign | ';' )
 
   variable_declaration ::= storage_class* type ( declarator | bitfield_declarator ) ( ',' ( declarator | bitfield_declarator ) )* ';'
 
-  _declarator_identifier_list ::= identifier ( ',' identifier )*
+  _declarator_identifier_list ::=  >0(  identifier ( ',' identifier )* )
 
-  declarator ::= identifier ( template_parameters? '=' _initializer )?
+  declarator ::=  >0(  identifier ( template_parameters? '=' _initializer )? )
 
-  bitfield_declarator ::= ':' _expr | identifier ':' _expr ( '=' _initializer )?
+  bitfield_declarator ::=  >0(  ':' _expr | identifier ':' _expr ( '=' _initializer )? )
 
   manifest_constant ::= storage_class* enum storage_class* type? manifest_declarator ( ',' manifest_declarator )* ';'
 
@@ -544,12 +541,12 @@ rules:
 	| ref
 	| _function_attribute_kwd
 
-  _initializer ::= _non_void_initializer | void
+  _initializer ::=  <0(  _non_void_initializer | void )
 
   _non_void_initializer ::= _expr
 	| aggregate_initializer
 
-  auto_declaration ::= storage_class+ _auto_assignment ( ',' _auto_assignment )* ';'
+  auto_declaration ::=  >0(  storage_class+ _auto_assignment ( ',' _auto_assignment )* ';' )
 
   _auto_assignment ::= ( identifier ):variable template_parameters? '=' ( _initializer ):value
 
@@ -566,14 +563,14 @@ rules:
 
   alias_reassign ::=  ~-1(  identifier '=' storage_class* type ';' | identifier '=' function_literal ';' | identifier '=' storage_class* type parameters member_function_attribute* ';' )
 
-  type ::= type_ctor* _type2 _type_suffix*
+  type ::=  >0(  type_ctor* _type2 _type_suffix* )
 
   type_ctor ::= const
 	| immutable
 	| inout
 	| shared
 
-  _type2 ::= void | _builtin_type | _qualified_id | '.' _qualified_id | typeof_expression | typeof_expression '.' _qualified_id | type_ctor '(' type ')' | vector_type | traits_expression | mixin_expression
+  _type2 ::=  >0(  void | _builtin_type | _qualified_id | '.' _qualified_id | typeof_expression | typeof_expression '.' _qualified_id | type_ctor '(' type ')' | vector_type | traits_expression | mixin_expression )
 
   vector_type ::= vector '(' type ')'
 
@@ -610,38 +607,38 @@ rules:
 
   void ::= 'void'
 
-  _type_suffix ::= '*' | '[' ']' | '[' expression ']' | '[' expression '..' expression ']' | '[' type ']' | delegate parameters member_function_attribute* | function parameters _function_attribute*
+  _type_suffix ::=  >0(  '*' | '[' ']' | '[' expression ']' | '[' expression '..' expression ']' | '[' type ']' | delegate parameters member_function_attribute* | function parameters _function_attribute* )
 
   _identifier_or_template_instance ::= identifier
 	| template_instance
 
-  _qualified_id ::= identifier | identifier '.' _qualified_id | identifier '[' ']' | identifier '[' expression '..' expression ']' | identifier '[' type ']' | identifier '[' expression ']' | identifier '[' expression ']' '.' _qualified_id | template_instance | template_instance '.' _qualified_id
+  _qualified_id ::=  >0(  identifier | identifier '.' _qualified_id | identifier '[' ']' | identifier '[' expression '..' expression ']' | identifier '[' type ']' | identifier '[' expression ']' | identifier '[' expression ']' '.' _qualified_id | template_instance | template_instance '.' _qualified_id )
 
   typeof_expression ::= typeof '(' ( expression | return ) ')'
 
   attribute_declaration ::= _attribute ':'
 
-  align_attribute ::= align ( '(' expression ')' )?
+  align_attribute ::=  >0(  align ( '(' expression ')' )? )
 
-  deprecated_attribute ::= deprecated ( '(' expression ')' )?
+  deprecated_attribute ::=  >0(  deprecated ( '(' expression ')' )? )
 
-  _attribute ::= linkage_attribute | align_attribute | deprecated_attribute | pragma_expression | type_ctor | private | package | package '(' module_fqn ')' | protected | public | export | static | extern | abstract | final | override | synchronized | auto | scope | gshared | at_attribute | _function_attribute_kwd | ref | return
+  _attribute ::=  >0(  linkage_attribute | align_attribute | deprecated_attribute | pragma_expression | type_ctor | private | package | package '(' module_fqn ')' | protected | public | export | static | extern | abstract | final | override | synchronized | auto | scope | gshared | at_attribute | _function_attribute_kwd | ref | return )
 
-  at_attribute ::= '@' identifier | '@' identifier arguments | '@' template_instance | '@' template_instance arguments | '@' '(' _argument_list ')'
+  at_attribute ::=  >0(  '@' identifier | '@' identifier arguments | '@' template_instance | '@' template_instance arguments | '@' '(' _argument_list ')' )
 
   _function_attribute_kwd ::= nothrow
 	| pure
 
-  linkage_attribute ::= extern '(' ( 'C' | 'D' | 'Windows' | 'System' | 'Objective' '-' 'C' | 'C' '++' | 'C' '++' ',' _argument_list -> "namespace_list"? | 'C' '++' ',' class | 'C' '++' ',' struct ) ')'
+  linkage_attribute ::=  >0(  extern '(' ( 'C' | 'D' | 'Windows' | 'System' | 'Objective' '-' 'C' | 'C' '++' | 'C' '++' ',' _argument_list -> "namespace_list"? | 'C' '++' ',' class | 'C' '++' ',' struct ) ')' )
 
-  _argument_list ::= expression ( ',' expression )* ','?
+  _argument_list ::=  >0(  expression ( ',' expression )* ','? )
 
   arguments ::= '(' _argument_list? ')'
 
   named_argument ::= expression
 	| identifier ':' expression
 
-  _named_argument_list ::= named_argument ( ',' named_argument )* ','?
+  _named_argument_list ::=  >0(  named_argument ( ',' named_argument )* ','? )
 
   named_arguments ::= '(' _named_argument_list? ')'
 
@@ -655,15 +652,15 @@ rules:
   pragma_expression ::= pragma '(' identifier ')'
 	| pragma '(' identifier ',' _argument_list ')'
 
-  expression_list ::= _expr ( ',' _expr )*
+  expression_list ::=  >0(  _expr ( ',' _expr )* )
 
   expression ::= _expr
 
-  _expr ::= assignment_expression | ternary_expression | binary_expression | ternary_expression | _unary_expr
+  _expr ::=  <0(  assignment_expression | ternary_expression | binary_expression | ternary_expression | _unary_expr )
 
   ternary_expression ::=  >ternary(  ( _expr ):condition '?' ( expression_list ):consequence ':' ( _expr ):alternative )
 
-  call_expression ::= _unary_expr named_arguments | type named_arguments
+  call_expression ::=  <0(  _unary_expr named_arguments | type named_arguments )
 
   primary_expression ::= '(' type ')' '.' identifier
 	| '(' type ')' '.' template_instance
@@ -740,7 +737,7 @@ rules:
 
   power_expression ::=  <power(  _expr ( '^^' ):operator _unary_expr )
 
-  postfix_expression ::= _unary_expr ( '++' | '--' ):operator
+  postfix_expression ::=  <0(  _unary_expr ( '++' | '--' ):operator )
 
   unary_expression ::=  >unary(  ( '~' | '+' | '-' | '!' | '*' | '&' | '++' | '--' ):operator _unary_expr )
 
@@ -757,10 +754,10 @@ rules:
 	| property_expression
 
   property_expression ::= '(' type ')' '.' _identifier_or_template_instance
-	| _unary_expr '.' _identifier_or_template_instance
-	| _unary_expr '.' new_expression
+	|  <0(  _unary_expr '.' _identifier_or_template_instance )
+	|  <0(  _unary_expr '.' new_expression )
 
-  cast_expression ::= cast '(' ')' ( _unary_expr ):operand | cast '(' type ')' ( _unary_expr ):operand | cast '(' cast_qualifier ')' _unary_expr
+  cast_expression ::=  >0(  cast '(' ')' ( _unary_expr ):operand | cast '(' type ')' ( _unary_expr ):operand | cast '(' cast_qualifier ')' _unary_expr )
 
   cast_qualifier ::= const
 	| const shared
@@ -771,9 +768,9 @@ rules:
 	| shared const
 	| shared inout
 
-  delete_expression ::= delete _unary_expr
+  delete_expression ::=  <0(  delete _unary_expr )
 
-  throw_expression ::= throw _unary_expr
+  throw_expression ::=  <0(  throw _unary_expr )
 
   assert_expression ::= assert '(' assert_arguments ')'
 
@@ -783,11 +780,11 @@ rules:
 
   import_expression ::= import '(' expression ')'
 
-  new_expression ::= new type | new type '[' expression ']' | new type arguments | new class arguments? _base_class_list? aggregate_body
+  new_expression ::=  <0(  new type | new type '[' expression ']' | new type arguments | new class arguments? _base_class_list? aggregate_body )
 
   typeid_expression ::= typeid '(' ( type | expression ) ')'
 
-  is_expression ::= is '(' type identifier? ( ( '==' | ':' ) type_specialization ( ',' _template_parameter_list )? )? ')'
+  is_expression ::=  >0(  is '(' type identifier? ( ( '==' | ':' ) type_specialization ( ',' _template_parameter_list )? )? ')' )
 
   type_specialization ::= type
 	| struct
@@ -847,7 +844,7 @@ rules:
 
   _array_member_init ::= ( ( expression ):key ':' )? ( _non_void_initializer ):value
 
-  function_literal ::= function ( auto? ref )? type? _parameter_with_attributes? _specified_function_body | function ( auto? ref )? type? _parameter_with_attributes '=>' _expr | delegate ( auto? ref )? type? _parameter_with_member_attributes? _specified_function_body | delegate ( auto? ref )? type? _parameter_with_member_attributes '=>' _expr | ( auto? ref )? _parameter_with_member_attributes _specified_function_body | ( auto? ref )? _parameter_with_member_attributes '=>' _expr | _specified_function_body | identifier '=>' _expr
+  function_literal ::=  >0(  function ( auto? ref )? type? _parameter_with_attributes? _specified_function_body | function ( auto? ref )? type? _parameter_with_attributes '=>' _expr | delegate ( auto? ref )? type? _parameter_with_member_attributes? _specified_function_body | delegate ( auto? ref )? type? _parameter_with_member_attributes '=>' _expr | ( auto? ref )? _parameter_with_member_attributes _specified_function_body | ( auto? ref )? _parameter_with_member_attributes '=>' _expr | _specified_function_body | identifier '=>' _expr )
 
   _parameter_with_attributes ::= parameters _function_attribute*
 
@@ -907,7 +904,7 @@ rules:
 	| version_specification
 	| debug_specification
 
-  labeled_statement ::= label body
+  labeled_statement ::=  <0(  label body )
 
   label ::= identifier ':'
 
@@ -915,7 +912,7 @@ rules:
 
   expression_statement ::= expression_list ';'
 
-  if_statement ::= if if_condition consequence ( else alternative )?
+  if_statement ::=  >0(  if if_condition consequence ( else alternative )? )
 
   if_condition ::= '(' ( _expr | auto identifier '=' expression | scope identifier '=' expression | type_ctor+ identifier '=' expression | type identifier '=' expression ) ')'
 
@@ -943,7 +940,7 @@ rules:
 
   switch_statement ::= switch '(' expression ')' body
 
-  case_statement ::= case expression_list ','? ':' ( _declaration | _statement_no_case_no_default )* | case expression ':' '..' case expression ':' ( _declaration | _statement_no_case_no_default )* | default ':' ( _declaration | _statement_no_case_no_default )*
+  case_statement ::=  >0(  case expression_list ','? ':' ( _declaration | _statement_no_case_no_default )* | case expression ':' '..' case expression ':' ( _declaration | _statement_no_case_no_default )* | default ':' ( _declaration | _statement_no_case_no_default )* )
 
   final_switch_statement ::= final switch_statement
 
@@ -960,9 +957,9 @@ rules:
 
   with_statement ::= with '(' expression ')' scope_statement
 
-  synchronized_statement ::= synchronized ( '(' expression ')' )? scope_statement
+  synchronized_statement ::=  <0(  synchronized ( '(' expression ')' )? scope_statement )
 
-  try_statement ::= try body catch_statement* finally_statement?
+  try_statement ::=  >0(  try body catch_statement* finally_statement? )
 
   catch_statement ::= catch '(' type identifier? ')' body
 
@@ -1044,15 +1041,15 @@ rules:
 
   anonymous_enum_member ::= type identifier '=' _expr
 
-  function_declaration ::= type identifier parameters member_function_attribute* function_body | type identifier template_parameters parameters member_function_attribute* constraint? function_body | storage_class+ identifier parameters member_function_attribute* function_body | storage_class+ identifier template_parameters parameters member_function_attribute* constraint? function_body
+  function_declaration ::=  >0(  type identifier parameters member_function_attribute* function_body | type identifier template_parameters parameters member_function_attribute* constraint? function_body | storage_class+ identifier parameters member_function_attribute* function_body | storage_class+ identifier template_parameters parameters member_function_attribute* constraint? function_body )
 
-  parameters ::= '(' ')' | '(' parameter ( ',' parameter )* ','? ')' | '(' parameter ( ',' parameter )* ',' ellipses ')' | '(' parameter ( ',' parameter )* ',' _variadic_arguments_attributes ellipses ')' | '(' ellipses ')' | '(' _variadic_arguments_attributes ellipses ')'
+  parameters ::=  >0(  '(' ')' | '(' parameter ( ',' parameter )* ','? ')' | '(' parameter ( ',' parameter )* ',' ellipses ')' | '(' parameter ( ',' parameter )* ',' _variadic_arguments_attributes ellipses ')' | '(' ellipses ')' | '(' _variadic_arguments_attributes ellipses ')' )
 
-  _parameters ::= '(' ')' | '(' _parameter ( ',' _parameter )* ','? ')' | '(' _parameter ( ',' _parameter )* ',' ellipses ')' | '(' _parameter ( ',' _parameter )* ',' _variadic_arguments_attributes ellipses ')' | '(' ellipses ')' | '(' _variadic_arguments_attributes ellipses ')'
+  _parameters ::=  >0(  '(' ')' | '(' _parameter ( ',' _parameter )* ','? ')' | '(' _parameter ( ',' _parameter )* ',' ellipses ')' | '(' _parameter ( ',' _parameter )* ',' _variadic_arguments_attributes ellipses ')' | '(' ellipses ')' | '(' _variadic_arguments_attributes ellipses ')' )
 
-  parameter ::= _parameter
+  parameter ::=  >0(  _parameter )
 
-  _parameter ::= parameter_attribute* type | parameter_attribute* type ellipses | parameter_attribute* type '=' _expr ellipses? | parameter_attribute* type identifier | parameter_attribute* type identifier ellipses | parameter_attribute* type identifier '=' _expr ellipses?
+  _parameter ::=  >0(  parameter_attribute* type | parameter_attribute* type ellipses | parameter_attribute* type '=' _expr ellipses? | parameter_attribute* type identifier | parameter_attribute* type identifier ellipses | parameter_attribute* type identifier '=' _expr ellipses? )
 
   parameter_attribute ::= at_attribute
 	| type_ctor
@@ -1114,9 +1111,9 @@ rules:
 
   template_declaration ::= template identifier template_parameters constraint? '{' _declaration* '}'
 
-  template_instance ::= identifier template_arguments
+  template_instance ::=  <0(  identifier template_arguments )
 
-  template_arguments ::= '!' ( '(' _template_argument_list? ')' | _template_single_arg )
+  template_arguments ::=  >0(  '!' ( '(' _template_argument_list? ')' | _template_single_arg ) )
 
   template_argument ::= type
 	| _expr
@@ -1136,19 +1133,19 @@ rules:
 	| this
 	| special_keyword
 
-  template_parameter ::= _template_type_parameter | _template_value_parameter | _template_alias_parameter | _template_sequence_parameter
+  template_parameter ::=  >0(  _template_type_parameter | _template_value_parameter | _template_alias_parameter | _template_sequence_parameter )
 
   template_parameters ::= '(' _template_parameter_list? ')'
 
-  _template_parameter_list ::= template_parameter ( ',' template_parameter )* ','?
+  _template_parameter_list ::=  >0(  template_parameter ( ',' template_parameter )* ','? )
 
-  _template_type_parameter ::= this? identifier ( ':' type )? ( '=' type )?
+  _template_type_parameter ::=  >0(  this? identifier ( ':' type )? ( '=' type )? )
 
-  _template_value_parameter ::= type identifier ( ':' _expr )? ( '=' _expr )?
+  _template_value_parameter ::=  >0(  type identifier ( ':' _expr )? ( '=' _expr )? )
 
   _template_sequence_parameter ::= identifier '...'
 
-  _template_alias_parameter ::= alias type? identifier ( ':' ( type | _expr ) )? ( '=' ( type | _expr ) )?
+  _template_alias_parameter ::=  >0(  alias type? identifier ( ':' ( type | _expr ) )? ( '=' ( type | _expr ) )? )
 
   constraint ::= if '(' expression ')'
 
@@ -1156,19 +1153,19 @@ rules:
 
   template_mixin ::= mixin ( typeof_expression? '.' )? _identifier_or_template_instance ( '.' _identifier_or_template_instance )* template_arguments? identifier? ';'
 
-  conditional_declaration ::= condition _declaration | condition _declaration else ':' _declaration* | condition _declaration else _declaration | condition _declaration else '{' _declaration* '}' | condition '{' _declaration* '}' | condition '{' _declaration* '}' else ':' _declaration* | condition '{' _declaration* '}' else _declaration | condition '{' _declaration* '}' else '{' _declaration* '}' | condition ':' _declaration+
+  conditional_declaration ::=  >0(  condition _declaration | condition _declaration else ':' _declaration* | condition _declaration else _declaration | condition _declaration else '{' _declaration* '}' | condition '{' _declaration* '}' | condition '{' _declaration* '}' else ':' _declaration* | condition '{' _declaration* '}' else _declaration | condition '{' _declaration* '}' else '{' _declaration* '}' | condition ':' _declaration+ )
 
-  conditional_statement ::= condition consequence ( else alternative )?
+  conditional_statement ::=  >0(  condition consequence ( else alternative )? )
 
   condition ::= version_condition
 	| debug_condition
 	| static_if_condition
 
-  version_condition ::= version '(' ( int_literal | identifier | unittest | assert ) ')'
+  version_condition ::=  <0(  version '(' ( int_literal | identifier | unittest | assert ) ')' )
 
   version_specification ::= version '=' ( int_literal | identifier ) ';'
 
-  debug_condition ::= debug ( '(' ( int_literal | identifier ) ')' )?
+  debug_condition ::=  >0(  debug ( '(' ( int_literal | identifier ) ')' )? )
 
   debug_specification ::= debug '=' ( int_literal | identifier ) ';'
 

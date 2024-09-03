@@ -24,15 +24,6 @@ extras ::= {
 	/\s+/
 	}
 
-supertypes ::= {
-	}
-
-inline ::= {
-	}
-
-conflicts ::= {
-	}
-
 rules:
 
   document ::= _node*

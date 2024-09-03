@@ -65,12 +65,6 @@ precedences ::= {
 	{ _type_definition 'type_modifiers' }
 	}
 
-supertypes ::= {
-	}
-
-inline ::= {
-	}
-
 conflicts ::= {
 	{ symbol_declaration _basic_expression }
 	}
@@ -85,7 +79,7 @@ rules:
 	| _line_statement_list
 	| _layout_empty
 
-  _line_statement_list ::= _simple_statement ( ';' _simple_statement )*
+  _line_statement_list ::=  >0(  _simple_statement ( ';' _simple_statement )* )
 
   _block_statement_list ::= _layout_start _semi_statement_list? _layout_end
 
@@ -125,9 +119,9 @@ rules:
 	| _infix_extended -> "infix_expression"
 	| _prefix_extended -> "prefix_expression"
 
-  import_statement ::= @(  1(  /i_?[mM]_?[pP]_?[oO]_?[rR]_?[tT]/ )  ) -> "import" _import_body
+  import_statement ::=  >0(  @(  1(  /i_?[mM]_?[pP]_?[oO]_?[rR]_?[tT]/ )  ) -> "import" _import_body )
 
-  export_statement ::= @(  1(  /e_?[xX]_?[pP]_?[oO]_?[rR]_?[tT]/ )  ) -> "export" _import_body
+  export_statement ::=  >0(  @(  1(  /e_?[xX]_?[pP]_?[oO]_?[rR]_?[tT]/ )  ) -> "export" _import_body )
 
   _import_body ::= expression_list
 	| _import_except
@@ -138,17 +132,17 @@ rules:
 
   include_statement ::= @(  1(  /i_?[nN]_?[cC]_?[lL]_?[uU]_?[dD]_?[eE]/ )  ) -> "include" expression_list
 
-  discard_statement ::= @(  1(  /d_?[iI]_?[sS]_?[cC]_?[aA]_?[rR]_?[dD]/ )  ) -> "discard" _expression_with_post_block?
+  discard_statement ::=  >0(  @(  1(  /d_?[iI]_?[sS]_?[cC]_?[aA]_?[rR]_?[dD]/ )  ) -> "discard" _expression_with_post_block? )
 
-  return_statement ::= @(  1(  /r_?[eE]_?[tT]_?[uU]_?[rR]_?[nN]/ )  ) -> "return" _expression_with_post_block?
+  return_statement ::=  >0(  @(  1(  /r_?[eE]_?[tT]_?[uU]_?[rR]_?[nN]/ )  ) -> "return" _expression_with_post_block? )
 
-  raise_statement ::= @(  1(  /r_?[aA]_?[iI]_?[sS]_?[eE]/ )  ) -> "raise" _expression_with_post_block?
+  raise_statement ::=  >0(  @(  1(  /r_?[aA]_?[iI]_?[sS]_?[eE]/ )  ) -> "raise" _expression_with_post_block? )
 
-  yield_statement ::= @(  1(  /y_?[iI]_?[eE]_?[lL]_?[dD]/ )  ) -> "yield" _expression_with_post_block?
+  yield_statement ::=  >0(  @(  1(  /y_?[iI]_?[eE]_?[lL]_?[dD]/ )  ) -> "yield" _expression_with_post_block? )
 
-  break_statement ::= @(  1(  /b_?[rR]_?[eE]_?[aA]_?[kK]/ )  ) -> "break" _expression_with_post_block?
+  break_statement ::=  >0(  @(  1(  /b_?[rR]_?[eE]_?[aA]_?[kK]/ )  ) -> "break" _expression_with_post_block? )
 
-  continue_statement ::= @(  1(  /c_?[oO]_?[nN]_?[tT]_?[iI]_?[nN]_?[uU]_?[eE]/ )  ) -> "continue" _expression_with_post_block?
+  continue_statement ::=  >0(  @(  1(  /c_?[oO]_?[nN]_?[tT]_?[iI]_?[nN]_?[uU]_?[eE]/ )  ) -> "continue" _expression_with_post_block? )
 
   assembly_statement ::= @(  1(  /a_?[sS]_?[mM]/ )  ) -> "asm" ( pragma_list )?:pragma _string_literal
 
@@ -156,13 +150,13 @@ rules:
 
   mixin_statement ::= @(  1(  /m_?[iI]_?[xX]_?[iI]_?[nN]/ )  ) -> "mixin" expression_list
 
-  import_from_statement ::= @( /f_?[rR]_?[oO]_?[mM]/ ) -> "from" ( _expression ):module @(  1(  /i_?[mM]_?[pP]_?[oO]_?[rR]_?[tT]/ )  ) -> "import" expression_list
+  import_from_statement ::= @(  0(  /f_?[rR]_?[oO]_?[mM]/ )  ) -> "from" ( _expression ):module @(  1(  /i_?[mM]_?[pP]_?[oO]_?[rR]_?[tT]/ )  ) -> "import" expression_list
 
   while ::= @(  1(  /w_?[hH]_?[iI]_?[lL]_?[eE]/ )  ) -> "while" ( _simple_expression ):condition ':' ( statement_list ):body
 
   static_statement ::= @(  1(  /s_?[tT]_?[aA]_?[tT]_?[iI]_?[cC]/ )  ) -> "static" ':' ( statement_list ):body
 
-  pragma_statement ::= pragma_list ( ':' ( statement_list ):body )?
+  pragma_statement ::=  >0(  pragma_list ( ':' ( statement_list ):body )? )
 
   defer ::= @(  1(  /d_?[eE]_?[fF]_?[eE]_?[rR]/ )  ) -> "defer" ':' ( statement_list ):body
 
@@ -255,7 +249,7 @@ rules:
 
   enum_declaration ::= @(  1(  /e_?[nN]_?[uU]_?[mM]/ )  ) -> "enum" ( ( enum_field_declaration ','? )+ | _layout_start ( ( enum_field_declaration ','? )+ _layout_terminator )* _layout_end )
 
-  enum_field_declaration ::= symbol_declaration ( '=' ( _expression ):value )?
+  enum_field_declaration ::=  >0(  symbol_declaration ( '=' ( _expression ):value )? )
 
   _tuple_declaration ::= @(  1(  /t_?[uU]_?[pP]_?[lL]_?[eE]/ )  ) -> "tuple" _layout_start ( _identifier_declaration -> "field_declaration" _layout_terminator )+ _layout_end
 
@@ -273,13 +267,13 @@ rules:
 	| nil_literal
 	| @(  1(  /d_?[iI]_?[sS]_?[cC]_?[aA]_?[rR]_?[dD]/ )  ) -> "discard" -> "discard_statement"
 
-  conditional_declaration ::= @(  1(  /w_?[hH]_?[eE]_?[nN]/ )  ) -> "when" ( _expression ):condition ':' ( _object_field_declaration_branch_list -> "field_declaration_list" ):consequence ( _elif_declaration_branch -> "elif_branch" | _else_declaration_branch -> "else_branch" | _inhibit_keyword_termination )*:alternative
+  conditional_declaration ::=  >0(  @(  1(  /w_?[hH]_?[eE]_?[nN]/ )  ) -> "when" ( _expression ):condition ':' ( _object_field_declaration_branch_list -> "field_declaration_list" ):consequence ( _elif_declaration_branch -> "elif_branch" | _else_declaration_branch -> "else_branch" | _inhibit_keyword_termination )*:alternative )
 
   _elif_declaration_branch ::= @(  1(  /e_?[lL]_?[iI]_?[fF]/ )  ) -> "elif" ( _expression ):condition ':' ( _object_field_declaration_branch_list -> "field_declaration_list" ):consequence
 
   variant_declaration ::= @(  1(  /c_?[aA]_?[sS]_?[eE]/ )  ) -> "case" _variant_declaration_body
 
-  _variant_declaration_body ::= variant_discriminator_declaration ':'? ( _of_declaration_branch -> "of_branch" )*:alternative _inhibit_keyword_termination? ( _else_declaration_branch -> "else_branch" )?:alternative
+  _variant_declaration_body ::=  >0(  variant_discriminator_declaration ':'? ( _of_declaration_branch -> "of_branch" )*:alternative _inhibit_keyword_termination? ( _else_declaration_branch -> "else_branch" )?:alternative )
 
   variant_discriminator_declaration ::= _identifier_declaration
 
@@ -377,16 +371,16 @@ rules:
 
   when ::= @(  1(  /w_?[hH]_?[eE]_?[nN]/ )  ) -> "when" ( _expression ):condition _if_body
 
-  _if_body ::= ':' ( statement_list ):consequence _if_alternatives?
+  _if_body ::=  >0(  ':' ( statement_list ):consequence _if_alternatives? )
 
   _if_branch ::= elif_branch
 	| else_branch
 
   _if_alternatives ::= ( _inhibit_keyword_termination | ( _if_branch ):alternative )+
 
-  case ::= @(  1(  /c_?[aA]_?[sS]_?[eE]/ )  ) -> "case" ( _expression ):value ':'? ( of_branch )*:alternative _if_alternatives?
+  case ::=  >0(  @(  1(  /c_?[aA]_?[sS]_?[eE]/ )  ) -> "case" ( _expression ):value ':'? ( of_branch )*:alternative _if_alternatives? )
 
-  try ::= @(  1(  /t_?[rR]_?[yY]/ )  ) -> "try" ':' ( statement_list ):body ( _inhibit_keyword_termination | _try_branch )*
+  try ::=  >0(  @(  1(  /t_?[rR]_?[yY]/ )  ) -> "try" ':' ( statement_list ):body ( _inhibit_keyword_termination | _try_branch )* )
 
   _try_branch ::= except_branch
 	| finally_branch
@@ -409,11 +403,11 @@ rules:
 
   _command_statement ::= ( _basic_expression ):function _command_statement_argument_list -> "argument_list"
 
-  _command_statement_argument_list ::= _equal_expression_list ( ':' statement_list _post_expression_block_tail? )?
+  _command_statement_argument_list ::=  >0(  _equal_expression_list ( ':' statement_list _post_expression_block_tail? )? )
 
   _command_block ::= ( _basic_expression ):function _command_block_argument_list -> "argument_list"
 
-  _command_block_argument_list ::= _command_expression_argument_list ':' statement_list _post_expression_block_tail?
+  _command_block_argument_list ::=  >0(  _command_expression_argument_list ':' statement_list _post_expression_block_tail? )
 
   _dot_generic_call_block ::= _dot_generic_head _call_block_argument_list -> "argument_list"
 
@@ -425,7 +419,7 @@ rules:
 
   _call_do ::= ( _basic_expression ):function _call_do_argument_list -> "argument_list"
 
-  _call_do_argument_list ::= _call_argument_list? do_block _post_expression_block_tail?
+  _call_do_argument_list ::=  >0(  _call_argument_list? do_block _post_expression_block_tail? )
 
   _call_expression ::=  suffix(  ( _basic_expression ):function _call_argument_list -> "argument_list" )
 
@@ -439,13 +433,13 @@ rules:
 
   _command_expression_argument_list ::= _simple_expression_command_start
 
-  dot_generic_call ::= _dot_generic_head _call_argument_list -> "argument_list"?
+  dot_generic_call ::=  >0(  _dot_generic_head _call_argument_list -> "argument_list"? )
 
   _dot_generic_head ::=  suffix(  ( _basic_expression ):first_argument '.' ( _symbol ):function ( _dot_generic_argument_list -> "generic_argument_list" ):generic_arguments )
 
   _dot_generic_argument_list ::= !( '[:' ) _expression ( ',' _expression )* _bracket_close
 
-  _post_expression_block ::= ( ':' statement_list | do_block ) _post_expression_block_tail?
+  _post_expression_block ::=  >0(  ( ':' statement_list | do_block ) _post_expression_block_tail? )
 
   _post_expression_block_tail ::= ( ( _if_branch | of_branch | _try_branch | do_block | _inhibit_keyword_termination ) )+
 
@@ -461,7 +455,7 @@ rules:
 
   enum_type ::= @(  1(  /e_?[nN]_?[uU]_?[mM]/ )  ) -> "enum"
 
-  tuple_type ::= @(  1(  /t_?[uU]_?[pP]_?[lL]_?[eE]/ )  ) -> "tuple" _tuple_field_declaration_list -> "field_declaration_list"?
+  tuple_type ::=  >0(  @(  1(  /t_?[uU]_?[pP]_?[lL]_?[eE]/ )  ) -> "tuple" _tuple_field_declaration_list -> "field_declaration_list"? )
 
   var_type ::=  >type_modifiers(  @(  1(  /v_?[aA]_?[rR]/ )  ) -> "var" type_expression? )
 
@@ -475,11 +469,11 @@ rules:
 
   _tuple_field_declaration_list ::= ( '[' | !( '[' ) ) _field_declaration_list? _bracket_close
 
-  _proc_type ::= @(  1(  /p_?[rR]_?[oO]_?[cC]/ )  ) -> "proc" ( parameter_declaration_list )?:parameters ( ':' ( type_expression ):return_type )? ( pragma_list )?:pragmas
+  _proc_type ::=  >0(  @(  1(  /p_?[rR]_?[oO]_?[cC]/ )  ) -> "proc" ( parameter_declaration_list )?:parameters ( ':' ( type_expression ):return_type )? ( pragma_list )?:pragmas )
 
-  _iterator_type ::= @(  1(  /i_?[tT]_?[eE]_?[rR]_?[aA]_?[tT]_?[oO]_?[rR]/ )  ) -> "iterator" ( parameter_declaration_list )?:parameters ( ':' ( type_expression ):return_type )? ( pragma_list )?:pragmas
+  _iterator_type ::=  >0(  @(  1(  /i_?[tT]_?[eE]_?[rR]_?[aA]_?[tT]_?[oO]_?[rR]/ )  ) -> "iterator" ( parameter_declaration_list )?:parameters ( ':' ( type_expression ):return_type )? ( pragma_list )?:pragmas )
 
-  _func_type ::= @(  1(  /f_?[uU]_?[nN]_?[cC]/ )  ) -> "func" ( parameter_declaration_list )?:parameters ( ':' ( type_expression ):return_type )? ( pragma_list )?:pragmas
+  _func_type ::=  >0(  @(  1(  /f_?[uU]_?[nN]_?[cC]/ )  ) -> "func" ( parameter_declaration_list )?:parameters ( ':' ( type_expression ):return_type )? ( pragma_list )?:pragmas )
 
   _infix_extended ::=  post_expr(  _infix_expression _post_expression_block )
 
@@ -564,11 +558,11 @@ rules:
 
   pragma_list ::= '{.' _colon_equal_expression_list? ( _dot_curly_close | _curly_close )
 
-  expression_list ::= ( _expression ) ( ',' ( _expression ) )*
+  expression_list ::=  >0(  ( _expression ) ( ',' ( _expression ) )* )
 
-  _equal_expression_list ::= ( _expression_with_call_do | equal_expression ) ( ',' ( _expression_with_call_do | equal_expression ) )*
+  _equal_expression_list ::=  >0(  ( _expression_with_call_do | equal_expression ) ( ',' ( _expression_with_call_do | equal_expression ) )* )
 
-  _colon_equal_expression_list ::= ( _expression_with_call_do | colon_expression | equal_expression ) ( ',' ( _expression_with_call_do | colon_expression | equal_expression ) )* ','?
+  _colon_equal_expression_list ::=  >0(  ( _expression_with_call_do | colon_expression | equal_expression ) ( ',' ( _expression_with_call_do | colon_expression | equal_expression ) )* ','? )
 
   colon_expression ::= ( _left_hand_side ):left ':' ( _expression ):right
 
@@ -584,9 +578,9 @@ rules:
 
   _field_declaration_list ::= _identifier_declaration -> "field_declaration" ( ( ',' | ';' ) _identifier_declaration -> "field_declaration" )* ( ',' | ';' )?
 
-  _identifier_declaration ::= symbol_declaration_list ( ':' ( type_expression ):type )? ( '=' ( _expression_with_post_block ):value )?
+  _identifier_declaration ::=  >0(  symbol_declaration_list ( ':' ( type_expression ):type )? ( '=' ( _expression_with_post_block ):value )? )
 
-  symbol_declaration_list ::= ( symbol_declaration | tuple_deconstruct_declaration ) ( ',' ( symbol_declaration | tuple_deconstruct_declaration ) )* ','?
+  symbol_declaration_list ::=  >0(  ( symbol_declaration | tuple_deconstruct_declaration ) ( ',' ( symbol_declaration | tuple_deconstruct_declaration ) )* ','? )
 
   tuple_deconstruct_declaration ::= '(' ( symbol_declaration | tuple_deconstruct_declaration ) ( ',' ( symbol_declaration | tuple_deconstruct_declaration ) )* ','? _paren_close
 
@@ -660,3 +654,4 @@ rules:
   documentation_comment ::= '##' comment_content
 
   comment ::= '#' comment_content
+

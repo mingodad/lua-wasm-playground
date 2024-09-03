@@ -7,14 +7,8 @@
 ;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
-externals ::= {
-	}
-
 extras ::= {
 	/\r?\n/
-	}
-
-supertypes ::= {
 	}
 
 inline ::= {
@@ -56,7 +50,7 @@ rules:
 
   character_class ::= '[' '^'? ( class_range | _class_atom )* ']'
 
-  class_range ::= _class_atom '-' _class_atom
+  class_range ::=  >0(  _class_atom '-' _class_atom )
 
   _class_atom ::= '-' -> "class_character"
 	| class_character

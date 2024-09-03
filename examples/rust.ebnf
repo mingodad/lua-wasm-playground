@@ -144,7 +144,7 @@ rules:
 	| super
 	| crate
 	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> "primitive_type"
-	| ( '+' | '-' | '*' | '/' | '%' | '^' | '!' | '&' | '|' | '&&' | '||' | '<<' | '>>' | '+=' | '-=' | '*=' | '/=' | '%=' | '^=' | '&=' | '|=' | '<<=' | '>>=' | '=' | '==' | '!=' | '>' | '<' | '>=' | '<=' | '@' | '_' | '.' | '..' | '...' | '..=' | ',' | ';' | ':' | '::' | '->' | '=>' | '#' | '?' )+
+	|  >0(  ( '+' | '-' | '*' | '/' | '%' | '^' | '!' | '&' | '|' | '&&' | '||' | '<<' | '>>' | '+=' | '-=' | '*=' | '/=' | '%=' | '^=' | '&=' | '|=' | '<<=' | '>>=' | '=' | '==' | '!=' | '>' | '<' | '>=' | '<=' | '@' | '_' | '.' | '..' | '...' | '..=' | ',' | ';' | ':' | '::' | '->' | '=>' | '#' | '?' )+ )
 	| "'"
 	| 'as'
 	| 'async'
@@ -216,7 +216,7 @@ rules:
 
   function_modifiers ::= ( 'async' | 'default' | 'const' | 'unsafe' | extern_modifier )+
 
-  where_clause ::= 'where' where_predicate ( ',' where_predicate )* ','?
+  where_clause ::=  >0(  'where' where_predicate ( ',' where_predicate )* ','? )
 
   where_predicate ::= ( lifetime | _type_identifier | scoped_type_identifier | generic_type | reference_type | pointer_type | tuple_type | array_type | higher_ranked_trait_bound | ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> "primitive_type" ):left ( trait_bounds ):bounds
 
@@ -340,9 +340,9 @@ rules:
 	| return_expression
 	| yield_expression
 	| _literal
-	| identifier
+	|  <0(  identifier )
 	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> "identifier"
-	| _reserved_identifier
+	|  <0(  _reserved_identifier )
 	| self
 	| scoped_identifier
 	| generic_function
@@ -411,16 +411,16 @@ rules:
 	|  <9(  ( _expression ):left ( '+' | '-' ):operator ( _expression ):right )
 	|  <10(  ( _expression ):left ( '*' | '/' | '%' ):operator ( _expression ):right )
 
-  assignment_expression ::= ( _expression ):left '=' ( _expression ):right
+  assignment_expression ::=  <0(  ( _expression ):left '=' ( _expression ):right )
 
-  compound_assignment_expr ::= ( _expression ):left ( '+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' | '<<=' | '>>=' ):operator ( _expression ):right
+  compound_assignment_expr ::=  <0(  ( _expression ):left ( '+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' | '<<=' | '>>=' ):operator ( _expression ):right )
 
   type_cast_expression ::=  <11(  ( _expression ):value 'as' ( _type ):type )
 
-  return_expression ::= 'return' _expression
+  return_expression ::=  <0(  'return' _expression )
 	|  -1(  'return' )
 
-  yield_expression ::= 'yield' _expression
+  yield_expression ::=  <0(  'yield' _expression )
 	|  -1(  'yield' )
 
   call_expression ::=  15(  ( _expression_except_range ):function ( arguments ):arguments )
@@ -445,7 +445,7 @@ rules:
 
   base_field_initializer ::= '..' _expression
 
-  if_expression ::= 'if' ( _condition ):condition ( block ):consequence ( else_clause )?:alternative
+  if_expression ::=  >0(  'if' ( _condition ):condition ( block ):consequence ( else_clause )?:alternative )
 
   let_condition ::= 'let' ( _pattern ):pattern '=' (  <3(  _expression )  ):value
 
@@ -461,7 +461,7 @@ rules:
 
   match_block ::= '{' ( match_arm* last_match_arm -> "match_arm" )? '}'
 
-  match_arm ::= ( attribute_item | inner_attribute_item )* ( match_pattern ):pattern '=>' ( ( _expression ):value ',' | (  1(  _expression_ending_with_block )  ):value )
+  match_arm ::=  >0(  ( attribute_item | inner_attribute_item )* ( match_pattern ):pattern '=>' ( ( _expression ):value ',' | (  1(  _expression_ending_with_block )  ):value ) )
 
   last_match_arm ::= ( attribute_item | inner_attribute_item )* ( match_pattern ):pattern '=>' ( _expression ):value ','?
 
@@ -481,9 +481,9 @@ rules:
 
   label ::= "'"  identifier
 
-  break_expression ::= 'break' label? _expression?
+  break_expression ::=  <0(  'break' label? _expression? )
 
-  continue_expression ::= 'continue' label?
+  continue_expression ::=  <0(  'continue' label? )
 
   index_expression ::=  15(  _expression '[' _expression ']' )
 

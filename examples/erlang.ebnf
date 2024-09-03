@@ -7,15 +7,9 @@
 ;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
-externals ::= {
-	}
-
 extras ::= {
 	/[\x01-\x20\x80-\xA0]/
 	comment
-	}
-
-supertypes ::= {
 	}
 
 inline ::= {
@@ -147,9 +141,9 @@ rules:
 
   catch_pattern ::= ( pattern ):class ( ':' pattern )?:exception ( ':' variable )?:stacktrace
 
-  expr_catch ::= 'catch' expression
+  expr_catch ::=  <0(  'catch' expression )
 
-  expr_throw ::= 'throw' expression
+  expr_throw ::=  <0(  'throw' expression )
 
   expr_begin_block ::= 'begin' expression ( ',' expression )* 'end'
 
@@ -173,7 +167,7 @@ rules:
   _expr_operator_binary ::=  <9(  ( expression ):lhs ( '*' | '+' | '-' | '/' | '/=' | '<' | '=/=' | '=:=' | '=<' | '==' | '>' | '>=' | 'and' | 'andalso' | 'band' | 'bor' | 'bsl' | 'bsr' | 'bxor' | 'div' | 'or' | 'orelse' | 'rem' | 'xor' ):operator ( expression ):rhs )
 	|  >9(  ( expression ):lhs ( '=!' | '++' | '--' ):operator ( expression ):rhs )
 
-  expr_send ::= expression '!' expression
+  expr_send ::=  >0(  expression '!' expression )
 
   expr_receive ::= 'receive' ( case_clause ( ';' case_clause )* )?:branches expr_receive_after? 'end'
 
@@ -282,3 +276,4 @@ rules:
   record ::= '#' atom '{' ( record_field ( ',' record_field )* )? '}'
 
   record_field ::= term '=' expression
+

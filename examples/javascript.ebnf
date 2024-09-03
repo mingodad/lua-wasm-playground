@@ -154,11 +154,11 @@ rules:
 
   variable_declarator ::= ( identifier | _destructuring_pattern ):name _initializer?
 
-  statement_block ::= '{' statement* '}' _automatic_semicolon?
+  statement_block ::=  >0(  '{' statement* '}' _automatic_semicolon? )
 
   else_clause ::= 'else' statement
 
-  if_statement ::= 'if' ( parenthesized_expression ):condition ( statement ):consequence ( else_clause )?:alternative
+  if_statement ::=  >0(  'if' ( parenthesized_expression ):condition ( statement ):consequence ( else_clause )?:alternative )
 
   switch_statement ::= 'switch' ( parenthesized_expression ):value ( switch_body ):body
 
@@ -170,7 +170,7 @@ rules:
 
   while_statement ::= 'while' ( parenthesized_expression ):condition ( statement ):body
 
-  do_statement ::= 'do' ( statement ):body 'while' ( parenthesized_expression ):condition _semicolon?
+  do_statement ::=  >0(  'do' ( statement ):body 'while' ( parenthesized_expression ):condition _semicolon? )
 
   try_statement ::= 'try' ( statement_block ):body ( catch_clause )?:handler ( finally_clause )?:finalizer
 
@@ -241,7 +241,7 @@ rules:
 	| meta_property
 	| call_expression
 
-  yield_expression ::= 'yield' ( '*' expression | expression )
+  yield_expression ::=  >0(  'yield' ( '*' expression | expression ) )
 
   object ::=  object(  '{' ( ( pair | spread_element | method_definition | ( identifier | _reserved_identifier ) -> "shorthand_property_identifier" )? ( ',' ( pair | spread_element | method_definition | ( identifier | _reserved_identifier ) -> "shorthand_property_identifier" )? )* )? '}' )
 
@@ -404,9 +404,9 @@ rules:
 
   unary_expression ::=  <unary_void(  ( '!' | '~' | '-' | '+' | 'typeof' | 'void' | 'delete' ):operator ( expression ):argument )
 
-  update_expression ::= ( expression ):argument ( '++' | '--' ):operator | ( '++' | '--' ):operator ( expression ):argument
+  update_expression ::=  <0(  ( expression ):argument ( '++' | '--' ):operator | ( '++' | '--' ):operator ( expression ):argument )
 
-  sequence_expression ::= expression ( ',' expression )*
+  sequence_expression ::=  >0(  expression ( ',' expression )* )
 
   string ::= '"'  ( unescaped_double_string_fragment -> "string_fragment" | escape_sequence )* '"'
 	| "'"  ( unescaped_single_string_fragment -> "string_fragment" | escape_sequence )* "'"
@@ -471,7 +471,7 @@ rules:
 
   pattern ::=  ~-1(  _lhs_expression | rest_pattern )
 
-  rest_pattern ::= '...' _lhs_expression
+  rest_pattern ::=  >0(  '...' _lhs_expression )
 
   method_definition ::= ( decorator )*:decorator ( 'static' | @( 'static' /\s+/ 'get' /\s*\n/ ) -> "static get" )? 'async'? ( 'get' | 'set' | '*' )? ( _property_name ):name ( formal_parameters ):parameters ( statement_block ):body
 
@@ -496,3 +496,4 @@ rules:
 
   _semicolon ::= _automatic_semicolon
 	| ';'
+

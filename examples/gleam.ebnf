@@ -19,12 +19,6 @@ extras ::= {
 	comment
 	}
 
-supertypes ::= {
-	}
-
-inline ::= {
-	}
-
 conflicts ::= {
 	{ _maybe_record_expression _maybe_tuple_expression }
 	{ _maybe_record_expression _maybe_tuple_expression remote_constructor_name }
@@ -131,7 +125,7 @@ rules:
 
   constant_type_argument ::= _constant_type
 
-  external_type ::= visibility_modifier? 'external'? 'type' type_name
+  external_type ::=  >0(  visibility_modifier? 'external'? 'type' type_name )
 
   external_function ::= visibility_modifier? 'external' 'fn' ( identifier ):name ( external_function_parameters -> "function_parameters" ):parameters '->' ( _type ):return_type '=' ( external_function_body ):body
 
@@ -141,7 +135,7 @@ rules:
 
   external_function_body ::= string string
 
-  function ::= visibility_modifier? 'fn' ( identifier ):name ( function_parameters ):parameters ( '->' ( _type ):return_type )? ( '{' ( _statement_seq -> "function_body" )?:body '}' )?
+  function ::=  >0(  visibility_modifier? 'fn' ( identifier ):name ( function_parameters ):parameters ( '->' ( _type ):return_type )? ( '{' ( _statement_seq -> "function_body" )?:body '}' )? )
 
   function_parameters ::= '(' ( function_parameter ( ',' function_parameter )* ','? )? ')'
 
@@ -321,7 +315,7 @@ rules:
 	| field_access
 	| tuple_access
 
-  tuple_access ::= ( _maybe_tuple_expression ):tuple '.' ( integer ):index
+  tuple_access ::=  <0(  ( _maybe_tuple_expression ):tuple '.' ( integer ):index )
 
   _maybe_record_expression ::= record
 	| identifier
@@ -332,7 +326,7 @@ rules:
 	| field_access
 	| tuple_access
 
-  field_access ::= ( _maybe_record_expression ):record '.' ( label ):field
+  field_access ::=  <0(  ( _maybe_record_expression ):record '.' ( label ):field )
 
   _maybe_function_expression ::= identifier
 	| anonymous_function

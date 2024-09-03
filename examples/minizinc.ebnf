@@ -7,9 +7,6 @@
 ;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
-externals ::= {
-	}
-
 extras ::= {
 	/\s/
 	line_comment
@@ -20,9 +17,6 @@ supertypes ::= {
 	_expression
 	_item
 	_type
-	}
-
-inline ::= {
 	}
 
 conflicts ::= {
@@ -168,3 +162,4 @@ rules:
   line_comment ::= @( '%' /.*/ )
 
   block_comment ::= @( '/*' /([^*]|\*[^\/]|\n)*?\*?/ '*/' )
+

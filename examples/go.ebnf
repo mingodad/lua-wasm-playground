@@ -7,9 +7,6 @@
 ;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
-externals ::= {
-	}
-
 extras ::= {
 	comment
 	/\s/
@@ -73,7 +70,7 @@ rules:
 
   const_declaration ::= 'const' ( const_spec | '(' ( const_spec ( /\n/ | ';' | '\0'  ) )* ')' )
 
-  const_spec ::= ( identifier ( ',' identifier )* ):name ( ( _type )?:type '=' ( expression_list ):value )?
+  const_spec ::=  <0(  ( identifier ( ',' identifier )* ):name ( ( _type )?:type '=' ( expression_list ):value )? )
 
   var_declaration ::= 'var' ( var_spec | var_spec_list )
 
@@ -91,7 +88,7 @@ rules:
 
   parameter_list ::= '(' ( ( ( parameter_declaration | variadic_parameter_declaration ) ( ',' ( parameter_declaration | variadic_parameter_declaration ) )* )? ','? )? ')'
 
-  parameter_declaration ::= ( ( identifier ):name ( ',' ( identifier ):name )* )? ( _type ):type
+  parameter_declaration ::=  <0(  ( ( identifier ):name ( ',' ( identifier ):name )* )? ( _type ):type )
 
   variadic_parameter_declaration ::= ( identifier )?:name '...' ( _type ):type
 
@@ -129,15 +126,15 @@ rules:
 
   pointer_type ::=  6(  '*' _type )
 
-  array_type ::= '[' ( _expression ):length ']' ( _type ):element
+  array_type ::=  >0(  '[' ( _expression ):length ']' ( _type ):element )
 
   implicit_length_array_type ::= '[' '...' ']' ( _type ):element
 
-  slice_type ::= '[' ']' ( _type ):element
+  slice_type ::=  >0(  '[' ']' ( _type ):element )
 
   struct_type ::= 'struct' field_declaration_list
 
-  negated_type ::= '~' _type
+  negated_type ::=  <0(  '~' _type )
 
   field_declaration_list ::= '{' ( field_declaration ( ( /\n/ | ';' | '\0'  ) field_declaration )* ( /\n/ | ';' | '\0'  )? )? '}'
 
@@ -152,11 +149,11 @@ rules:
 
   type_elem ::= _type ( '|' _type )*
 
-  map_type ::= 'map' '[' ( _type ):key ']' ( _type ):value
+  map_type ::=  >0(  'map' '[' ( _type ):key ']' ( _type ):value )
 
-  channel_type ::= 'chan' ( _type ):value | 'chan' '<-' ( _type ):value |  6(  '<-' 'chan' ( _type ):value )
+  channel_type ::=  <0(  'chan' ( _type ):value | 'chan' '<-' ( _type ):value |  6(  '<-' 'chan' ( _type ):value )  )
 
-  function_type ::= 'func' ( parameter_list ):parameters ( parameter_list | _simple_type )?:result
+  function_type ::=  >0(  'func' ( parameter_list ):parameters ( parameter_list | _simple_type )?:result )
 
   block ::= '{' _statement_list? '}'
 
@@ -208,7 +205,7 @@ rules:
 
   empty_labeled_statement ::= ( identifier -> "label_name" ):label ':'
 
-  fallthrough_statement ::= 'fallthrough'
+  fallthrough_statement ::=  <0(  'fallthrough' )
 
   break_statement ::= 'break' identifier -> "label_name"?
 
@@ -274,7 +271,7 @@ rules:
 
   call_expression ::=  7(  ( ( 'new' | 'make' ) -> "identifier" ):function ( special_argument_list -> "argument_list" ):arguments | ( _expression ):function ( type_arguments )?:type_arguments ( argument_list ):arguments )
 
-  variadic_argument ::= _expression '...'
+  variadic_argument ::=  >0(  _expression '...' )
 
   special_argument_list ::= '(' ( _type ( ',' _expression )* ','? )? ')'
 
@@ -349,3 +346,4 @@ rules:
   iota ::= 'iota'
 
   comment ::= @( '//' /.*/ | '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/' )
+

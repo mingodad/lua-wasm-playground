@@ -70,9 +70,6 @@ inline ::= {
 	_call_operator
 	}
 
-conflicts ::= {
-	}
-
 word ::= identifier
 
 rules:
@@ -153,25 +150,25 @@ rules:
 
   module ::= 'module' ( constant | scope_resolution ):name _terminator? ( body_statement )?:body 'end'
 
-  return_command ::= 'return' command_argument_list -> "argument_list"
+  return_command ::=  <0(  'return' command_argument_list -> "argument_list" )
 
-  yield_command ::= 'yield' command_argument_list -> "argument_list"
+  yield_command ::=  <0(  'yield' command_argument_list -> "argument_list" )
 
-  break_command ::= 'break' command_argument_list -> "argument_list"
+  break_command ::=  <0(  'break' command_argument_list -> "argument_list" )
 
-  next_command ::= 'next' command_argument_list -> "argument_list"
+  next_command ::=  <0(  'next' command_argument_list -> "argument_list" )
 
-  return ::= 'return' argument_list?
+  return ::=  <0(  'return' argument_list? )
 
-  yield ::= 'yield' argument_list?
+  yield ::=  <0(  'yield' argument_list? )
 
-  break ::= 'break' argument_list?
+  break ::=  <0(  'break' argument_list? )
 
-  next ::= 'next' argument_list?
+  next ::=  <0(  'next' argument_list? )
 
-  redo ::= 'redo' argument_list?
+  redo ::=  <0(  'redo' argument_list? )
 
-  retry ::= 'retry' argument_list?
+  retry ::=  <0(  'retry' argument_list? )
 
   if_modifier ::=  16(  ( _statement ):body 'if' ( _expression ):condition )
 
@@ -213,7 +210,7 @@ rules:
 
   _pattern_top_expr_body ::=  -1(  _pattern_expr | _array_pattern_n -> "array_pattern" | _find_pattern_body -> "find_pattern" | _hash_pattern_body -> "hash_pattern" )
 
-  _array_pattern_n ::= _pattern_expr ',' -> "splat_parameter" | _pattern_expr ',' ( _pattern_expr | _array_pattern_n ) | splat_parameter ( ',' _pattern_expr )*
+  _array_pattern_n ::=  >0(  _pattern_expr ',' -> "splat_parameter" | _pattern_expr ',' ( _pattern_expr | _array_pattern_n ) | splat_parameter ( ',' _pattern_expr )* )
 
   _pattern_expr ::= as_pattern
 	| _pattern_expr_alt
@@ -236,7 +233,7 @@ rules:
 	| ( _pattern_constant ):class !( '[' ) _find_pattern_body ']'
 	| ( _pattern_constant ):class !( '(' ) _find_pattern_body ')'
 
-  _hash_pattern_body ::= keyword_pattern ( ',' keyword_pattern )* ','? | keyword_pattern ( ',' keyword_pattern )* ',' _hash_pattern_any_rest | _hash_pattern_any_rest
+  _hash_pattern_body ::=  >0(  keyword_pattern ( ',' keyword_pattern )* ','? | keyword_pattern ( ',' keyword_pattern )* ',' _hash_pattern_any_rest | _hash_pattern_any_rest )
 
   keyword_pattern ::=  >-1(  ( identifier -> "hash_key_symbol" | constant -> "hash_key_symbol" | identifier_suffix -> "hash_key_symbol" | constant_suffix -> "hash_key_symbol" | string ):key !( ':' ) ( _pattern_expr )?:value )
 
@@ -310,7 +307,7 @@ rules:
 	| command_operator_assignment -> "operator_assignment"
 	| command_call -> "call"
 	| command_call_with_block -> "call"
-	| _chained_command_call -> "call"
+	|  <0(  _chained_command_call -> "call" )
 	| return_command -> "return"
 	| yield_command -> "yield"
 	| break_command -> "break"
@@ -398,21 +395,21 @@ rules:
 	|  1(  ( _call | ( _variable | _function_identifier ):method ) ( block ):block )
 	|  -1(  ( _call | ( _variable | _function_identifier ):method ) ( do_block ):block )
 
-  command_argument_list ::= _argument ( ',' _argument )*
+  command_argument_list ::=  >0(  _argument ( ',' _argument )* )
 
-  argument_list ::= !( '(' ) _argument_list_with_trailing_comma? ')'
+  argument_list ::=  >0(  !( '(' ) _argument_list_with_trailing_comma? ')' )
 
-  _argument_list_with_trailing_comma ::= _argument ( ',' _argument )* ','?
+  _argument_list_with_trailing_comma ::=  >0(  _argument ( ',' _argument )* ','? )
 
-  _argument ::= _expression | splat_argument | hash_splat_argument | forward_argument | block_argument | pair
+  _argument ::=  <0(  _expression | splat_argument | hash_splat_argument | forward_argument | block_argument | pair )
 
   forward_argument ::= '...'
 
-  splat_argument ::= _splat_star -> "*" _arg?
+  splat_argument ::=  >0(  _splat_star -> "*" _arg? )
 
-  hash_splat_argument ::= _hash_splat_star_star -> "**" _arg?
+  hash_splat_argument ::=  >0(  _hash_splat_star_star -> "**" _arg? )
 
-  block_argument ::= _block_ampersand -> "&" _arg?
+  block_argument ::=  >0(  _block_ampersand -> "&" _arg? )
 
   do_block ::= 'do' _terminator? ( ( block_parameters ):parameters _terminator? )? ( body_statement )?:body 'end'
 
@@ -446,7 +443,7 @@ rules:
 	|  >40(  ( _arg ):left ( '==' | '!=' | '===' | '<=>' | '=~' | '!~' ):operator ( _arg ):right )
 	|  >80(  ( _arg ):left ( _binary_star_star -> "**" ):operator ( _arg ):right )
 
-  command_binary ::= ( _expression ):left ( 'or' | 'and' ):operator ( _expression ):right
+  command_binary ::=  <0(  ( _expression ):left ( 'or' | 'and' ):operator ( _expression ):right )
 
   unary ::=  10(  ( 'defined?' ):operator ( _arg ):operand )
 	|  >5(  ( 'not' ):operator ( _arg ):operand )
@@ -487,11 +484,11 @@ rules:
   _function_identifier ::= identifier_suffix -> "identifier"
 	| constant_suffix -> "constant"
 
-  _function_identifier_call ::= ( _function_identifier ):method
+  _function_identifier_call ::=  <0(  ( _function_identifier ):method )
 
-  _lhs ::= _variable | true | false | nil | scope_resolution | element_reference | _call -> "call"
+  _lhs ::=  <0(  _variable | true | false | nil | scope_resolution | element_reference | _call -> "call" )
 
-  _variable ::= self | super | _nonlocal_variable | identifier | constant
+  _variable ::=  >0(  self | super | _nonlocal_variable | identifier | constant )
 
   operator ::= '..'
 	| '|'
@@ -612,7 +609,7 @@ rules:
 
   hash ::= '{' ( ( pair | hash_splat_argument ) ( ',' ( pair | hash_splat_argument ) )* ','? )? '}'
 
-  pair ::= ( _arg ):key '=>' ( _arg ):value | ( string ):key !( ':' ) ( _arg ):value | ( hash_key_symbol | identifier -> "hash_key_symbol" | constant -> "hash_key_symbol" | identifier_suffix -> "hash_key_symbol" | constant_suffix -> "hash_key_symbol" ):key !( ':' ) ( ( _arg )?:value | _no_line_break )
+  pair ::=  >0(  ( _arg ):key '=>' ( _arg ):value | ( string ):key !( ':' ) ( _arg ):value | ( hash_key_symbol | identifier -> "hash_key_symbol" | constant -> "hash_key_symbol" | identifier_suffix -> "hash_key_symbol" | constant_suffix -> "hash_key_symbol" ):key !( ':' ) ( ( _arg )?:value | _no_line_break ) )
 
   lambda ::= '->' ( parameters -> "lambda_parameters" | bare_parameters -> "lambda_parameters" )?:parameters ( block | do_block ):body
 

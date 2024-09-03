@@ -21,15 +21,6 @@ extras ::= {
 	comment
 	}
 
-supertypes ::= {
-	}
-
-inline ::= {
-	}
-
-conflicts ::= {
-	}
-
 rules:
 
   source_file ::= ( _instruction '\n'  )*
@@ -172,3 +163,4 @@ rules:
   _non_newline_whitespace ::= !( /[\t ]+/ )
 
   comment ::= /#.*/
+

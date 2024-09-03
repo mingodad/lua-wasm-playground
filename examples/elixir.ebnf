@@ -44,12 +44,6 @@ extras ::= {
 	_newline_before_binary_operator
 	}
 
-supertypes ::= {
-	}
-
-inline ::= {
-	}
-
 conflicts ::= {
 	{ _expression _local_call_without_parentheses }
 	{ binary_operator _stab_clause_arguments_without_parentheses }
@@ -63,7 +57,7 @@ rules:
 
   source ::= _terminator? ( _expression ( _terminator _expression )* _terminator? )?
 
-  _terminator ::= /\r?\n/* ';' | /\r?\n/+
+  _terminator ::=  >0(  /\r?\n/* ';' | /\r?\n/+ )
 
   _expression ::= block
 	| identifier
@@ -166,7 +160,7 @@ rules:
 
   sigil ::= '~' ( !( /[a-z]/ ) -> "sigil_name" ( _quoted_i_double | _quoted_i_single | _quoted_i_heredoc_single | _quoted_i_heredoc_double | _quoted_i_parenthesis | _quoted_i_curly | _quoted_i_square | _quoted_i_angle | _quoted_i_bar | _quoted_i_slash ) | !( /[A-Z][A-Z0-9]*/ ) -> "sigil_name" ( _quoted_double | _quoted_single | _quoted_heredoc_single | _quoted_heredoc_double | _quoted_parenthesis | _quoted_curly | _quoted_square | _quoted_angle | _quoted_bar | _quoted_slash ) ) !( /[a-zA-Z0-9]+/ ) -> "sigil_modifiers"?
 
-  keywords ::= pair ( ',' pair )*
+  keywords ::=  >0(  pair ( ',' pair )* )
 
   _keywords_with_trailing_separator ::= pair ( ',' pair )* ','?
 
@@ -187,7 +181,7 @@ rules:
 
   map ::=  1(  '%' struct? '{' _items_with_trailing_separator -> "map_content"? '}' )
 
-  struct ::= alias | _atom | identifier | unary_operator | dot | _call_with_parentheses -> "call"
+  struct ::=  <0(  alias | _atom | identifier | unary_operator | dot | _call_with_parentheses -> "call" )
 
   _items_with_trailing_separator ::= ( _expression ( ',' _expression )* ','? | ( _expression ( ',' _expression )* ',' )? _keywords_with_trailing_separator -> "keywords" )
 
@@ -282,15 +276,15 @@ rules:
 	| _anonymous_call
 	| _double_call
 
-  _local_call_without_parentheses ::= ( identifier ):target _call_arguments_without_parentheses -> "arguments" ( _newline_before_do? do_block )?
+  _local_call_without_parentheses ::=  <0(  ( identifier ):target _call_arguments_without_parentheses -> "arguments" ( _newline_before_do? do_block )? )
 
-  _local_call_with_parentheses ::= ( identifier ):target _call_arguments_with_parentheses_immediate -> "arguments" ( _newline_before_do? do_block )?
+  _local_call_with_parentheses ::=  <0(  ( identifier ):target _call_arguments_with_parentheses_immediate -> "arguments" ( _newline_before_do? do_block )? )
 
   _local_call_just_do_block ::=  -1(  ( identifier ):target do_block )
 
-  _remote_call_without_parentheses ::= ( _remote_dot -> "dot" ):target _call_arguments_without_parentheses -> "arguments"? ( _newline_before_do? do_block )?
+  _remote_call_without_parentheses ::=  <0(  ( _remote_dot -> "dot" ):target _call_arguments_without_parentheses -> "arguments"? ( _newline_before_do? do_block )? )
 
-  _remote_call_with_parentheses ::= ( _remote_dot -> "dot" ):target _call_arguments_with_parentheses_immediate -> "arguments" ( _newline_before_do? do_block )?
+  _remote_call_with_parentheses ::=  <0(  ( _remote_dot -> "dot" ):target _call_arguments_with_parentheses_immediate -> "arguments" ( _newline_before_do? do_block )? )
 
   _remote_dot ::=  210(  ( _expression ):left ( '.' ):operator ( identifier | ( 'and' | 'in' | 'not' | 'or' | 'when' | 'true' | 'false' | 'nil' | 'after' | 'catch' | 'do' | 'else' | 'end' | 'fn' | 'rescue' ) -> "identifier" | operator_identifier | _quoted_i_double -> "string" | _quoted_i_single -> "charlist" ):right )
 
@@ -298,7 +292,7 @@ rules:
 
   _anonymous_dot ::=  210(  ( _expression ):left ( '.' ):operator )
 
-  _double_call ::= ( ( _local_call_with_parentheses | _remote_call_with_parentheses | _anonymous_call ) -> "call" ):target _call_arguments_with_parentheses -> "arguments" ( _newline_before_do? do_block )?
+  _double_call ::=  <0(  ( ( _local_call_with_parentheses | _remote_call_with_parentheses | _anonymous_call ) -> "call" ):target _call_arguments_with_parentheses -> "arguments" ( _newline_before_do? do_block )? )
 
   _call_arguments_with_parentheses ::= '(' _call_arguments_with_trailing_separator? ')'
 
@@ -307,7 +301,7 @@ rules:
   _call_arguments_with_trailing_separator ::= _expression ( ',' _expression )* ( ',' _keywords_with_trailing_separator -> "keywords" )?
 	| _keywords_with_trailing_separator -> "keywords"
 
-  _call_arguments_without_parentheses ::=  ~-1(  _expression ( ',' _expression )* ( ',' keywords )? | keywords )
+  _call_arguments_without_parentheses ::=  ~-1(   >0(  _expression ( ',' _expression )* ( ',' keywords )? | keywords )  )
 
   do_block ::= 'do' _terminator? ( ( stab_clause ) ( _terminator ( stab_clause ) )* | ( _expression ) ( _terminator ( _expression ) )* _terminator? )? ( after_block | rescue_block | catch_block | else_block )* 'end'
 
@@ -321,7 +315,7 @@ rules:
 
   access_call ::=  205(  ( _expression ):target !( '[' ) ( _expression ):key ']' )
 
-  stab_clause ::= ( _stab_clause_left )?:left ( '->' ):operator ( body )?:right
+  stab_clause ::=  >0(  ( _stab_clause_left )?:left ( '->' ):operator ( body )?:right )
 
   _stab_clause_left ::= _stab_clause_arguments_with_parentheses -> "arguments"
 	| _stab_clause_arguments_with_parentheses_with_guard -> "binary_operator"
@@ -342,3 +336,4 @@ rules:
   anonymous_function ::= 'fn' _terminator? stab_clause ( _terminator stab_clause )* 'end'
 
   comment ::= @(  -1(  '#' /.*/ )  )
+

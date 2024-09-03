@@ -134,7 +134,7 @@ rules:
 
   _c_unary_expression ::=  17(  ( '++' | '--' ):operator _c_expression_not_assignment )
 
-  _c_binary_expression ::= ( _c_expression_not_assignment ):left ( '+=' | '-=' | '*=' | '/=' | '%=' | '**=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ):operator ( _c_expression_not_assignment ):right
+  _c_binary_expression ::=  <0(  ( _c_expression_not_assignment ):left ( '+=' | '-=' | '*=' | '/=' | '%=' | '**=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ):operator ( _c_expression_not_assignment ):right )
 	|  <3(  ( _c_expression_not_assignment ):left ( '||' | '-o' ):operator ( _c_expression_not_assignment ):right )
 	|  <4(  ( _c_expression_not_assignment ):left ( '&&' | '-a' ):operator ( _c_expression_not_assignment ):right )
 	|  <5(  ( _c_expression_not_assignment ):left ( '|' ):operator ( _c_expression_not_assignment ):right )
@@ -169,13 +169,13 @@ rules:
 
   last_case_item ::= '('? ( _literal | _extglob_blob ):value ( '|' ( _literal | _extglob_blob ):value )* ')' _statements?  1(  ';;' ) ?
 
-  function_definition ::= ( 'function' ( word ):name ( '(' ')' )? | ( word ):name '(' ')' ) ( compound_statement | subshell | test_command | if_statement ):body ( _redirect )?:redirect
+  function_definition ::=  >0(  ( 'function' ( word ):name ( '(' ')' )? | ( word ):name '(' ')' ) ( compound_statement | subshell | test_command | if_statement ):body ( _redirect )?:redirect )
 
   compound_statement ::= '{' _terminated_statement? @(  -1(  '}' )  )
 
   subshell ::= '(' _statements ')'
 
-  pipeline ::= _statement_not_pipeline ( ( '|' | '|&' ) _statement_not_pipeline )+
+  pipeline ::=  >0(  _statement_not_pipeline ( ( '|' | '|&' ) _statement_not_pipeline )+ )
 
   list ::=  <-1(  _statement ( '&&' | '||' ) _statement )
 
@@ -185,11 +185,11 @@ rules:
 
   _test_command_binary_expression ::=  1(  ( _expression ):left ( '=' ):operator ( _regex_no_space -> "regex" ):right )
 
-  declaration_command ::= ( 'declare' | 'typeset' | 'export' | 'readonly' | 'local' ) ( _literal | _simple_variable_name | variable_assignment )*
+  declaration_command ::=  <0(  ( 'declare' | 'typeset' | 'export' | 'readonly' | 'local' ) ( _literal | _simple_variable_name | variable_assignment )* )
 
-  unset_command ::= ( 'unset' | 'unsetenv' ) ( _literal | _simple_variable_name )*
+  unset_command ::=  <0(  ( 'unset' | 'unsetenv' ) ( _literal | _simple_variable_name )* )
 
-  command ::= ( variable_assignment | ( _redirect ):redirect )* ( command_name ):name ( ( ( _literal ):argument | ( _bare_dollar -> "$" ):argument | ( ( '=~' | '==' ) ( _literal | regex ) ):argument | ( herestring_redirect ):redirect )* | subshell )
+  command ::=  <0(  ( variable_assignment | ( _redirect ):redirect )* ( command_name ):name ( ( ( _literal ):argument | ( _bare_dollar -> "$" ):argument | ( ( '=~' | '==' ) ( _literal | regex ) ):argument | ( herestring_redirect ):redirect )* | subshell ) )
 
   command_name ::= _literal
 
@@ -199,7 +199,7 @@ rules:
 
   subscript ::= ( variable_name ):name '[' ( _literal | binary_expression | unary_expression | parenthesized_expression ):index _concat? ']' _concat?
 
-  file_redirect ::= ( file_descriptor )?:descriptor ( ( '<' | '>' | '>>' | '&>' | '&>>' | '<&' | '>&' | '>|' ) ( _literal+ ):destination | ( '<&-' | '>&-' ) ( _literal )?:destination )
+  file_redirect ::=  <0(  ( file_descriptor )?:descriptor ( ( '<' | '>' | '>>' | '&>' | '&>>' | '<&' | '>&' | '>|' ) ( _literal+ ):destination | ( '<&-' | '>&-' ) ( _literal )?:destination ) )
 
   heredoc_redirect ::= ( file_descriptor )?:descriptor ( '<<' | '<<-' ) heredoc_start ( _heredoc_pipeline -> "pipeline" | ( _redirect+ ):redirect _heredoc_expression? | _heredoc_expression | _heredoc_command )? /\n/ ( _heredoc_body | _simple_heredoc_body )
 
@@ -215,7 +215,7 @@ rules:
 
   _simple_heredoc_body ::= simple_heredoc_body -> "heredoc_body" heredoc_end
 
-  herestring_redirect ::= ( file_descriptor )?:descriptor '<<<' _literal
+  herestring_redirect ::=  <0(  ( file_descriptor )?:descriptor '<<<' _literal )
 
   _redirect ::= file_redirect
 	| herestring_redirect
@@ -227,7 +227,7 @@ rules:
 	| postfix_expression
 	| parenthesized_expression
 
-  binary_expression ::= ( _expression ):left ( '+=' | '-=' | '*=' | '/=' | '%=' | '**=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ):operator ( _expression ):right
+  binary_expression ::=  <0(  ( _expression ):left ( '+=' | '-=' | '*=' | '/=' | '%=' | '**=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ):operator ( _expression ):right )
 	|  <1(  ( _expression ):left ( '=' | '=~' ):operator ( _expression ):right )
 	|  <3(  ( _expression ):left ( '||' ):operator ( _expression ):right )
 	|  <4(  ( _expression ):left ( '&&' ):operator ( _expression ):right )
@@ -282,7 +282,7 @@ rules:
 
   _arithmetic_literal ::=  1(  number | subscript | simple_expansion | expansion | _simple_variable_name | variable_name | string )
 
-  _arithmetic_binary_expression ::= ( _arithmetic_expression ):left ( '+=' | '-=' | '*=' | '/=' | '%=' | '**=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ):operator ( _arithmetic_expression ):right
+  _arithmetic_binary_expression ::=  <0(  ( _arithmetic_expression ):left ( '+=' | '-=' | '*=' | '/=' | '%=' | '**=' | '<<=' | '>>=' | '&=' | '^=' | '|=' ):operator ( _arithmetic_expression ):right )
 	|  <1(  ( _arithmetic_expression ):left ( '=' | '=~' ):operator ( _arithmetic_expression ):right )
 	|  <3(  ( _arithmetic_expression ):left ( '||' ):operator ( _arithmetic_expression ):right )
 	|  <4(  ( _arithmetic_expression ):left ( '&&' ):operator ( _arithmetic_expression ):right )

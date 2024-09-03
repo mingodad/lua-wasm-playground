@@ -27,9 +27,6 @@ inline ::= {
 	_statement
 	}
 
-conflicts ::= {
-	}
-
 word ::= identifier
 
 rules:
@@ -59,7 +56,7 @@ rules:
 	| enum_declaration
 	| expression_statement
 
-  expression_statement ::= expression ';'? | ';'
+  expression_statement ::=  >0(  expression ';'? | ';' )
 
   block ::= '{' _statement* '}'
 
@@ -67,9 +64,9 @@ rules:
 
   else_statement ::=  >1(  'else' ( _statement ):alternative )
 
-  while_statement ::= 'while' '(' expression ')' _statement?
+  while_statement ::=  >0(  'while' '(' expression ')' _statement? )
 
-  do_while_statement ::= 'do' _statement 'while' '(' expression ')'
+  do_while_statement ::=  >0(  'do' _statement 'while' '(' expression ')' )
 
   switch_statement ::= 'switch' '(' expression ')' '{' case_statement* default_statement? '}'
 
@@ -85,15 +82,15 @@ rules:
 
   continue ::= 'continue' ';'
 
-  return ::= 'return' ( expression | table )? ';'?
+  return ::=  >0(  'return' ( expression | table )? ';'? )
 
   yield ::= 'yield' expression? ( ';' | '\n'  )
 
   resume_expression ::= 'resume' expression
 
-  local_declaration ::= 'local' _initz ';'?
+  local_declaration ::=  <0(  'local' _initz ';'? )
 
-  _initz ::= identifier ( ( '=' | '<-' ) ( expression | table ) )? ( ',' _initz )?
+  _initz ::=  >0(  identifier ( ( '=' | '<-' ) ( expression | table ) )? ( ',' _initz )? )
 
   function_declaration ::= 'function' identifier ( '::' identifier )* '(' parameters? ')' _statement
 
@@ -110,7 +107,7 @@ rules:
 
   catch_statement ::= 'catch' '(' identifier ')' _statement
 
-  throw_statement ::= 'throw' expression ';'?
+  throw_statement ::=  >0(  'throw' expression ';'? )
 
   const_declaration ::= 'const' identifier '=' const_value ( ';' | '\n'  )
 
@@ -127,7 +124,7 @@ rules:
 	| identifier
 	| global_variable
 
-  enum_declaration ::= 'enum' identifier attribute_declaration? '{' identifier ( '=' const_value )? ( ',' identifier ( '=' const_value )? )* '}' ';'?
+  enum_declaration ::=  >0(  'enum' identifier attribute_declaration? '{' identifier ( '=' const_value )? ( ',' identifier ( '=' const_value )? )* '}' ';'? )
 
   attribute_declaration ::= '</' ( identifier ):left ( '=' ):operator ( const_value ):right ( ',' ( identifier ):left ( '=' ):operator ( const_value ):right )* '/>'
 
@@ -139,7 +136,7 @@ rules:
 	| resume_expression
 	| primary_expression
 
-  primary_expression ::= unary_expression | binary_expression | ternary_expression | anonymous_function | deref_expression | index_expression | call_expression | lambda_expression | parenthesized_expression | integer | float | string | verbatim_string | char | bool | null | identifier | global_variable
+  primary_expression ::=  >0(  unary_expression | binary_expression | ternary_expression | anonymous_function | deref_expression | index_expression | call_expression | lambda_expression | parenthesized_expression | integer | float | string | verbatim_string | char | bool | null | identifier | global_variable )
 
   unary_expression ::=  <13(  ( '-' | '~' | '!' | 'typeof' | '++' | '--' ):operator ( expression | table ):operand ';'? | ( expression ):operand ( '++' | '--' ):operator ';'? )
 
@@ -172,7 +169,7 @@ rules:
 
   update_expression ::=  >1(  ( expression ):left ( '<-' | '+=' | '-=' | '*=' | '/=' | '%=' ):operator ( expression | table ):right )
 
-  table ::= '{' table_slots? '}' ( '.' expression )?
+  table ::=  >0(  '{' table_slots? '}' ( '.' expression )? )
 
   table_slots ::= table_slot ( ','? table_slot )* ','?
 
@@ -199,9 +196,9 @@ rules:
 
   parenthesized_expression ::=  -1(  '(' expression ')' )
 
-  clone_expression ::= 'clone' expression
+  clone_expression ::=  >0(  'clone' expression )
 
-  array ::= '[' ( expression ( ',' expression )* )? ','? ']'
+  array ::=  >0(  '[' ( expression ( ',' expression )* )? ','? ']' )
 
   identifier ::= /[a-zA-Z_][a-zA-Z0-9_]*/
 
@@ -229,3 +226,4 @@ rules:
   null ::= 'null'
 
   comment ::= @( '#' /.*/ | '//' /(\\(.|\r?\n)|[^\\\n])*/ | '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/' )
+

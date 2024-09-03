@@ -7,21 +7,9 @@
 ;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
-externals ::= {
-	}
-
 extras ::= {
 	/\s/
 	comment
-	}
-
-supertypes ::= {
-	}
-
-inline ::= {
-	}
-
-conflicts ::= {
 	}
 
 word ::= NAME
@@ -182,7 +170,7 @@ rules:
 
   mustbe_exp ::= exp
 
-  exp ::= ( '-' | '!' | '+' | '~' ) exp | '(' exp ')' | ( 'NEXT' | 'ABSOLUTE' | 'DATA_SEGMENT_END' | 'BLOCK' | 'LOG2CEIL' ) '(' exp ')' | exp ( '*' | '/' | '%' | '+' | '-' | '<<' | '>>' | '==' | '!=' | '<=' | '>=' | '<' | '>' | '&' | '^' | '|' | '&&' | '||' ) exp | exp '?' exp ':' exp | ( 'DEFINED' | 'CONSTANT' ) '(' SYMBOLNAME ')' | INT | 'SIZEOF_HEADERS' | ( 'ALIGNOF' | 'SIZEOF' | 'ADDR' | 'LOADADDR' | 'ORIGIN' | 'LENGTH' ) paren_script_name | 'ALIGN' '(' exp ( ',' exp )? ')' | ( 'DATA_SEGMENT_ALIGN' | 'DATA_SEGMENT_RELRO_END' | 'MAX' | 'MIN' ) '(' exp ',' exp ')' | 'SEGMENT_START' '(' SYMBOLNAME ',' exp ')' | SYMBOLNAME | 'ASSERT' '(' exp ',' SYMBOLNAME ')'
+  exp ::=  <0(  ( '-' | '!' | '+' | '~' ) exp | '(' exp ')' | ( 'NEXT' | 'ABSOLUTE' | 'DATA_SEGMENT_END' | 'BLOCK' | 'LOG2CEIL' ) '(' exp ')' | exp ( '*' | '/' | '%' | '+' | '-' | '<<' | '>>' | '==' | '!=' | '<=' | '>=' | '<' | '>' | '&' | '^' | '|' | '&&' | '||' ) exp | exp '?' exp ':' exp | ( 'DEFINED' | 'CONSTANT' ) '(' SYMBOLNAME ')' | INT | 'SIZEOF_HEADERS' | ( 'ALIGNOF' | 'SIZEOF' | 'ADDR' | 'LOADADDR' | 'ORIGIN' | 'LENGTH' ) paren_script_name | 'ALIGN' '(' exp ( ',' exp )? ')' | ( 'DATA_SEGMENT_ALIGN' | 'DATA_SEGMENT_RELRO_END' | 'MAX' | 'MIN' ) '(' exp ',' exp ')' | 'SEGMENT_START' '(' SYMBOLNAME ',' exp ')' | SYMBOLNAME | 'ASSERT' '(' exp ',' SYMBOLNAME ')' )
 
   memspec_at ::= 'AT' '>' NAME
 
@@ -258,16 +246,13 @@ rules:
 
   wildcard_name ::= /[_a-zA-Z0-9/.\\$~\-+:\[\],=?*^!]+/
 
-  ;INT ::= /\$[0-9A-Fa-f]+/ FIXME
-  INT ::= /[0-9A-Fa-f]+/
+  INT ::= /\$[0-9A-Fa-f]+/
 	| /[0-9A-Fa-f]+[HhXxBbOoDd]/
-	;| /((\$|0[xX])[0-9A-Fa-f]+|[0-9]+)[MKmk]?/ FIXME
-	| /((0[xX])[0-9A-Fa-f]+|[0-9]+)[MKmk]?/
+	| /((\$|0[xX])[0-9A-Fa-f]+|[0-9]+)[MKmk]?/
 
-  ;VERS_TAG ::= /[.$_a-zA-Z][._a-zA-Z0-9]*/ FIXME
-  VERS_TAG ::= /[._a-zA-Z][._a-zA-Z0-9]*/
+  VERS_TAG ::= /[.$_a-zA-Z][._a-zA-Z0-9]*/
 
-  ;VERS_IDENTIFIER ::= /[*?.$_a-zA-Z\[\]\-!^\\]([*?.$_a-zA-Z0-9\[\]\-!^\\]|::)*/ FIXME
-  VERS_IDENTIFIER ::= /[*?._a-zA-Z\[\]\-!^\\]([*?._a-zA-Z0-9\[\]\-!^\\]|::)*/
+  VERS_IDENTIFIER ::= /[*?.$_a-zA-Z\[\]\-!^\\]([*?.$_a-zA-Z0-9\[\]\-!^\\]|::)*/
 
   comment ::= /\/\*([^*]|\*[^/])*\*\//
+

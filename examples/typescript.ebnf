@@ -1,4 +1,4 @@
-; From tree-sitter-typescript/typescript/src/grammar.json
+; From tree-sitter-typescript/tsx/src/grammar.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
@@ -148,7 +148,8 @@ conflicts ::= {
 	{ array array_pattern tuple_type }
 	{ array_pattern tuple_type }
 	{ template_literal_type template_string }
-	{ primary_type type_parameter }
+	{ jsx_opening_element type_parameter }
+	{ jsx_namespace_name primary_type }
 	}
 
 word ::= identifier
@@ -237,11 +238,11 @@ rules:
   variable_declarator ::= ( identifier | _destructuring_pattern ):name ( type_annotation )?:type _initializer?
 	|  declaration(  ( identifier ):name '!' ( type_annotation ):type )
 
-  statement_block ::= '{' statement* '}' _automatic_semicolon?
+  statement_block ::=  >0(  '{' statement* '}' _automatic_semicolon? )
 
   else_clause ::= 'else' statement
 
-  if_statement ::= 'if' ( parenthesized_expression ):condition ( statement ):consequence ( else_clause )?:alternative
+  if_statement ::=  >0(  'if' ( parenthesized_expression ):condition ( statement ):consequence ( else_clause )?:alternative )
 
   switch_statement ::= 'switch' ( parenthesized_expression ):value ( switch_body ):body
 
@@ -253,7 +254,7 @@ rules:
 
   while_statement ::= 'while' ( parenthesized_expression ):condition ( statement ):body
 
-  do_statement ::= 'do' ( statement ):body 'while' ( parenthesized_expression ):condition _semicolon?
+  do_statement ::=  >0(  'do' ( statement ):body 'while' ( parenthesized_expression ):condition _semicolon? )
 
   try_statement ::= 'try' ( statement_block ):body ( catch_clause )?:handler ( finally_clause )?:finalizer
 
@@ -292,9 +293,9 @@ rules:
 	| satisfies_expression
 	| instantiation_expression
 	| internal_module
-	| type_assertion
 	| primary_expression
 	| glimmer_template
+	| _jsx_element
 	| assignment_expression
 	| augmented_assignment_expression
 	| await_expression
@@ -329,7 +330,7 @@ rules:
 	| call_expression
 	| non_null_expression
 
-  yield_expression ::= 'yield' ( '*' expression | expression )
+  yield_expression ::=  >0(  'yield' ( '*' expression | expression ) )
 
   object ::=  object(  '{' ( ( pair | spread_element | method_definition | ( identifier | _reserved_identifier ) -> "shorthand_property_identifier" )? ( ',' ( pair | spread_element | method_definition | ( identifier | _reserved_identifier ) -> "shorthand_property_identifier" )? )* )? '}' )
 
@@ -495,9 +496,9 @@ rules:
 
   unary_expression ::=  <unary_void(  ( '!' | '~' | '-' | '+' | 'typeof' | 'void' | 'delete' ):operator ( expression ):argument )
 
-  update_expression ::= ( expression ):argument ( '++' | '--' ):operator | ( '++' | '--' ):operator ( expression ):argument
+  update_expression ::=  <0(  ( expression ):argument ( '++' | '--' ):operator | ( '++' | '--' ):operator ( expression ):argument )
 
-  sequence_expression ::= expression ( ',' expression )*
+  sequence_expression ::=  >0(  expression ( ',' expression )* )
 
   string ::= '"'  ( unescaped_double_string_fragment -> "string_fragment" | escape_sequence )* '"'
 	| "'"  ( unescaped_single_string_fragment -> "string_fragment" | escape_sequence )* "'"
@@ -562,9 +563,9 @@ rules:
 
   pattern ::=  ~-1(  _lhs_expression | rest_pattern )
 
-  rest_pattern ::= '...' _lhs_expression
+  rest_pattern ::=  >0(  '...' _lhs_expression )
 
-  method_definition ::= accessibility_modifier? 'static'? override_modifier? 'readonly'? 'async'? ( 'get' | 'set' | '*' )? ( _property_name ):name '?'? _call_signature ( statement_block ):body
+  method_definition ::=  <0(  accessibility_modifier? 'static'? override_modifier? 'readonly'? 'async'? ( 'get' | 'set' | '*' )? ( _property_name ):name '?'? _call_signature ( statement_block ):body )
 
   pair ::= ( _property_name ):key ':' ( expression ):value
 
@@ -647,7 +648,7 @@ rules:
 
   internal_module ::= 'namespace' _module
 
-  _module ::= ( string | identifier | nested_identifier ):name ( statement_block )?:body
+  _module ::=  >0(  ( string | identifier | nested_identifier ):name ( statement_block )?:body )
 
   import_alias ::= 'import' identifier '=' ( identifier | nested_identifier ) _semicolon
 
@@ -715,7 +716,7 @@ rules:
 	| rest_type
 	| type
 
-  constructor_type ::= 'abstract'? 'new' ( type_parameters )?:type_parameters ( formal_parameters ):parameters '=>' ( type ):type
+  constructor_type ::=  <0(  'abstract'? 'new' ( type_parameters )?:type_parameters ( formal_parameters ):parameters '=>' ( type ):type )
 
   primary_type ::= parenthesized_type
 	| predefined_type
@@ -742,9 +743,9 @@ rules:
 
   template_literal_type ::= '`' ( _template_chars -> "string_fragment" | template_type )* '`'
 
-  infer_type ::= 'infer' _type_identifier ( 'extends' type )?
+  infer_type ::=  >0(  'infer' _type_identifier ( 'extends' type )? )
 
-  conditional_type ::= ( type ):left 'extends' ( type ):right '?' ( type ):consequence ':' ( type ):alternative
+  conditional_type ::=  >0(  ( type ):left 'extends' ( type ):right '?' ( type ):consequence ':' ( type ):alternative )
 
   generic_type ::=  call(  ( _type_identifier | nested_type_identifier ):name ( type_arguments ):type_arguments )
 
@@ -760,7 +761,7 @@ rules:
 
   _type_query_instantiation_expression ::= ( import | identifier | _type_query_member_expression -> "member_expression" | _type_query_subscript_expression -> "subscript_expression" ):function ( type_arguments ):type_arguments
 
-  type_query ::= 'typeof' ( _type_query_subscript_expression -> "subscript_expression" | _type_query_member_expression -> "member_expression" | _type_query_call_expression -> "call_expression" | _type_query_instantiation_expression -> "instantiation_expression" | identifier | this )
+  type_query ::=  >0(  'typeof' ( _type_query_subscript_expression -> "subscript_expression" | _type_query_member_expression -> "member_expression" | _type_query_call_expression -> "call_expression" | _type_query_instantiation_expression -> "instantiation_expression" | identifier | this ) )
 
   index_type_query ::= 'keyof' primary_type
 
@@ -780,7 +781,7 @@ rules:
 
   existential_type ::= '*'
 
-  flow_maybe_type ::= '?' primary_type
+  flow_maybe_type ::=  >0(  '?' primary_type )
 
   parenthesized_type ::= '(' type ')'
 
@@ -822,10 +823,11 @@ rules:
 
   readonly_type ::= 'readonly' type
 
-  union_type ::= type? '|' type
+  union_type ::=  <0(  type? '|' type )
 
-  intersection_type ::= type? '&' type
+  intersection_type ::=  <0(  type? '&' type )
 
-  function_type ::= ( type_parameters )?:type_parameters ( formal_parameters ):parameters '=>' ( type | asserts | type_predicate ):return_type
+  function_type ::=  <0(  ( type_parameters )?:type_parameters ( formal_parameters ):parameters '=>' ( type | asserts | type_predicate ):return_type )
 
   _type_identifier ::= identifier -> "type_identifier"
+

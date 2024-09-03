@@ -16,12 +16,6 @@ extras ::= {
 	/\s/
 	}
 
-supertypes ::= {
-	}
-
-inline ::= {
-	}
-
 conflicts ::= {
 	{ _binder_ident _term }
 	{ _binder_ident named_argument }
@@ -65,13 +59,13 @@ rules:
 	| do
 	| unless
 
-  let ::= 'let' ( identifier ):name ( parameters )?:parameters ( ':' ( _expression ):type )? ':=' ( _expression ):value ( _newline | ';' ) ( _expression )?:body
+  let ::=  <0(  'let' ( identifier ):name ( parameters )?:parameters ( ':' ( _expression ):type )? ':=' ( _expression ):value ( _newline | ';' ) ( _expression )?:body )
 
-  _do_seq ::= _do_element ( _newline _do_element )* _newline?
+  _do_seq ::=  >0(  _do_element ( _newline _do_element )* _newline? )
 
-  do ::= 'do' _do_seq
+  do ::=  >0(  'do' _do_seq )
 
-  conditional_when ::= 'if' _expression 'then' _do_element
+  conditional_when ::=  >0(  'if' _expression 'then' _do_element )
 
   for_in ::= 'for' ( identifier | anonymous_constructor ) 'in' ( _expression ):iterable ( do ):body
 
@@ -85,11 +79,11 @@ rules:
 
   try ::=  <1(  'try' _do_element ( _newline _do_element )* _newline? ( catch finally? | finally ) )
 
-  catch ::= 'catch' _expression '=>' _do_element ( _newline _do_element )* _newline?
+  catch ::=  <0(  'catch' _expression '=>' _do_element ( _newline _do_element )* _newline? )
 
-  finally ::= 'finally' _do_element ( _newline _do_element )* _newline?
+  finally ::=  <0(  'finally' _do_element ( _newline _do_element )* _newline? )
 
-  fun ::= ( 'fun' | 'λ' ) ( parameters '=>' _expression | ( '|' ( _expression ( ',' _expression )* ):lhs '=>' _expression )* )
+  fun ::=  >0(  ( 'fun' | 'λ' ) ( parameters '=>' _expression | ( '|' ( _expression ( ',' _expression )* ):lhs '=>' _expression )* ) )
 
   apply ::= _apply
 	| _dollar
@@ -154,9 +148,9 @@ rules:
 
   _decl_id ::= (  2(  identifier )  ):name
 
-  _decl_sig ::= _simple_binder_without_type | _bracketed_binder* -> "binders" _type_spec
+  _decl_sig ::=  <0(  _simple_binder_without_type | _bracketed_binder ) * -> "binders" _type_spec
 
-  _opt_decl_sig ::= _simple_binder_without_type | _bracketed_binder+ -> "binders" _type_spec? | _simple_binder_without_type | _bracketed_binder+ -> "binders"? _type_spec
+  _opt_decl_sig ::=  <0(   <0(  _simple_binder_without_type | _bracketed_binder ) + -> "binders" _type_spec? |  <0(  _simple_binder_without_type | _bracketed_binder ) + -> "binders"? _type_spec )
 
   _decl_val_simple ::= ':=' _expression
 
@@ -192,7 +186,7 @@ rules:
 
   _struct_instance_binder ::= '[' ( identifier+ ):name ( _decl_sig ):type ']'
 
-  _struct_simple_binder ::= ( identifier ):name ( _opt_decl_sig )?:type _binder_default?
+  _struct_simple_binder ::=  <0(  ( identifier ):name ( _opt_decl_sig )?:type _binder_default? )
 
   _struct_field ::= ( _struct_explicit_binder -> "explicit_binder" | _struct_implicit_binder -> "implicit_binder" | _struct_instance_binder -> "instance_binder" | _struct_simple_binder ) -> "field"
 
@@ -279,7 +273,7 @@ rules:
 
   elab ::= _attr_kind? 'elab' _precedence? _elab_arg+ _elab_tail
 
-  tactics ::= 'by' _tactic ( ';'? _newline _tactic )* ( ';'? _newline )?
+  tactics ::=  <0(  'by' _tactic ( ';'? _newline _tactic )* ( ';'? _newline )? )
 
   apply_tactic ::= 'apply' _expression
 
@@ -287,11 +281,11 @@ rules:
 
   term ::= 'exact' _expression
 
-  simp ::= 'simp' ( list )?:extra
+  simp ::=  >0(  'simp' ( list )?:extra )
 
   trivial ::= 'trivial'
 
-  intro ::= 'intro' _expression*
+  intro ::=  <0(  'intro' _expression* )
 
   rfl ::= 'rfl'
 
@@ -392,7 +386,7 @@ rules:
 
   false ::= 'false'
 
-  match ::= 'match' ( _match_discr ( ', ' _match_discr )* ):value ( _type_spec )?:type 'with' ( _match_alts ):patterns
+  match ::=  <0(  'match' ( _match_discr ( ', ' _match_discr )* ):value ( _type_spec )?:type 'with' ( _match_alts ):patterns )
 
   borrowed ::= '@&'  1022(  _term )
 
@@ -518,3 +512,4 @@ rules:
   interpolated_string ::= 's!"' ( /[^"]/ | quoted_char | interpolation )* '"'
 
   interpolation ::= '{' _expression '}'
+

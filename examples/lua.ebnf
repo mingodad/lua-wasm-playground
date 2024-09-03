@@ -32,9 +32,6 @@ inline ::= {
 	field_separator
 	}
 
-conflicts ::= {
-	}
-
 word ::= identifier
 
 rules:
@@ -217,3 +214,4 @@ rules:
   identifier ::= /[a-zA-Z_][0-9a-zA-Z_]*/
 
   comment ::= _comment_start _comment_content? _comment_end
+

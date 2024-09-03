@@ -87,13 +87,13 @@ rules:
 
   module_abbrev ::= attributes? 'module' identifier '=' ( _indent long_identifier _dedent ):block
 
-  module_defn ::= attributes? 'module' access_modifier? identifier '=' ( _indent _module_body _dedent ):block
+  module_defn ::=  <0(  attributes? 'module' access_modifier? identifier '=' ( _indent _module_body _dedent ):block )
 
   _module_body ::= _module_elem  2(  _newline -> ";" _module_elem ) *
 
   import_decl ::= 'open' long_identifier
 
-  attributes ::= _attribute_set+
+  attributes ::=  <0(  _attribute_set+ )
 
   _attribute_set ::= '[<' attribute  2(  ( _newline attribute )* )  '>]'
 
@@ -115,7 +115,7 @@ rules:
 
   do ::=  9(  'do' _expression_block )
 
-  _function_or_value_defns ::= _function_or_value_defn_body ( 'and' _function_or_value_defn_body )*
+  _function_or_value_defns ::=  >0(  _function_or_value_defn_body ( 'and' _function_or_value_defn_body )* )
 
   function_or_value_defn ::= ( 'let' | 'let!' ) ( _function_or_value_defn_body | 'rec' _function_or_value_defns )
 
@@ -131,7 +131,7 @@ rules:
 
   primary_constr_args ::= attributes? access_modifier? '(' _pattern? ')' class_as_reference?
 
-  repeat_pattern ::= _pattern  1(  ',' _pattern ) +
+  repeat_pattern ::=  >0(  _pattern  1(  ',' _pattern ) + )
 
   _pattern ::= 'null'
 	| '_' -> "wildcard_pattern"
@@ -151,21 +151,21 @@ rules:
 	| optional_pattern
 	| identifier_pattern
 
-  optional_pattern ::= '?' _pattern
+  optional_pattern ::=  <0(  '?' _pattern )
 
-  type_check_pattern ::= ':?' atomic_type ( 'as' identifier )?
+  type_check_pattern ::=  >0(  ':?' atomic_type ( 'as' identifier )? )
 
-  attribute_pattern ::= attributes _pattern
+  attribute_pattern ::=  <0(  attributes _pattern )
 
   paren_pattern ::= '(' _pattern ')'
 
-  as_pattern ::= _pattern 'as' identifier
+  as_pattern ::=  <0(  _pattern 'as' identifier )
 
-  cons_pattern ::= _pattern '::' _pattern
+  cons_pattern ::=  <0(  _pattern '::' _pattern )
 
-  disjunct_pattern ::= _pattern '|' _pattern
+  disjunct_pattern ::=  <0(  _pattern '|' _pattern )
 
-  conjunct_pattern ::= _pattern '&' _pattern
+  conjunct_pattern ::=  <0(  _pattern '&' _pattern )
 
   typed_pattern ::=  <-1(  _pattern ':' _type ( type_argument_constraints )?:constraints )
 
@@ -181,7 +181,7 @@ rules:
 
   array_pattern ::= '[|' _list_pattern_content? '|]'
 
-  record_pattern ::= '{' field_pattern ( ';' field_pattern )* '}'
+  record_pattern ::=  <0(  '{' field_pattern ( ';' field_pattern )* '}' )
 
   identifier_pattern ::=  <-1(  long_identifier_or_op _pattern_param? _pattern? )
 
@@ -224,7 +224,7 @@ rules:
 
   literal_expression ::=  21(  '<@' _expression '@>' | '<@@' _expression '@@>' )
 
-  long_identifier_or_op ::= long_identifier | long_identifier '.' _identifier_or_op | _identifier_or_op
+  long_identifier_or_op ::=  >0(  long_identifier | long_identifier '.' _identifier_or_op | _identifier_or_op )
 
   tuple_expression ::=  >16(  _expression ',' _expression )
 
@@ -291,7 +291,7 @@ rules:
   _expression_or_range ::= _expression
 	| range_expression
 
-  rule ::= ( _pattern ):pattern ( 'when' ( _expression ):guard )? '->' ( _expression_block ):block
+  rule ::=  >0(  ( _pattern ):pattern ( 'when' ( _expression ):guard )? '->' ( _expression_block ):block )
 
   rules ::= '|'? rule ( _newline? '|' rule )*
 
@@ -336,9 +336,9 @@ rules:
 
   paren_type ::= '(' _type ')'
 
-  function_type ::= _type '->' _type
+  function_type ::=  >0(  _type '->' _type )
 
-  compound_type ::= _type '*' _type+
+  compound_type ::=  >0(  _type  >0(  '*' _type ) + )
 
   postfix_type ::=  <4(  _type long_identifier )
 
@@ -346,9 +346,9 @@ rules:
 
   static_type ::=  10(  _type type_arguments )
 
-  constrained_type ::= type_argument ':>' _type
+  constrained_type ::=  >0(  type_argument ':>' _type )
 
-  flexible_type ::= '#' _type
+  flexible_type ::=  >0(  '#' _type )
 
   anon_record_type ::= '{|' ( _indent record_fields _dedent ):block '|}'
 
@@ -366,7 +366,7 @@ rules:
 
   type_attributes ::= type_attribute  >13(  ',' type_attribute ) *
 
-  atomic_type ::= '#' _type | type_argument | '(' _type ')' | long_identifier | long_identifier '<' type_attributes '>'
+  atomic_type ::=  >0(  '#' _type | type_argument | '(' _type ')' | long_identifier | long_identifier '<' type_attributes '>' )
 
   constraint ::=  1000000(  type_argument ':>' _type | type_argument ':' 'null' | type_argument ':' '(' ( trait_member_constraint | 'new' ':' 'unit' '->' _type ) ')' | type_argument ':' 'struct' | type_argument ':' 'not' 'struct' | type_argument ':' 'enum' '<' _type '>' | type_argument ':' 'unmanaged' | type_argument ':' 'equality' | type_argument ':' 'comparison' | type_argument ':' 'delegate' '<' _type ',' _type '>' | 'default' type_argument ':' _type )
 
@@ -384,7 +384,7 @@ rules:
 
   curried_spec ::= ( arguments_spec '->' )* _type
 
-  argument_spec ::= attributes? argument_name_spec? _type
+  argument_spec ::=  <0(  attributes? argument_name_spec? _type )
 
   arguments_spec ::= argument_spec ( '*' argument_spec )*
 
@@ -400,7 +400,7 @@ rules:
 
   exception_definition ::= attributes? 'exception' ( long_identifier ):exception_name 'of' _type
 
-  type_definition ::= attributes? 'type' _type_defn_body ( attributes? 'and' _type_defn_body )*
+  type_definition ::=  <0(  attributes? 'type' _type_defn_body ( attributes? 'and' _type_defn_body )* )
 
   _type_defn_body ::= delegate_type_defn
 	| record_type_defn
@@ -430,7 +430,7 @@ rules:
 
   _record_type_defn_inner ::= access_modifier? '{' ( _indent record_fields _dedent ):block '}' type_extension_elements?
 
-  record_type_defn ::= type_name '=' ( _indent _record_type_defn_inner _dedent ):block
+  record_type_defn ::=  <0(  type_name '=' ( _indent _record_type_defn_inner _dedent ):block )
 
   record_fields ::= record_field ( _newline record_field )* _newline?
 
@@ -445,7 +445,7 @@ rules:
 
   _union_type_defn_inner ::= access_modifier? union_type_cases type_extension_elements?
 
-  union_type_defn ::= type_name '=' ( _indent _union_type_defn_inner _dedent ):block
+  union_type_defn ::=  <0(  type_name '=' ( _indent _union_type_defn_inner _dedent ):block )
 
   union_type_cases ::= '|'? union_type_case ( '|' union_type_case )*
 
@@ -453,22 +453,22 @@ rules:
 
   union_type_fields ::= union_type_field ( '*' union_type_field )*
 
-  union_type_field ::= _type | identifier ':' _type
+  union_type_field ::=  <0(  _type | identifier ':' _type )
 
   interface_type_defn ::=  <1(  type_name '=' _interface_begin -> "interface" ( _indent _type_defn_elements+ _dedent ):block 'end' )
 
-  anon_type_defn ::= type_name primary_constr_args? '=' ( ( _indent _class_type_body _dedent ):block | ( 'begin' | 'class' ) ( _indent _class_type_body? _dedent ):block 'end' | _struct_begin -> "struct" ( _indent _type_defn_elements* _dedent ):block 'end' )
+  anon_type_defn ::=  <0(  type_name primary_constr_args? '=' ( ( _indent _class_type_body _dedent ):block | ( 'begin' | 'class' ) ( _indent _class_type_body? _dedent ):block 'end' | _struct_begin -> "struct" ( _indent _type_defn_elements* _dedent ):block 'end' ) )
 
   _class_function_or_value_defn ::= attributes? 'static'? ( function_or_value_defn | 'do' _expression_block )
 
   type_extension_elements ::= ( 'with' ( _indent _type_defn_elements _dedent ):block | _type_defn_elements )
 
   _type_defn_elements ::= _member_defns
-	| interface_implementation+
+	|  <0(  interface_implementation+ )
 
-  interface_implementation ::= 'interface' _type _object_members?
+  interface_implementation ::=  <0(  'interface' _type _object_members? )
 
-  _member_defns ::= member_defn member_defn*
+  _member_defns ::=  <0(  member_defn member_defn* )
 
   _object_members ::= 'with' ( _indent _member_defns _dedent ):block
 
@@ -485,7 +485,7 @@ rules:
 
   additional_constr_defn ::= access_modifier? 'new' _pattern '=' _expression_block
 
-  class_inherits_decl ::= 'inherit' ( _indent _type _expression? _dedent ):block
+  class_inherits_decl ::=  <0(  'inherit' ( _indent _type _expression? _dedent ):block )
 
   field_initializer ::=  17(  ( long_identifier ):field @(  10000000(  '=' )  ) ( _expression ):value )
 
@@ -575,7 +575,7 @@ rules:
 	| bool
 	| unit
 
-  long_identifier ::= identifier ( '.' identifier )*
+  long_identifier ::=  >0(  identifier ( '.' identifier )* )
 
   active_pattern ::=  1000(  '(|' identifier -> "active_pattern_op_name" ( '|' identifier -> "active_pattern_op_name" )* ( '|' '_' -> "wildcard_active_pattern_op" )? '|)' )
 
@@ -593,7 +593,7 @@ rules:
 	| '&'
 	| '&&'
 
-  prefix_op ::= _infix_or_prefix_op | '~'+ | /[!?][!%&*+-./<=>@^|~?]*/
+  prefix_op ::=  <0(  _infix_or_prefix_op | '~'+ | /[!?][!%&*+-./<=>@^|~?]*/ )
 
   infix_op ::=  4(  _infix_or_prefix_op | !(  1(  /[+-]/ )  ) | /[-+<>|&^*/'%@][!%&*+./<=>@^|~?-]*/ | '||' | '=' | '!=' | ':=' | '::' | '$' | 'or' | '?' | '?' | '?<-' )
 
@@ -630,7 +630,7 @@ rules:
 
   decimal ::= ( float | int ) !( /[Mm]/ )
 
-  float ::= ( int !( '.' ) int? | int ( !( '.' ) int )? !( /[eE][+-]?/ ) int ) -> "float"
+  float ::=  >0(  ( int !( '.' ) int? | int ( !( '.' ) int )? !( /[eE][+-]?/ ) int ) -> "float" )
 
   block_comment ::= '(*' block_comment_content !( '*)' )
 
@@ -644,9 +644,9 @@ rules:
 
   preproc_line ::= /#(line)?/ -> "#line" int ( _string_literal -> "string" | verbatim_string )? _newline_not_aligned
 
-  preproc_if ::= '#if' ( identifier ):condition _newline_not_aligned _module_elem ( preproc_else )?:alternative '#endif'
+  preproc_if ::=  0(  '#if' ( identifier ):condition _newline_not_aligned _module_elem ( preproc_else )?:alternative '#endif' )
 
-  preproc_else ::= '#else' _module_elem
+  preproc_else ::=  0(  '#else' _module_elem )
 
   preproc_if_in_expression ::=  -2(  '#if' ( identifier ):condition _newline_not_aligned ( _newline? _expression )* ( preproc_else_in_expression -> "preproc_else" )?:alternative '#endif' )
 

@@ -24,12 +24,6 @@ precedences ::= {
 	{ 'binary_is' 'unary_not' 'binary_exp' 'binary_times' 'binary_plus' 'unary_other' 'binary_other' 'binary_in' 'binary_compare' 'binary_relation' 'pattern_matching' 'between' 'clause_connective' 'clause_disjunctive' }
 	}
 
-supertypes ::= {
-	}
-
-inline ::= {
-	}
-
 conflicts ::= {
 	{ object_reference _qualified_field }
 	{ object_reference }
@@ -643,7 +637,7 @@ rules:
 
   keyword_jsonfile ::= /[jJ][sS][oO][nN][fF][iI][lL][eE]/
 
-  is_not ::= keyword_is keyword_not
+  is_not ::=  <0(  keyword_is keyword_not )
 
   not_like ::= keyword_not keyword_like
 
@@ -815,9 +809,9 @@ rules:
 
   keyword_array ::= /[aA][rR][rR][aA][yY]/
 
-  _type ::= ( keyword_boolean | bit | binary | varbinary | keyword_image | keyword_smallserial | keyword_serial | keyword_bigserial | tinyint | smallint | mediumint | int | bigint | decimal | numeric | double | float | keyword_money | keyword_smallmoney | char | varchar | nchar | nvarchar | numeric | keyword_string | keyword_text | keyword_uuid | keyword_json | keyword_jsonb | keyword_xml | keyword_bytea | keyword_inet | enum | keyword_date | keyword_datetime | keyword_datetime2 | datetimeoffset | keyword_smalldatetime | time | timestamp | keyword_timestamptz | keyword_interval | keyword_geometry | keyword_geography | keyword_box2d | keyword_box3d | keyword_oid | keyword_name | keyword_regclass | keyword_regnamespace | keyword_regproc | keyword_regtype | ( object_reference ):custom_type ) array_size_definition?
+  _type ::=  <0(  ( keyword_boolean | bit | binary | varbinary | keyword_image | keyword_smallserial | keyword_serial | keyword_bigserial | tinyint | smallint | mediumint | int | bigint | decimal | numeric | double | float | keyword_money | keyword_smallmoney | char | varchar | nchar | nvarchar | numeric | keyword_string | keyword_text | keyword_uuid | keyword_json | keyword_jsonb | keyword_xml | keyword_bytea | keyword_inet | enum | keyword_date | keyword_datetime | keyword_datetime2 | datetimeoffset | keyword_smalldatetime | time | timestamp | keyword_timestamptz | keyword_interval | keyword_geometry | keyword_geography | keyword_box2d | keyword_box3d | keyword_oid | keyword_name | keyword_regclass | keyword_regnamespace | keyword_regproc | keyword_regtype | ( object_reference ):custom_type ) array_size_definition? )
 
-  array_size_definition ::= keyword_array _array_size_definition? | _array_size_definition+
+  array_size_definition ::=  <0(  keyword_array _array_size_definition? | _array_size_definition+ )
 
   _array_size_definition ::= '[' ( _integer -> "literal" )?:size ']'
 
@@ -837,7 +831,7 @@ rules:
 	|  >1(  keyword_bigint | keyword_bigint '(' ( _natural_number -> "literal" ):size ')' )  keyword_unsigned? keyword_zerofill?
 
   bit ::= keyword_bit
-	| keyword_bit  >1(  keyword_varying | keyword_varying '(' ( _natural_number -> "literal" ):precision ')' )
+	| keyword_bit  0(   >1(  keyword_varying | keyword_varying '(' ( _natural_number -> "literal" ):precision ')' )  )
 	|  1(   >1(  keyword_bit | keyword_bit '(' ( _natural_number -> "literal" ):precision ')' )  )
 
   binary ::=  >1(  keyword_binary | keyword_binary '(' ( _natural_number -> "literal" ):precision ')' )
@@ -896,7 +890,7 @@ rules:
 
   block ::= keyword_begin ';'? ( statement ';' )* keyword_end
 
-  statement ::= ( keyword_explain keyword_analyze? keyword_verbose? )? ( _ddl_statement | _dml_write | _dml_read | '(' _dml_read ')' )
+  statement ::= ( keyword_explain keyword_analyze? keyword_verbose? )? ( _ddl_statement | _dml_write |  >0(  _dml_read | '(' _dml_read ')' )  )
 
   _ddl_statement ::= _create_statement
 	| _alter_statement
@@ -912,13 +906,13 @@ rules:
 
   _dml_write ::= _cte? ( _delete_statement | _insert_statement | _update_statement | _truncate_statement | _copy_statement )
 
-  _dml_read ::= _cte | '(' _cte ')'? _select_statement | set_operation | '(' ( _select_statement | set_operation ) ')'
+  _dml_read ::=  >0(  _cte | '(' _cte ')' ) ?  >0(  _select_statement | set_operation | '(' ( _select_statement | set_operation ) ')' )
 
   cte ::= identifier ( '(' ( ( identifier ):argument ( ',' ( identifier ):argument )* )? ')' )? keyword_as ( keyword_not? keyword_materialized )? '(' ( _dml_read | _dml_write ) -> "statement" ')'
 
   set_operation ::= _select_statement ( ( keyword_union keyword_all? | keyword_except | keyword_intersect ):operation _select_statement )+
 
-  _select_statement ::= select from? | '(' select from? ')'
+  _select_statement ::=  >0(  select from? | '(' select from? ')' )
 
   comment_statement ::= keyword_comment keyword_on _comment_target keyword_is ( keyword_null | _literal_string -> "literal" )
 
@@ -962,7 +956,7 @@ rules:
 
   delete ::= keyword_delete index_hint?
 
-  _create_statement ::= ( create_table | create_view | create_materialized_view | create_index | create_function | create_type | create_database | create_role | create_sequence | create_extension | create_trigger | create_schema _create_statement* )
+  _create_statement ::= ( create_table | create_view | create_materialized_view | create_index | create_function | create_type | create_database | create_role | create_sequence | create_extension | create_trigger |  <0(  create_schema _create_statement* )  )
 
   _table_settings ::= table_partition
 	| stored_as
@@ -976,7 +970,7 @@ rules:
 
   storage_parameters ::= keyword_with '(' identifier ( '=' literal )? ( ',' identifier ( '=' literal )? )* ')'
 
-  create_table ::= keyword_create ( _temporary | keyword_unlogged | keyword_external )? keyword_table _if_not_exists? object_reference ( column_definitions _table_settings* ( keyword_as _select_statement )? | _table_settings* keyword_as create_query )
+  create_table ::=  <0(  keyword_create ( _temporary | keyword_unlogged | keyword_external )? keyword_table _if_not_exists? object_reference ( column_definitions _table_settings* ( keyword_as _select_statement )? | _table_settings* keyword_as create_query ) )
 
   reset_statement ::= keyword_reset ( object_reference | keyword_all | keyword_session keyword_authorization | keyword_role )
 
@@ -986,9 +980,9 @@ rules:
 
   create_query ::= _dml_read
 
-  create_view ::= keyword_create _or_replace? _temporary? keyword_recursive? keyword_view _if_not_exists? object_reference ( '(' ( identifier ( ',' identifier )* )? ')' )? keyword_as create_query ( keyword_with ( keyword_local | keyword_cascaded )? _check_option )?
+  create_view ::=  >0(  keyword_create _or_replace? _temporary? keyword_recursive? keyword_view _if_not_exists? object_reference ( '(' ( identifier ( ',' identifier )* )? ')' )? keyword_as create_query ( keyword_with ( keyword_local | keyword_cascaded )? _check_option )? )
 
-  create_materialized_view ::= keyword_create _or_replace? keyword_materialized keyword_view _if_not_exists? object_reference keyword_as create_query ( keyword_with keyword_data | keyword_with keyword_no keyword_data )?
+  create_materialized_view ::=  >0(  keyword_create _or_replace? keyword_materialized keyword_view _if_not_exists? object_reference keyword_as create_query ( keyword_with keyword_data | keyword_with keyword_no keyword_data )? )
 
   dollar_quote ::= /\$[^\$]*\$/
 
@@ -1036,7 +1030,7 @@ rules:
 
   create_index ::= keyword_create keyword_unique? keyword_index keyword_concurrently? ( _if_not_exists? ( _column ):column )? keyword_on keyword_only? object_reference ( keyword_using ( keyword_btree | keyword_hash | keyword_gist | keyword_spgist | keyword_gin | keyword_brin ) )? index_fields where?
 
-  create_schema ::= keyword_create keyword_schema ( _if_not_exists? identifier ( keyword_authorization identifier )? | keyword_authorization identifier )
+  create_schema ::=  <0(  keyword_create keyword_schema ( _if_not_exists? identifier ( keyword_authorization identifier )? | keyword_authorization identifier ) )
 
   _with_settings ::= ( identifier ):name '='? ( identifier | _single_quote_string -> "literal" ):value
 
@@ -1166,9 +1160,9 @@ rules:
 
   _update_statement ::= update returning?
 
-  _merge_statement ::= keyword_merge keyword_into object_reference _alias? keyword_using ( subquery | object_reference ) _alias? keyword_on ( _expression ):predicate | '(' ( _expression ):predicate ')' when_clause+
+  _merge_statement ::= keyword_merge keyword_into object_reference _alias? keyword_using ( subquery | object_reference ) _alias? keyword_on  >0(  ( _expression ):predicate | '(' ( _expression ):predicate ')' )  when_clause+
 
-  when_clause ::= keyword_when keyword_not? keyword_matched ( keyword_and ( _expression ):predicate | '(' ( _expression ):predicate ')' )? keyword_then ( keyword_delete | keyword_update _set_values | keyword_insert _insert_values | where )
+  when_clause ::= keyword_when keyword_not? keyword_matched ( keyword_and  >0(  ( _expression ):predicate | '(' ( _expression ):predicate ')' )  )? keyword_then ( keyword_delete | keyword_update _set_values | keyword_insert _insert_values | where )
 
   _optimize_statement ::= _compute_stats
 	| _vacuum_table
@@ -1190,11 +1184,11 @@ rules:
 
   update ::= keyword_update keyword_only? ( _mysql_update_statement | _postgres_update_statement )
 
-  _mysql_update_statement ::= relation ( ',' relation )* join* _set_values where?
+  _mysql_update_statement ::=  0(  relation ( ',' relation )* join* _set_values where? )
 
   _postgres_update_statement ::=  1(  relation _set_values from? )
 
-  storage_location ::= keyword_location ( _literal_string -> "literal" ):path ( keyword_cached keyword_in ( _literal_string -> "literal" ):pool ( keyword_uncached | keyword_with keyword_replication '=' ( _natural_number -> "literal" ):value )? )?
+  storage_location ::=  >0(  keyword_location ( _literal_string -> "literal" ):path ( keyword_cached keyword_in ( _literal_string -> "literal" ):pool ( keyword_uncached | keyword_with keyword_replication '=' ( _natural_number -> "literal" ):value )? )? )
 
   row_format ::= keyword_row keyword_format keyword_delimited ( keyword_fields keyword_terminated keyword_by ( _literal_string -> "literal" ):fields_terminated_char ( keyword_escaped keyword_by ( _literal_string -> "literal" ):escaped_char )? )? ( keyword_lines keyword_terminated keyword_by ( _literal_string -> "literal" ):row_terminated_char )?
 
@@ -1219,11 +1213,11 @@ rules:
 
   _column_comment ::= keyword_comment _literal_string -> "literal"
 
-  _column_constraint ::= keyword_null | _not_null | keyword_references object_reference '(' identifier ( ',' identifier )* ')' ( keyword_on ( keyword_delete | keyword_update ) ( keyword_no keyword_action | keyword_restrict | keyword_cascade | keyword_set ( keyword_null | keyword_default ) ( '(' identifier ( ',' identifier )* ')' )? ) )* | _default_expression | _primary_key | keyword_auto_increment | direction | _column_comment | _check_constraint | ( keyword_generated keyword_always )? keyword_as _expression | keyword_stored | keyword_virtual | keyword_unique
+  _column_constraint ::=  <0(  keyword_null | _not_null | keyword_references object_reference '(' identifier ( ',' identifier )* ')' ( keyword_on ( keyword_delete | keyword_update ) ( keyword_no keyword_action | keyword_restrict | keyword_cascade | keyword_set ( keyword_null | keyword_default ) ( '(' identifier ( ',' identifier )* ')' )? ) )* | _default_expression | _primary_key | keyword_auto_increment | direction | _column_comment | _check_constraint | ( keyword_generated keyword_always )? keyword_as _expression | keyword_stored | keyword_virtual | keyword_unique )
 
   _check_constraint ::= ( keyword_constraint literal )? keyword_check '(' binary_expression ')'
 
-  _default_expression ::= keyword_default _inner_default_expression | '(' _inner_default_expression ')'
+  _default_expression ::= keyword_default  >0(  _inner_default_expression | '(' _inner_default_expression ')' )
 
   _inner_default_expression ::= literal
 	| list
@@ -1260,7 +1254,7 @@ rules:
 
   field ::= ( identifier ):name
 
-  _qualified_field ::= ( object_reference | '(' object_reference ')' '.' )? ( identifier ):name
+  _qualified_field ::= (  >0(  object_reference | '(' object_reference ')' )  '.' )? ( identifier ):name
 
   implicit_cast ::= _expression '::' _type
 
@@ -1290,7 +1284,7 @@ rules:
 
   from ::= keyword_from keyword_only? relation ( ',' relation )* index_hint? ( join | cross_join | lateral_join | lateral_cross_join )* where? group_by? window_clause? order_by? limit?
 
-  relation ::= ( subquery | invocation | object_reference | '(' values ')' ) ( _alias _column_list -> "list"? )?
+  relation ::=  >0(  ( subquery | invocation | object_reference | '(' values ')' ) ( _alias _column_list -> "list"? )? )
 
   values ::= keyword_values list ( ',' list )*?
 
@@ -1310,7 +1304,7 @@ rules:
 
   _having ::= keyword_having _expression
 
-  order_by ::= keyword_order keyword_by order_target ( ',' order_target )*
+  order_by ::=  >0(  keyword_order keyword_by order_target ( ',' order_target )* )
 
   order_target ::= _expression ( ( direction | keyword_using ( '<' | '>' | '<=' | '>=' ) ) ( keyword_nulls ( keyword_first | keyword_last ) )? )?
 

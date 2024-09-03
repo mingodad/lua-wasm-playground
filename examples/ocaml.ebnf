@@ -68,9 +68,6 @@ inline ::= {
 	_label
 	}
 
-conflicts ::= {
-	}
-
 word ::= _identifier
 
 rules:
@@ -104,7 +101,7 @@ rules:
 
   value_definition ::= ( 'let' _attribute? 'rec'? | let_operator ) let_binding ( ( 'and' | let_and_operator ) let_binding )*
 
-  let_binding ::= ( _binding_pattern ):pattern ( _parameter* _polymorphic_typed? ( ':>' _type )? '=' ( _sequence_expression ):body )? item_attribute*
+  let_binding ::=  >0(  ( _binding_pattern ):pattern ( _parameter* _polymorphic_typed? ( ':>' _type )? '=' ( _sequence_expression ):body )? item_attribute* )
 
   _parameter ::= parameter
 	| _parenthesized_abstract_type -> "abstract_type"
@@ -158,7 +155,7 @@ rules:
 
   class_definition ::= 'class' _attribute? class_binding ( 'and' class_binding )*
 
-  class_binding ::= 'virtual'? ( '[' _type_param ( ',' _type_param )* ']' )? ( _class_name ):name _parameter* _class_typed? ( '=' ( _class_expression ):body )? item_attribute*
+  class_binding ::=  >0(  'virtual'? ( '[' _type_param ( ',' _type_param )* ']' )? ( _class_name ):name _parameter* _class_typed? ( '=' ( _class_expression ):body )? item_attribute* )
 
   class_type_definition ::= 'class' 'type' _attribute? class_type_binding ( 'and' class_type_binding )*
 
@@ -193,17 +190,17 @@ rules:
 
   signature ::= 'sig' _signature? 'end'
 
-  module_type_constraint ::= _module_type 'with' ( constrain_type | constrain_module | constrain_module_type ) ( 'and' ( constrain_type | constrain_module | constrain_module_type ) )*
+  module_type_constraint ::=  >0(  _module_type 'with' ( constrain_type | constrain_module | constrain_module_type ) ( 'and' ( constrain_type | constrain_module | constrain_module_type ) )* )
 
   constrain_type ::= 'type' _type_params? type_constructor_path _type_equation type_constraint*
 
   constrain_module ::= 'module' module_path ( '=' | ':=' ) extended_module_path
 
-  constrain_module_type ::= 'module' 'type' module_type_path ( '=' | ':=' ) _module_type
+  constrain_module_type ::=  <0(  'module' 'type' module_type_path ( '=' | ':=' ) _module_type )
 
   module_type_of ::= 'module' 'type' 'of' _module_expression
 
-  functor_type ::= ( 'functor' module_parameter* | _module_type | '(' ')' ) '->' _module_type
+  functor_type ::=  >0(  ( 'functor' module_parameter* | _module_type | '(' ')' ) '->' _module_type )
 
   parenthesized_module_type ::= '(' _module_type ')'
 
@@ -220,7 +217,7 @@ rules:
 
   structure ::= 'struct' _structure? 'end'
 
-  functor ::= 'functor' module_parameter+ '->' ( _module_expression ):body
+  functor ::=  >0(  'functor' module_parameter+ '->' ( _module_expression ):body )
 
   module_application ::= ( _module_expression ):functor ( ( _simple_module_expression ):argument | '(' ')' )
 
@@ -480,7 +477,7 @@ rules:
 
   match_expression ::=  >2(  ( 'match' _attribute? | match_operator ) _sequence_expression 'with' _match_cases )
 
-  _match_cases ::= '|'? match_case ( '|' match_case )*
+  _match_cases ::=  >0(  '|'? match_case ( '|' match_case )* )
 
   match_case ::= ( _pattern ):pattern guard? '->' ( _sequence_expression | refutation_case ):body
 
@@ -600,25 +597,25 @@ rules:
 
   tuple_binding_pattern ::=  <6(  _binding_pattern ',' _binding_pattern )
 
-  record_pattern ::= '{' field_pattern ( ';' field_pattern )* ( ';' '_' )? ';'? '}'
+  record_pattern ::=  <0(  '{' field_pattern ( ';' field_pattern )* ( ';' '_' )? ';'? '}' )
 
   field_pattern ::= field_path _typed? ( '=' _pattern )?
 
-  record_binding_pattern ::= '{' field_binding_pattern -> "field_pattern" ( ';' field_binding_pattern -> "field_pattern" )* ( ';' '_' )? ';'? '}'
+  record_binding_pattern ::=  <0(  '{' field_binding_pattern -> "field_pattern" ( ';' field_binding_pattern -> "field_pattern" )* ( ';' '_' )? ';'? '}' )
 
   field_binding_pattern ::= field_path _typed? ( '=' ( _binding_pattern ):pattern )?
 
-  list_pattern ::= '[' ( _pattern ( ';' _pattern )* ';'? )? ']'
+  list_pattern ::=  <0(  '[' ( _pattern ( ';' _pattern )* ';'? )? ']' )
 
-  list_binding_pattern ::= '[' ( _binding_pattern ( ';' _binding_pattern )* ';'? )? ']'
+  list_binding_pattern ::=  <0(  '[' ( _binding_pattern ( ';' _binding_pattern )* ';'? )? ']' )
 
   cons_pattern ::=  >11(  _pattern '::' _pattern )
 
   cons_binding_pattern ::=  >11(  _binding_pattern '::' _binding_pattern )
 
-  array_pattern ::= '[|' ( _pattern ( ';' _pattern )* ';'? )? '|]'
+  array_pattern ::=  <0(  '[|' ( _pattern ( ';' _pattern )* ';'? )? '|]' )
 
-  array_binding_pattern ::= '[|' ( _binding_pattern ( ';' _binding_pattern )* ';'? )? '|]'
+  array_binding_pattern ::=  <0(  '[|' ( _binding_pattern ( ';' _binding_pattern )* ';'? )? '|]' )
 
   range_pattern ::=  18(  _signed_constant '..' _signed_constant )
 
@@ -638,7 +635,8 @@ rules:
 
   exception_pattern ::= 'exception' _attribute? _pattern
 
-  attribute ::= /\[@/ -> "[@" attribute_id attribute_payload? ']'
+  ;attribute ::= /\[@/ -> "[@" attribute_id attribute_payload? ']' FIXME
+  attribute ::= /\x5b@/ -> "[@" attribute_id attribute_payload? ']'
 
   item_attribute ::= '[@@' attribute_id attribute_payload? ']'
 
@@ -687,13 +685,13 @@ rules:
 
   string ::= '"'  string_content? '"'
 
-  string_content ::= ( !( /\s/ ) | !( /\[@/ ) | /[^\\"%@]+|%|@/ | _null | escape_sequence | /\\u\{[0-9A-Fa-f]+\}/ -> "escape_sequence" | /\\\r*\n[\t ]*/ -> "escape_sequence" | conversion_specification | pretty_printing_indication )+
+  string_content ::= ( !( /\s/ ) | !( /\x5B@/ ) | /[^\\"%@]+|%|@/ | _null | escape_sequence | /\\u\{[0-9A-Fa-f]+\}/ -> "escape_sequence" | /\\\r*\n[\t ]*/ -> "escape_sequence" | conversion_specification | pretty_printing_indication )+
 
   quoted_string ::= '{' _quoted_string '}'
 
   _quoted_string ::= _left_quoted_string_delimiter quoted_string_content? _right_quoted_string_delimiter
 
-  quoted_string_content ::= ( !( /\s/ ) | !( /\[@/ ) | /[^%@|]+|%|@|\|/ | _null | conversion_specification | pretty_printing_indication )+
+  quoted_string_content ::= ( !( /\s/ ) | !( /\x5B@/ ) | /[^%@|]+|%|@|\|/ | _null | conversion_specification | pretty_printing_indication )+
 
   escape_sequence ::= /\\[\\"'ntbr ]/
 	| /\\[0-9][0-9][0-9]/
@@ -826,3 +824,4 @@ rules:
   tag ::= /`/ ( _identifier | _capitalized_identifier )
 
   attribute_id ::= ( _identifier | _capitalized_identifier ) ( /\./ ( _identifier | _capitalized_identifier ) )*
+

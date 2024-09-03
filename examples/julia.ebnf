@@ -100,7 +100,7 @@ rules:
 
   macro_definition ::= 'macro' signature _terminator? _block? 'end'
 
-  signature ::= identifier | ( call_expression | argument_list ) ( unary_typed_expression )?:return_type where_clause?
+  signature ::=  >0(  identifier | ( call_expression | argument_list ) ( unary_typed_expression )?:return_type where_clause? )
 
   where_clause ::= 'where' _expression
 
@@ -168,11 +168,11 @@ rules:
 	| scoped_identifier
 	| import_path
 
-  _import_list ::= ( _importable | import_alias ) ( ',' ( _importable | import_alias ) )*
+  _import_list ::=  >0(  ( _importable | import_alias ) ( ',' ( _importable | import_alias ) )* )
 
   selected_import ::= _importable !( ':' ) _import_list
 
-  export_statement ::= 'export' _exportable ( ',' _exportable )*
+  export_statement ::= 'export'  >0(  _exportable ( ',' _exportable )* )
 
   import_statement ::= ( 'import' | 'using' ) ( _import_list | selected_import )
 
@@ -203,7 +203,7 @@ rules:
 
   if_clause ::= 'if' _expression
 
-  for_clause ::= 'for' for_binding ( ',' for_binding )*
+  for_clause ::=  >0(  'for' for_binding ( ',' for_binding )* )
 
   for_binding ::=  1(  'outer'? ( identifier | tuple_expression | typed_expression | interpolation_expression ) ( 'in' | '=' | '∈' ) _expression )
 
@@ -233,9 +233,9 @@ rules:
 
   _closed_macrocall_expression ::=  29(  ( _primary_expression !( '.' ) )? macro_identifier ( _immediate_brace curly_expression | _immediate_bracket _array | _immediate_paren argument_list do_clause? ) )
 
-  macrocall_expression ::= ( _primary_expression !( '.' ) )? macro_identifier macro_argument_list?
+  macrocall_expression ::=  >0(  ( _primary_expression !( '.' ) )? macro_identifier macro_argument_list? )
 
-  macro_argument_list ::=  -4(  _expression | assignment | open_tuple ) +
+  macro_argument_list ::=  <0(   -4(  _expression | assignment | open_tuple ) + )
 
   argument_list ::= '(' ';'? ( ( _expression | _closed_assignment -> "named_argument" | _expression _comprehension_clause ) ( ( ',' | ';' ) ( _expression | _closed_assignment -> "named_argument" | _expression _comprehension_clause ) )* )? ','? ')'
 
@@ -285,7 +285,7 @@ rules:
 
   function_expression ::=  >10(  ( identifier | argument_list | typed_expression ) '->' ( _expression | assignment ) )
 
-  juxtaposition_expression ::= ( integer_literal | float_literal | adjoint_expression ) _primary_expression
+  juxtaposition_expression ::=  <0(  ( integer_literal | float_literal | adjoint_expression ) _primary_expression )
 
   compound_assignment_expression ::=  >-2(  _primary_expression ( _assignment_operator | _tilde_operator ) -> "operator" _expression )
 
@@ -326,9 +326,9 @@ rules:
 
   command_literal ::= _command_start ( _string_content | string_interpolation | escape_sequence )* _command_end
 
-  prefixed_string_literal ::= ( identifier ):prefix _immediate_string_start ( _string_content_no_interp | escape_sequence )* _string_end ( identifier )?:suffix
+  prefixed_string_literal ::=  <0(  ( identifier ):prefix _immediate_string_start ( _string_content_no_interp | escape_sequence )* _string_end ( identifier )?:suffix )
 
-  prefixed_command_literal ::= ( identifier ):prefix _immediate_command_start ( _string_content_no_interp | escape_sequence )* _command_end ( identifier )?:suffix
+  prefixed_command_literal ::=  <0(  ( identifier ):prefix _immediate_command_start ( _string_content_no_interp | escape_sequence )* _command_end ( identifier )?:suffix )
 
   string_interpolation ::= '$' ( identifier | _immediate_paren '(' ( _expression | named_field -> "assignment" ) ')' )
 
@@ -390,3 +390,4 @@ rules:
 	| /;+/
 
   line_comment ::= @( '#' /.*/ )
+

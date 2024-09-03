@@ -129,11 +129,11 @@ rules:
 
   raise_statement ::= 'raise' _expressions? ( 'from' ( expression ):cause )?
 
-  pass_statement ::= 'pass'
+  pass_statement ::=  <0(  'pass' )
 
-  break_statement ::= 'break'
+  break_statement ::=  <0(  'break' )
 
-  continue_statement ::= 'continue'
+  continue_statement ::=  <0(  'continue' )
 
   _compound_statement ::= if_statement
 	| for_statement
@@ -213,7 +213,7 @@ rules:
 
   block ::= _statement* _dedent
 
-  expression_list ::= expression ( ',' | ( ',' expression )+ ','? )
+  expression_list ::=  >0(  expression ( ',' | ( ',' expression )+ ','? ) )
 
   dotted_name ::=  1(  identifier ( '.' identifier )* )
 
@@ -223,7 +223,7 @@ rules:
 
   _as_pattern ::= case_pattern 'as' identifier
 
-  union_pattern ::= _simple_pattern '|' _simple_pattern+
+  union_pattern ::=  >0(  _simple_pattern  <0(  '|' _simple_pattern ) + )
 
   _list_pattern ::= '[' ( case_pattern ( ',' case_pattern )* ','? )? ']'
 
@@ -275,7 +275,7 @@ rules:
 
   dictionary_splat_pattern ::= '**' ( identifier | keyword_identifier | subscript | attribute )
 
-  as_pattern ::= expression 'as' ( expression -> "as_pattern_target" ):alias
+  as_pattern ::=  <0(  expression 'as' ( expression -> "as_pattern_target" ):alias )
 
   _expression_within_for_in_clause ::= expression
 	| lambda_within_for_in_clause -> "lambda"
@@ -363,7 +363,7 @@ rules:
 	| pattern_list
 	| yield
 
-  yield ::= 'yield' ( 'from' expression | _expressions )
+  yield ::=  >0(  'yield' ( 'from' expression | _expressions ) )
 
   attribute ::=  22(  ( primary_expression ):object '.' ( identifier ):attribute )
 
@@ -388,9 +388,9 @@ rules:
 
   generic_type ::=  1(  identifier type_parameter )
 
-  union_type ::= type '|' type
+  union_type ::=  <0(  type '|' type )
 
-  constrained_type ::= type ':' type
+  constrained_type ::=  >0(  type ':' type )
 
   member_type ::= type '.' identifier
 
@@ -420,7 +420,7 @@ rules:
 
   _collection_elements ::= ( expression | yield | list_splat | parenthesized_list_splat ) ( ',' ( expression | yield | list_splat | parenthesized_list_splat ) )* ','?
 
-  for_in_clause ::= 'async'? 'for' ( _left_hand_side ):left 'in' ( _expression_within_for_in_clause ( ',' _expression_within_for_in_clause )* ):right ','?
+  for_in_clause ::=  <0(  'async'? 'for' ( _left_hand_side ):left 'in' ( _expression_within_for_in_clause ( ',' _expression_within_for_in_clause )* ):right ','? )
 
   if_clause ::= 'if' expression
 
@@ -430,7 +430,7 @@ rules:
 
   string ::= string_start ( interpolation | string_content )* string_end
 
-  string_content ::= ( escape_interpolation | escape_sequence | _not_escape_sequence | _string_content )+
+  string_content ::=  >0(  ( escape_interpolation | escape_sequence | _not_escape_sequence | _string_content )+ )
 
   interpolation ::= '{' ( _f_expression ):expression '='? ( type_conversion )?:type_conversion ( format_specifier )?:format_specifier '}'
 

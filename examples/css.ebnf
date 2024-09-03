@@ -19,15 +19,9 @@ extras ::= {
 	js_comment
 	}
 
-supertypes ::= {
-	}
-
 inline ::= {
 	_top_level_item
 	_block_item
-	}
-
-conflicts ::= {
 	}
 
 rules:
@@ -114,15 +108,15 @@ rules:
 
   attribute_selector ::= _selector? '[' ( identifier | namespace_selector ) -> "attribute_name" ( ( '=' | '~=' | '^=' | '|=' | '*=' | '$=' ) _value )? ']'
 
-  child_selector ::= _selector '>' _selector
+  child_selector ::=  <0(  _selector '>' _selector )
 
-  descendant_selector ::= _selector _descendant_operator _selector
+  descendant_selector ::=  <0(  _selector _descendant_operator _selector )
 
-  sibling_selector ::= _selector '~' _selector
+  sibling_selector ::=  <0(  _selector '~' _selector )
 
-  adjacent_sibling_selector ::= _selector '+' _selector
+  adjacent_sibling_selector ::=  <0(  _selector '+' _selector )
 
-  namespace_selector ::= _selector '|' _selector
+  namespace_selector ::=  <0(  _selector '|' _selector )
 
   pseudo_class_arguments ::= !( '(' ) ( ( _selector | _value+ ) ( ',' ( _selector | _value+ ) )* )? ')'
 
@@ -147,7 +141,7 @@ rules:
 
   parenthesized_query ::= '(' _query ')'
 
-  binary_query ::= _query ( 'and' | 'or' ) _query
+  binary_query ::=  <0(  _query ( 'and' | 'or' ) _query )
 
   unary_query ::=  1(  ( 'not' | 'only' ) _query )
 
@@ -172,7 +166,7 @@ rules:
 
   call_expression ::= identifier -> "function_name" arguments
 
-  binary_expression ::= _value ( '+' | '-' | '*' | '/' ) _value
+  binary_expression ::=  <0(  _value ( '+' | '-' | '*' | '/' ) _value )
 
   arguments ::= !( '(' ) ( _value+ ( ( ',' | ';' ) _value+ )* )? ')'
 

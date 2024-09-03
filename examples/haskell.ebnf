@@ -287,9 +287,9 @@ rules:
 
   _parameter_type ::= ( strict_field | lazy_field | quantified_type ):parameter
 
-  _qtype_function ::= _parameter_type _fun_arrow ( quantified_type ):result
+  _qtype_function ::=  >0(  _parameter_type _fun_arrow ( quantified_type ):result )
 
-  _qtype_linear_function ::= _parameter_type _linear_fun_arrow ( quantified_type ):result
+  _qtype_linear_function ::=  >0(  _parameter_type _linear_fun_arrow ( quantified_type ):result )
 
   _qtype_context ::=  >qtype-curried(  _context_inline ( quantified_type ):type )
 
@@ -299,7 +299,7 @@ rules:
 	| _qtype_forall_required -> "forall_required"
 	| _qtype_context -> "context"
 	| implicit_parameter
-	| type
+	|  >0(  type )
 
   _type_annotation ::= _colon2 ( quantified_type ):type
 
@@ -371,7 +371,7 @@ rules:
 
   _ctr_tuple ::= _paren_open constraints ( ',' constraints )+ _paren_close
 
-  implicit_parameter ::= ( implicit_variable ):name _type_annotation
+  implicit_parameter ::=  <0(  ( implicit_variable ):name _type_annotation )
 
   constraint ::= _type_name
 	| _class_infix -> "infix"
@@ -543,7 +543,7 @@ rules:
   _exp_signature ::=  >annotated(  ( expression ):expression _type_annotation )
 
   _exp ::= _exp_signature -> "signature"
-	| expression
+	|  >0(  expression )
 
   _pat_parens ::= _paren_open ( _pat_texp ):pattern _paren_close
 
@@ -605,7 +605,7 @@ rules:
   _pat_signature ::=  >annotated(  ( pattern ):pattern _type_annotation )
 
   _pat ::= _pat_signature -> "signature"
-	| pattern
+	|  >0(  pattern )
 
   view_pattern ::= ( _exp ):expression _arrow ( _pat_texp ):pattern
 
@@ -890,7 +890,7 @@ rules:
 
   char ::= @( ( /'[^']'/ | /'\\[^ ]*'/ ) !( /##?/ )? )
 
-  ;string ::= @( '"'  ( /[^\\"\n]/ | /\\(\^)?./ | /\\\n\s*\\/ )* '"'  !( /##?/ )? ) FIXME
+  ;string ::= @( '"'  ( /[^\\"\n]/ | /\\(\^)?.\\/ | /\\\n\s*/ )* '"'  !( /##?/ )? ) FIXME
   string ::= @( '"'  ( /[^\\"\n]/ | /\\(\^)?./ | /\\\n\s*/ )* '"'  !( /##?/ )? )
 
   _integer_literal ::= @( /[0-9][0-9_]*/ !( /##?/ )? )
@@ -1179,3 +1179,4 @@ rules:
   _where ::= _phantom_where? 'where'
 
   _bar ::= _phantom_bar? '|'
+

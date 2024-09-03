@@ -7,17 +7,8 @@
 ;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
-externals ::= {
-	}
-
 extras ::= {
 	/[\t ]/
-	}
-
-supertypes ::= {
-	}
-
-inline ::= {
 	}
 
 conflicts ::= {
@@ -90,7 +81,7 @@ rules:
 
   block ::= ( line+ | line_li+ | line+ line_li+ ) ( !( '<' ) | _blank ) _blank*
 
-  codeblock ::= '>' ( !( /[a-z0-9]+\n/ ) -> "language" | !( /\n/ ) ) line_code -> "line"+ -> "code"
+  codeblock ::=  >0(  '>' ( !( /[a-z0-9]+\n/ ) -> "language" | !( /\n/ ) ) line_code -> "line"+ -> "code" )
 
   _blank ::= ( /\n/ ):blank
 
@@ -133,3 +124,4 @@ rules:
   codespan ::= '`' ( !( /[^``\n]+/ ) -> "word" ):text !( '`' )
 
   argument ::= '{' ( !( /[^}\n\t ]+/ ) -> "word" ):text !( '}' ) !( '?' )?
+

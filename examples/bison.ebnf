@@ -17,15 +17,6 @@ extras ::= {
 	comment
 	}
 
-supertypes ::= {
-	}
-
-inline ::= {
-	}
-
-conflicts ::= {
-	}
-
 rules:
 
   sections ::= ( prologue | declaration ';'? )* grammar_rules_section
@@ -165,3 +156,4 @@ rules:
 
   comment ::= '//' /.*/
 	| '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/'
+

@@ -134,12 +134,6 @@ extras ::= {
 	_wsp
 	}
 
-supertypes ::= {
-	}
-
-inline ::= {
-	}
-
 conflicts ::= {
 	{ _chk_box_pgh_ctn _chk_box_lik_stx_ctn }
 	{ _fen_cod_ctn }
@@ -377,4 +371,5 @@ rules:
   _htm_atr_val ::= _htm_atr_val_bgn ( _txt -> "text" | _bsl_esc -> "backslash_escape" )* _htm_atr_val_end
 	| _htm_atr_val_bgn_mkr ( _txt -> "text" | _bsl_esc -> "backslash_escape" )* _htm_atr_val_end_mkr
 
-  _txt ::= _txt_frg+
+  _txt ::=  >0(  _txt_frg+ )
+

@@ -48,9 +48,6 @@ supertypes ::= {
 	_number_set
 	}
 
-inline ::= {
-	}
-
 conflicts ::= {
 	{ minus negative }
 	{ bound_prefix_op prefix_op_symbol }
@@ -76,13 +73,13 @@ rules:
 	| extends? _unit+
 	| pcal_algorithm
 
-  comment ::= @( /\\\*.*/ )
+  comment ::= @(  0(  /\\\*.*/ )  )
 
   block_comment ::= @(  1(  '(*' )  ) ( pcal_algorithm | block_comment_text )* @(  1(  '*)' )  )
 
-  block_comment_text ::= ( @(  1(  /[^*()]|[^*][)]|[(][^(*]|[*][)][ \t]*(
+  block_comment_text ::=  >0(  ( @(  1(  /[^*()]|[^*][)]|[(][^(*]|[*][)][ \t]*(
 |
-)?[ \t]*[(][*]/ )  ) | @(  1(  /\*/ )  ) | @(  1(  /\(/ )  ) | @(  1(  /\)/ )  ) )+
+)?[ \t]*[(][*]/ )  ) | @(  1(  /\*/ )  ) | @(  1(  /\(/ )  ) | @(  1(  /\)/ )  ) )+ )
 
   module ::= single_line -> "header_line" 'MODULE' ( identifier ):name single_line -> "header_line" extends? _unit* double_line
 
@@ -452,7 +449,7 @@ rules:
 
   if_then_else ::=  0-0(  'IF' ( _expr ):if 'THEN' ( _expr ):then 'ELSE' ( _expr ):else )
 
-  case ::= 'CASE' case_arm ( case_box case_arm )* ( case_box other_arm )?
+  case ::=  >0(  'CASE' case_arm ( case_box case_arm )* ( case_box other_arm )? )
 
   case_arm ::=  0-0(  _expr case_arrow _expr )
 
@@ -1026,7 +1023,7 @@ rules:
 
   pcal_p_if ::= 'if' _expr 'then' _pcal_p_stmts ( 'elsif' _expr 'then' _pcal_p_stmts )* ( 'else' _pcal_p_stmts )? 'end' -> "pcal_end_if" 'if'
 
-  pcal_c_if ::= 'if' '(' _expr ')' _pcal_c_stmt ( 'else' _pcal_c_stmt )?
+  pcal_c_if ::=  >0(  'if' '(' _expr ')' _pcal_c_stmt ( 'else' _pcal_c_stmt )? )
 
   pcal_p_while ::= 'while' _expr 'do' _pcal_p_stmts 'end' -> "pcal_end_while" 'while'
 
@@ -1034,7 +1031,7 @@ rules:
 
   pcal_p_either ::= 'either' _pcal_p_stmts ( 'or' _pcal_p_stmts )+ 'end' -> "pcal_end_either" 'either'
 
-  pcal_c_either ::= 'either' _pcal_c_stmt ( 'or' _pcal_c_stmt )+
+  pcal_c_either ::=  >0(  'either' _pcal_c_stmt ( 'or' _pcal_c_stmt )+ )
 
   pcal_p_with ::= 'with' _pcal_with_vars 'do' _pcal_p_stmts 'end' -> "pcal_end_with" 'with'
 

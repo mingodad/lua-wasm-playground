@@ -7,16 +7,10 @@
 ;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
-externals ::= {
-	}
-
 extras ::= {
 	/[\s]/
 	??:ALIAS
 	comment
-	}
-
-supertypes ::= {
 	}
 
 inline ::= {
@@ -29,9 +23,6 @@ inline ::= {
 	_primary
 	_name
 	_string
-	}
-
-conflicts ::= {
 	}
 
 word ::= word
@@ -48,9 +39,9 @@ rules:
   rule ::= _ordinary_rule
 	| _static_pattern_rule
 
-  _ordinary_rule ::= _targets ( ':' | '&:' | '::' ) !( /[\t ]+/ )? _prerequisites? ( recipe | !( /[\r\n]+/ ) )
+  _ordinary_rule ::=  >0(  _targets ( ':' | '&:' | '::' ) !( /[\t ]+/ )? _prerequisites? ( recipe | !( /[\r\n]+/ ) ) )
 
-  _static_pattern_rule ::= _targets ':' !( /[\t ]+/ )? _target_pattern ':' !( /[\t ]+/ )? _prerequisites_pattern? ( recipe | !( /[\r\n]+/ ) )
+  _static_pattern_rule ::=  >0(  _targets ':' !( /[\t ]+/ )? _target_pattern ':' !( /[\t ]+/ )? _prerequisites_pattern? ( recipe | !( /[\r\n]+/ ) ) )
 
   _targets ::= list -> "targets"
 
@@ -65,7 +56,7 @@ rules:
 
   _prerequisites_pattern ::= ( list -> "pattern_list" ):prerequisite
 
-  recipe ::= _attached_recipe_line !( /[\r\n]+/ ) ( conditional | _prefixed_recipe_line )* | !( /[\r\n]+/ ) ( conditional | _prefixed_recipe_line )+
+  recipe ::=  >0(  _attached_recipe_line !( /[\r\n]+/ ) ( conditional | _prefixed_recipe_line )* | !( /[\r\n]+/ ) ( conditional | _prefixed_recipe_line )+ )
 
   _attached_recipe_line ::= ';' recipe_line?
 
@@ -177,7 +168,7 @@ rules:
 	| concatenation
 	| string
 
-  concatenation ::= _primary _primary+
+  concatenation ::=  >0(  _primary  <0(  _primary ) + )
 
   _name ::= ( word ):name
 
@@ -204,3 +195,4 @@ rules:
 	| ( _variable | _function | '$$' -> "escape" | '//' -> "escape" ) ( @( ( /[^\$\(\)\n\r\\]/ | !( '\\'  /\r?\n|\r/ ) -> "\" | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ )? ( _variable | _function | '$$' -> "escape" | '//' -> "escape" ) )* @( ( /[^\$\(\)\n\r\\]/ | !( '\\'  /\r?\n|\r/ ) -> "\" | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ )?
 
   comment ::= @(  -1(  /#.*/ )  )
+

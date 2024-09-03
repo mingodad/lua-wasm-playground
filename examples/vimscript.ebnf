@@ -126,12 +126,6 @@ extras ::= {
 	/[\t ]/
 	}
 
-supertypes ::= {
-	}
-
-inline ::= {
-	}
-
 conflicts ::= {
 	{ binary_operation unary_operation field_expression }
 	{ binary_operation field_expression }
@@ -598,7 +592,7 @@ rules:
 
   sign_statement ::= _sign -> "sign" ( _sign_define | _sign_undefine | _sign_list | _sign_place | _sign_unplace | _sign_jump )
 
-  _variable ::= scope_dict | _ident | string_literal | float_literal | integer_literal | list | env_variable | register | option | lambda_expression | dictionnary | literal_dictionary
+  _variable ::=  <0(  scope_dict | _ident | string_literal | float_literal | integer_literal | list | env_variable | register | option | lambda_expression | dictionnary | literal_dictionary )
 
   _expression ::= _variable
 	| ternary_expression
@@ -669,7 +663,7 @@ rules:
 
   _pattern_ordinary_atom ::= ( '[' ( '\\'  /./ | /[^\]\n\\]/ )* ']' | '\\'  /./ | /[^\\\[\n]/ )+
 
-  _pattern_atom ::= _pattern_ordinary_atom | '\(' pattern '\)' | '\%(' pattern '\)' | '\z(' pattern '\)'
+  _pattern_atom ::=  <0(  _pattern_ordinary_atom | '\(' pattern '\)' | '\%(' pattern '\)' | '\z(' pattern '\)' )
 
   _pattern_piece ::= _pattern_atom pattern_multi?
 
@@ -677,7 +671,7 @@ rules:
 
   _pattern_branch ::= _pattern_concat ( '\&' _pattern_concat )*
 
-  pattern ::= _pattern_branch ( '\|' _pattern_branch )*
+  pattern ::=  <0(  _pattern_branch ( '\|' _pattern_branch )* )
 
   env_variable ::= '$' identifier
 
@@ -959,3 +953,4 @@ rules:
   visual_statement ::= _visual -> "visual" bang? plus_plus_opt* plus_cmd* filename?
 
   view_statement ::= _view -> "view" bang? plus_plus_opt* plus_cmd* filename
+

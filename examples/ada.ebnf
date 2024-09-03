@@ -7,15 +7,9 @@
 ;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
-externals ::= {
-	}
-
 extras ::= {
 	/\s|\\\r?\n/
 	comment
-	}
-
-supertypes ::= {
 	}
 
 inline ::= {
@@ -114,11 +108,11 @@ rules:
 	| selected_component
 	| _attribute_reference
 
-  selected_component ::= ( _name ):prefix '.' ( identifier | character_literal | string_literal ):selector_name
+  selected_component ::=  <0(  ( _name ):prefix '.' ( identifier | character_literal | string_literal ):selector_name )
 
   target_name ::= '@'
 
-  _name_list ::= _name ( ',' _name )*
+  _name_list ::=  <0(  _name ( ',' _name )* )
 
   _defining_identifier_list ::= identifier ( ',' identifier )*
 
@@ -240,7 +234,7 @@ rules:
 
   raise_expression ::=  >1(  @(  2(  /[rR][aA][iI][sS][eE]/ )  ) -> "raise" ( _name ):exception_name ( @(  2(  /[wW][iI][tT][hH]/ )  ) -> "with" _simple_expression )? )
 
-  membership_choice_list ::= _membership_choice ( '|' _membership_choice )*
+  membership_choice_list ::=  >0(  _membership_choice ( '|' _membership_choice )* )
 
   _membership_choice ::= _simple_expression
 	| range_g
@@ -373,7 +367,7 @@ rules:
 
   incomplete_type_declaration ::= @(  2(  /[tT][yY][pP][eE]/ )  ) -> "type" identifier _discriminant_part? ( @(  2(  /[iI][sS]/ )  ) -> "is" @(  2(  /[tT][aA][gG][gG][eE][dD]/ )  ) -> "tagged" )? ';'
 
-  discriminant_specification_list ::= discriminant_specification ( ';' discriminant_specification )*
+  discriminant_specification_list ::=  >0(  discriminant_specification ( ';' discriminant_specification )* )
 
   discriminant_specification ::= _defining_identifier_list ':' ( null_exclusion? ( _name ):subtype_mark | access_definition ) _assign_value? aspect_specification?
 
@@ -708,7 +702,7 @@ rules:
 
   procedure_specification ::= @(  2(  /[pP][rR][oO][cC][eE][dD][uU][rR][eE]/ )  ) -> "procedure" ( _name ):name formal_part?
 
-  record_representation_clause ::= @(  2(  /[fF][oO][rR]/ )  ) -> "for" ( _name ):local_name @(  2(  /[uU][sS][eE]/ )  ) -> "use" @(  2(  /[rR][eE][cC][oO][rR][dD]/ )  ) -> "record" mod_clause? component_clause* @(  2(  /[eE][nN][dD]/ )  ) -> "end" @(  2(  /[rR][eE][cC][oO][rR][dD]/ )  ) -> "record" ( _name )?:end_local_name ';'
+  record_representation_clause ::=  <0(  @(  2(  /[fF][oO][rR]/ )  ) -> "for" ( _name ):local_name @(  2(  /[uU][sS][eE]/ )  ) -> "use" @(  2(  /[rR][eE][cC][oO][rR][dD]/ )  ) -> "record" mod_clause? component_clause* @(  2(  /[eE][nN][dD]/ )  ) -> "end" @(  2(  /[rR][eE][cC][oO][rR][dD]/ )  ) -> "record" ( _name )?:end_local_name ';' )
 
   _renaming_declaration ::= object_renaming_declaration
 	| exception_renaming_declaration
@@ -731,7 +725,7 @@ rules:
 
   result_profile ::= @(  2(  /[rR][eE][tT][uU][rR][nN]/ )  ) -> "return" ( null_exclusion? ( _name ):subtype_mark | access_definition )
 
-  _sequence_of_statements ::= _statement+ label*
+  _sequence_of_statements ::=  <0(  _statement+ label* )
 
   _simple_statement ::= null_statement
 	| assignment_statement
@@ -854,3 +848,4 @@ rules:
   variant_list ::= variant+
 
   variant ::= @(  2(  /[wW][hH][eE][nN]/ )  ) -> "when" discrete_choice_list '=>' component_list
+

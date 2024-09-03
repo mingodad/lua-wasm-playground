@@ -7,9 +7,6 @@
 ;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
-externals ::= {
-	}
-
 extras ::= {
 	line_comment
 	block_comment
@@ -175,7 +172,7 @@ rules:
 	| array_creation_expression
 	| template_expression
 
-  array_creation_expression ::= 'new' _annotation* ( _simple_type ):type ( ( dimensions_expr+ ):dimensions ( dimensions )?:dimensions | ( dimensions ):dimensions ( array_initializer ):value )
+  array_creation_expression ::=  >0(  'new' _annotation* ( _simple_type ):type ( ( dimensions_expr+ ):dimensions ( dimensions )?:dimensions | ( dimensions ):dimensions ( array_initializer ):value ) )
 
   dimensions_expr ::= _annotation* '[' expression ']'
 
@@ -186,7 +183,7 @@ rules:
   object_creation_expression ::= _unqualified_object_creation_expression
 	| primary_expression '.' _unqualified_object_creation_expression
 
-  _unqualified_object_creation_expression ::= 'new' ( _annotation* ( type_arguments ):type_arguments _annotation* | _annotation* ) ( _simple_type ):type ( argument_list ):arguments class_body?
+  _unqualified_object_creation_expression ::=  >0(  'new' ( _annotation* ( type_arguments ):type_arguments _annotation* | _annotation* ) ( _simple_type ):type ( argument_list ):arguments class_body? )
 
   field_access ::= ( primary_expression | super ):object ( '.' super )? '.' ( identifier | _reserved_identifier | this ):field
 
@@ -207,13 +204,13 @@ rules:
   _wildcard_bounds ::= 'extends' _type
 	| super _type
 
-  dimensions ::= ( _annotation* '[' ']' )+
+  dimensions ::=  >0(  ( _annotation* '[' ']' )+ )
 
   switch_expression ::= 'switch' ( parenthesized_expression ):condition ( switch_block ):body
 
   switch_block ::= '{' ( switch_block_statement_group* | switch_rule* ) '}'
 
-  switch_block_statement_group ::= ( switch_label ':' )+ statement*
+  switch_block_statement_group ::=  <0(  ( switch_label ':' )+ statement* )
 
   switch_rule ::= switch_label '->' ( expression_statement | throw_statement | block )
 
@@ -299,7 +296,7 @@ rules:
 	| identifier
 	| field_access
 
-  if_statement ::= 'if' ( parenthesized_expression ):condition ( statement ):consequence ( 'else' ( statement ):alternative )?
+  if_statement ::=  >0(  'if' ( parenthesized_expression ):condition ( statement ):consequence ( 'else' ( statement ):alternative )? )
 
   while_statement ::= 'while' ( parenthesized_expression ):condition ( statement ):body
 
@@ -507,7 +504,7 @@ rules:
   comment ::= line_comment
 	| block_comment
 
-  line_comment ::= @( '//' /[^\n]*/ )
+  line_comment ::= @(  0(  '//' /[^\n]*/ )  )
 
-  block_comment ::= @( '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/' )
+  block_comment ::= @(  0(  '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/' )  )
 

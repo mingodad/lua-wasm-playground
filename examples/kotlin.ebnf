@@ -23,12 +23,6 @@ extras ::= {
 	/\s+/
 	}
 
-supertypes ::= {
-	}
-
-inline ::= {
-	}
-
 conflicts ::= {
 	{ _primary_expression callable_reference }
 	{ constructor_invocation _unescaped_annotation }
@@ -89,7 +83,7 @@ rules:
 	| setter
 	| type_alias
 
-  class_declaration ::= modifiers? ( 'class' | 'interface' ) simple_identifier -> "type_identifier" type_parameters? primary_constructor? ( ':' _delegation_specifiers )? type_constraints? class_body? | modifiers? 'enum' 'class' simple_identifier -> "type_identifier" type_parameters? primary_constructor? ( ':' _delegation_specifiers )? type_constraints? enum_class_body?
+  class_declaration ::=  >0(  modifiers? ( 'class' | 'interface' ) simple_identifier -> "type_identifier" type_parameters? primary_constructor? ( ':' _delegation_specifiers )? type_constraints? class_body? | modifiers? 'enum' 'class' simple_identifier -> "type_identifier" type_parameters? primary_constructor? ( ':' _delegation_specifiers )? type_constraints? enum_class_body? )
 
   primary_constructor ::= ( modifiers? 'constructor' )? _class_parameters
 
@@ -102,9 +96,9 @@ rules:
 
   class_parameter ::= modifiers? binding_pattern_kind? simple_identifier ':' _type ( '=' _expression )?
 
-  _delegation_specifiers ::= delegation_specifier ( ',' delegation_specifier )*
+  _delegation_specifiers ::=  <0(  delegation_specifier ( ',' delegation_specifier )* )
 
-  delegation_specifier ::= constructor_invocation | explicit_delegation | user_type | function_type
+  delegation_specifier ::=  <0(  constructor_invocation | explicit_delegation | user_type | function_type )
 
   constructor_invocation ::= user_type value_arguments
 
@@ -116,7 +110,7 @@ rules:
 
   type_parameter ::= type_parameter_modifiers? simple_identifier -> "type_identifier" ( ':' _type )?
 
-  type_constraints ::= 'where' type_constraint ( ',' type_constraint )*
+  type_constraints ::=  >0(  'where' type_constraint ( ',' type_constraint )* )
 
   type_constraint ::= annotation* simple_identifier -> "type_identifier" ':' _type
 
@@ -137,20 +131,20 @@ rules:
 
   _receiver_type ::= type_modifiers? ( _type_reference | parenthesized_type | nullable_type )
 
-  function_declaration ::= modifiers? 'fun' type_parameters? ( _receiver_type '.'? )? simple_identifier function_value_parameters ( ':' _type )? type_constraints? function_body?
+  function_declaration ::=  >0(  modifiers? 'fun' type_parameters? ( _receiver_type '.'? )? simple_identifier function_value_parameters ( ':' _type )? type_constraints? function_body? )
 
   function_body ::= _block
 	| '=' _expression
 
   variable_declaration ::=  <3(  simple_identifier ( ':' _type )? )
 
-  property_declaration ::= modifiers? binding_pattern_kind type_parameters? ( _receiver_type '.'? )? ( variable_declaration | multi_variable_declaration ) type_constraints? ( '=' _expression | property_delegate )? ';'? ( getter | setter )
+  property_declaration ::=  >0(  modifiers? binding_pattern_kind type_parameters? ( _receiver_type '.'? )? ( variable_declaration | multi_variable_declaration ) type_constraints? ( '=' _expression | property_delegate )? ';'? ( getter | setter ) )
 
   property_delegate ::= 'by' _expression
 
-  getter ::= modifiers? 'get' ( '(' ')' ( ':' _type )? function_body )?
+  getter ::=  >0(  modifiers? 'get' ( '(' ')' ( ':' _type )? function_body )? )
 
-  setter ::= modifiers? 'set' ( '(' parameter_with_optional_type ')' ( ':' _type )? function_body )?
+  setter ::=  >0(  modifiers? 'set' ( '(' parameter_with_optional_type ')' ( ':' _type )? function_body )? )
 
   parameters_with_optional_type ::= '(' parameter_with_optional_type ( ',' parameter_with_optional_type )* ')'
 
@@ -158,7 +152,7 @@ rules:
 
   parameter ::= simple_identifier ':' _type
 
-  object_declaration ::= modifiers? 'object' simple_identifier -> "type_identifier" ( ':' _delegation_specifiers )? class_body?
+  object_declaration ::=  >0(  modifiers? 'object' simple_identifier -> "type_identifier" ( ':' _delegation_specifiers )? class_body? )
 
   secondary_constructor ::= modifiers? 'constructor' function_value_parameters ( ':' constructor_delegation_call )? _block?
 
@@ -215,11 +209,11 @@ rules:
 	| while_statement
 	| do_while_statement
 
-  for_statement ::= 'for' '(' annotation* ( variable_declaration | multi_variable_declaration ) 'in' _expression ')' control_structure_body?
+  for_statement ::=  >0(  'for' '(' annotation* ( variable_declaration | multi_variable_declaration ) 'in' _expression ')' control_structure_body? )
 
   while_statement ::= 'while' '(' _expression ')' ( ';' | control_structure_body )
 
-  do_while_statement ::= 'do' control_structure_body? 'while' '(' _expression ')'
+  do_while_statement ::=  >0(  'do' control_structure_body? 'while' '(' _expression ')' )
 
   _semi ::= _automatic_semicolon
 
@@ -246,7 +240,7 @@ rules:
 
   navigation_expression ::=  <16(  _expression navigation_suffix )
 
-  prefix_expression ::= ( annotation | label | _prefix_unary_operator ) _expression
+  prefix_expression ::=  >0(  ( annotation | label | _prefix_unary_operator ) _expression )
 
   as_expression ::=  <13(  _expression _as_operator _type )
 
@@ -289,7 +283,7 @@ rules:
 
   navigation_suffix ::= _member_access_operator ( simple_identifier | parenthesized_expression | 'class' )
 
-  call_suffix ::= type_arguments? (  1(  value_arguments? annotated_lambda )  | value_arguments )
+  call_suffix ::=  <0(  type_arguments? (  1(  value_arguments? annotated_lambda )  | value_arguments ) )
 
   annotated_lambda ::= annotation* label? lambda_literal
 
@@ -335,7 +329,7 @@ rules:
   _interpolation ::= '${' _expression -> "interpolated_expression" '}'
 	| '$' simple_identifier -> "interpolated_identifier"
 
-  lambda_literal ::= '{' ( lambda_parameters? '->' )? statements? '}'
+  lambda_literal ::=  0(  '{' ( lambda_parameters? '->' )? statements? '}' )
 
   multi_variable_declaration ::= '(' variable_declaration ( ',' variable_declaration )* ')'
 
@@ -344,7 +338,7 @@ rules:
   _lambda_parameter ::= variable_declaration
 	| multi_variable_declaration
 
-  anonymous_function ::= 'fun' ( _simple_user_type ( '.' _simple_user_type )* '.' )? function_value_parameters ( ':' _type )? function_body?
+  anonymous_function ::=  >0(  'fun' ( _simple_user_type ( '.' _simple_user_type )* '.' )? function_value_parameters ( ':' _type )? function_body? )
 
   _function_literal ::= lambda_literal
 	| anonymous_function
@@ -354,9 +348,9 @@ rules:
   this_expression ::= 'this'
 	| _this_at
 
-  super_expression ::= 'super' | 'super' '<' _type '>' | _super_at
+  super_expression ::=  >0(  'super' | 'super' '<' _type '>' | _super_at )
 
-  if_expression ::= 'if' '(' ( _expression ):condition ')' ( ( control_structure_body ):consequence | ( control_structure_body )?:consequence ';'? 'else' ( ( control_structure_body ):alternative | ';' ) | ';' )
+  if_expression ::=  >0(  'if' '(' ( _expression ):condition ')' ( ( control_structure_body ):consequence | ( control_structure_body )?:consequence ';'? 'else' ( ( control_structure_body ):alternative | ';' ) | ';' ) )
 
   when_subject ::= '(' ( annotation* 'val' variable_declaration '=' )? _expression ')'
 
@@ -378,8 +372,8 @@ rules:
 
   finally_block ::= 'finally' _block
 
-  jump_expression ::= 'throw' _expression
-	| ( 'return' | _return_at ) _expression?
+  jump_expression ::=  >0(  'throw' _expression )
+	|  >0(  ( 'return' | _return_at ) _expression? )
 	| 'continue'
 	| _continue_at
 	| 'break'
@@ -443,7 +437,7 @@ rules:
 
   directly_assignable_expression ::=  1(  _postfix_unary_expression | simple_identifier )
 
-  modifiers ::= ( annotation | _modifier )+
+  modifiers ::=  <0(  ( annotation | _modifier )+ )
 
   parameter_modifiers ::= ( annotation | parameter_modifier )+
 

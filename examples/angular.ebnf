@@ -83,7 +83,7 @@ rules:
 
   text ::= /[^<>{}&\s]([^<>{}&]*[^<>{}&\s])?/
 
-  statement_block ::= '{' _node* '}'
+  statement_block ::=  >0(  '{' _node* '}' )
 
   _any_statement ::= if_statement
 	| for_statement
@@ -98,7 +98,7 @@ rules:
 	| ( loading_statement ):loading
 	| ( error_statement ):error
 
-  switch_statement ::= _control_flow_start -> "@" 'switch' -> "control_keyword" '(' ( expression ):value ')' ( switch_body ):body
+  switch_statement ::=  >0(  _control_flow_start -> "@" 'switch' -> "control_keyword" '(' ( expression ):value ')' ( switch_body ):body )
 
   switch_body ::= '{' ( case_statement | default_statement )+ '}'
 
@@ -106,11 +106,11 @@ rules:
 
   default_statement ::= _control_flow_start -> "@" 'default' -> "control_keyword" ( statement_block ):body
 
-  defer_statement ::= _control_flow_start -> "@" 'defer' -> "control_keyword" defer_trigger? ( statement_block ):body
+  defer_statement ::=  <0(  _control_flow_start -> "@" 'defer' -> "control_keyword" defer_trigger? ( statement_block ):body )
 
-  placeholder_statement ::= _control_flow_start -> "@" 'placeholder' -> "control_keyword" placeholder_minimum? ( statement_block ):body
+  placeholder_statement ::=  <0(  _control_flow_start -> "@" 'placeholder' -> "control_keyword" placeholder_minimum? ( statement_block ):body )
 
-  loading_statement ::= _control_flow_start -> "@" 'loading' -> "control_keyword" loading_condition? ( statement_block ):body
+  loading_statement ::=  <0(  _control_flow_start -> "@" 'loading' -> "control_keyword" loading_condition? ( statement_block ):body )
 
   error_statement ::= _control_flow_start -> "@" 'error' -> "control_keyword" ( statement_block ):body
 
@@ -124,7 +124,7 @@ rules:
 
   timed_expression ::= ( 'after' | 'minimum' ) -> "special_keyword" ( number ):value ( 'ms' | 's' ) -> "unit"
 
-  for_statement ::= _control_flow_start -> "@" 'for' -> "control_keyword" '(' ( for_declaration ):declaration ( for_reference )?:reference ')' ( statement_block ):body
+  for_statement ::=  <0(  _control_flow_start -> "@" 'for' -> "control_keyword" '(' ( for_declaration ):declaration ( for_reference )?:reference ')' ( statement_block ):body )
 
   empty_statement ::= _control_flow_start -> "@" 'empty' -> "control_keyword" ( statement_block ):body
 
@@ -132,17 +132,17 @@ rules:
 
   for_reference ::= ';' 'let' -> "special_keyword" ( assignment_expression ):alias ( ( ';' | ',' ) ( assignment_expression ):alias )*
 
-  if_statement ::= _if_start_expression _if_body_expression
+  if_statement ::=  >0(  _if_start_expression _if_body_expression )
 
-  else_if_statement ::= _else_if_start_expression _if_body_expression
+  else_if_statement ::=  >0(  _else_if_start_expression _if_body_expression )
 
-  else_statement ::= _control_flow_start -> "@" 'else' -> "control_keyword" statement_block
+  else_statement ::=  >0(  _control_flow_start -> "@" 'else' -> "control_keyword" statement_block )
 
   _if_start_expression ::= _control_flow_start -> "@" 'if' -> "control_keyword"
 
   _else_if_start_expression ::= _control_flow_start -> "@" 'else' -> "control_keyword" 'if' -> "control_keyword"
 
-  _if_body_expression ::= '(' ( if_condition ):condition ( if_reference )?:reference ')' ( statement_block ):consequence
+  _if_body_expression ::=  <0(  '(' ( if_condition ):condition ( if_reference )?:reference ')' ( statement_block ):consequence )
 
   if_condition ::=  >1(  _any_expression )
 

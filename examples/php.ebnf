@@ -130,7 +130,7 @@ rules:
 
   base_clause ::= /extends/ -> "extends" _name ( ',' _name )*
 
-  enum_declaration ::= ( attribute_list )?:attributes /enum/ -> "enum" ( name ):name ( ':' ( 'string' | 'int' ) -> "primitive_type" )? class_interface_clause? ( enum_declaration_list ):body
+  enum_declaration ::=  >0(  ( attribute_list )?:attributes /enum/ -> "enum" ( name ):name ( ':' ( 'string' | 'int' ) -> "primitive_type" )? class_interface_clause? ( enum_declaration_list ):body )
 
   enum_declaration_list ::= '{' _enum_member_declaration* '}'
 
@@ -140,7 +140,7 @@ rules:
 
   enum_case ::= ( attribute_list )?:attributes /case/ -> "case" ( name ):name ( '=' ( _string | integer ):value )? _semicolon
 
-  class_declaration ::= ( attribute_list )?:attributes _modifier* /class/ -> "class" ( name ):name base_clause? class_interface_clause? ( declaration_list ):body
+  class_declaration ::=  >0(  ( attribute_list )?:attributes _modifier* /class/ -> "class" ( name ):name base_clause? class_interface_clause? ( declaration_list ):body )
 
   declaration_list ::= '{' _member_declaration* '}'
 
@@ -165,7 +165,7 @@ rules:
 
   property_declaration ::= ( attribute_list )?:attributes _modifier+ ( type )?:type property_element ( ',' property_element )* ( _semicolon | property_hook_list )
 
-  _modifier ::= var_modifier | visibility_modifier | static_modifier | final_modifier | abstract_modifier | readonly_modifier
+  _modifier ::=  <0(  var_modifier | visibility_modifier | static_modifier | final_modifier | abstract_modifier | readonly_modifier )
 
   property_element ::= ( variable_name ):name ( '=' ( expression ):default_value )?
 
@@ -187,7 +187,7 @@ rules:
 
   use_list ::= '{' ( ( use_instead_of_clause | use_as_clause ) _semicolon )* '}'
 
-  use_instead_of_clause ::= class_constant_access_expression /insteadof/ -> "insteadof" name
+  use_instead_of_clause ::=  <0(  class_constant_access_expression /insteadof/ -> "insteadof" name )
 
   use_as_clause ::= ( class_constant_access_expression | name ) /as/ -> "as" ( visibility_modifier? name | visibility_modifier name? )
 
@@ -340,7 +340,7 @@ rules:
 
   match_expression ::= /match/ -> "match" ( parenthesized_expression ):condition ( match_block ):body
 
-  match_block ::= '{' ( ( match_conditional_expression | match_default_expression ) ( ',' ( match_conditional_expression | match_default_expression ) )* )? ','? '}'
+  match_block ::=  <0(  '{' ( ( match_conditional_expression | match_default_expression ) ( ',' ( match_conditional_expression | match_default_expression ) )* )? ','? '}' )
 
   match_condition_list ::= expression ( ',' expression )* ','?
 
@@ -421,7 +421,7 @@ rules:
 	| _new_variable
 	| parenthesized_expression
 
-  anonymous_class ::= ( attribute_list )?:attributes _modifier* /class/ -> "class" arguments? base_clause? class_interface_clause? ( declaration_list ):body
+  anonymous_class ::=  >0(  ( attribute_list )?:attributes _modifier* /class/ -> "class" arguments? base_clause? class_interface_clause? ( declaration_list ):body )
 
   update_expression ::=  <21(  ( '--' | '++' ):operator ( _variable ):argument | ( _variable ):argument ( '--' | '++' ):operator )
 
@@ -521,7 +521,7 @@ rules:
 
   _simple_string_member_access_expression ::=  25(  ( variable_name ):object '->' ( name ):name )
 
-  _simple_string_subscript_unary_expression ::= '-' integer
+  _simple_string_subscript_unary_expression ::=  <0(  '-' integer )
 
   _simple_string_array_access_argument ::= integer
 	| _simple_string_subscript_unary_expression -> "unary_op_expression"
@@ -540,13 +540,13 @@ rules:
 
   _interpolated_string_body_heredoc ::= ( escape_sequence | variable_name encapsed_string_chars_after_variable_heredoc -> "string_content" | encapsed_string_chars_heredoc -> "string_content" | _simple_string_part | _complex_string_part | '\u' -> "string_content" )+
 
-  encapsed_string ::= ( /[bB]"/ | '"'  ) _interpolated_string_body? '"'
+  encapsed_string ::=  >0(  ( /[bB]"/ | '"'  ) _interpolated_string_body? '"'  )
 
   string ::= ( /[bB]'/ | "'"  ) ( @( '\\' | "\'" ) -> "escape_sequence" | string_content )* "'"
 
-  string_content ::= !(  1(  /\\?[^'\\]+/ )  )+
+  string_content ::=  >0(  !(  1(  /\\?[^'\\]+/ )  )+ )
 
-  heredoc_body ::= _new_line _new_line? _interpolated_string_body_heredoc+
+  heredoc_body ::= _new_line  >0(  _new_line? _interpolated_string_body_heredoc ) +
 
   heredoc ::= @( '<<<' ) '"' ? ( heredoc_start ):identifier !( '"'  )? ( ( heredoc_body ):value _new_line | ( heredoc_body )?:value ) ( heredoc_end ):end_tag
 
@@ -588,9 +588,9 @@ rules:
 
   by_ref ::= '&' _variable
 
-  yield_expression ::= /yield/ -> "yield" ( array_element_initializer | /from/ -> "from" expression )?
+  yield_expression ::=  >0(  /yield/ -> "yield" ( array_element_initializer | /from/ -> "from" expression )? )
 
-  array_element_initializer ::= by_ref | expression | expression '=>' ( by_ref | expression ) | variadic_unpacking
+  array_element_initializer ::=  >0(  by_ref | expression | expression '=>' ( by_ref | expression ) | variadic_unpacking )
 
   binary_expression ::=  20(  ( _unary_expression ):left ( /instanceof/ -> "instanceof" ):operator ( _class_name_reference ):right )
 	|  >6(  ( expression ):left ( '??' ):operator ( expression ):right )
