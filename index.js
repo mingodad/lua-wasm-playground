@@ -90,6 +90,7 @@ const sampleList = [
 	["Tree-sitter-ebnf-generator-TlaPlus", "tree-sitter-ebnf-generator.lua", "tlaplus.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Typescript", "tree-sitter-ebnf-generator.lua", "typescript.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-V", "tree-sitter-ebnf-generator.lua", "v-analyzer.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-VimDoc", "tree-sitter-ebnf-generator.lua", "vimdoc.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-VimScript", "tree-sitter-ebnf-generator.lua", "vimscript.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Zig", "tree-sitter-ebnf-generator.lua", "zig.ebnf", "ace/mode/text"],
 ];
