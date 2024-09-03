@@ -1,0 +1,961 @@
+; From tree-sitter-vim/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	_no
+	_inv
+	_newline_or_pipe
+	_line_continuation
+	_script_heredoc_marker
+	_let_heredoc_marker
+	_heredoc_end
+	_separator_first
+	_separator
+	_scope_dict
+	scope
+	string_literal
+	comment
+	line_continuation_comment
+	_bang_filter
+	_function
+	_endfunction
+	_for
+	_endfor
+	_while
+	_endwhile
+	_if
+	_elseif
+	_else
+	_endif
+	_try
+	_catch
+	_cnext
+	_cprevious
+	_cNext
+	_finally
+	_endtry
+	_const
+	_normal
+	_return
+	_perl
+	_lua
+	_ruby
+	_python
+	_throw
+	_execute
+	_autocmd
+	_silent
+	_echo
+	_echon
+	_echohl
+	_echomsg
+	_echoerr
+	_map
+	_nmap
+	_vmap
+	_xmap
+	_smap
+	_omap
+	_imap
+	_lmap
+	_cmap
+	_tmap
+	_noremap
+	_nnoremap
+	_vnoremap
+	_xnoremap
+	_snoremap
+	_onoremap
+	_inoremap
+	_lnoremap
+	_cnoremap
+	_tnoremap
+	_augroup
+	_highlight
+	_default
+	_syntax
+	_set
+	_setlocal
+	_setfiletype
+	_browse
+	_options
+	_startinsert
+	_stopinsert
+	_scriptencoding
+	_source
+	_global
+	_colorscheme
+	_command
+	_comclear
+	_delcommand
+	_runtime
+	_wincmd
+	_sign
+	_filetype
+	_let
+	_unlet
+	_call
+	_break
+	_continue
+	_vertical
+	_leftabove
+	_aboveleft
+	_rightbelow
+	_belowright
+	_topleft
+	_botright
+	_edit
+	_enew
+	_find
+	_ex
+	_visual
+	_view
+	_eval
+	unknown_command_name
+	}
+
+extras ::= {
+	_line_continuation
+	line_continuation_comment
+	/[\t ]/
+	}
+
+supertypes ::= {
+	}
+
+inline ::= {
+	}
+
+conflicts ::= {
+	{ binary_operation unary_operation field_expression }
+	{ binary_operation field_expression }
+	{ _ident lambda_expression }
+	{ _ident _immediate_lambda_expression }
+	}
+
+word ::= keyword
+
+rules:
+
+  script_file ::= _separated_statements
+
+  _cmd_separator ::= _newline_or_pipe
+	| comment
+
+  _separated_statements ::= ( _statement? _cmd_separator )+
+
+  _statement ::= ':'* ( function_definition | let_statement | unlet_statement | const_statement | set_statement | setlocal_statement | return_statement | normal_statement | while_loop | for_loop | if_statement | lua_statement | range_statement | ruby_statement | python_statement | perl_statement | call_statement | execute_statement | echo_statement | echon_statement | echohl_statement | echomsg_statement | echoerr_statement | try_statement | throw_statement | autocmd_statement | silent_statement | vertical_statement | belowright_statement | aboveleft_statement | topleft_statement | botright_statement | register_statement | map_statement | augroup_statement | bang_filter_statement | highlight_statement | syntax_statement | setfiletype_statement | options_statement | startinsert_statement | stopinsert_statement | scriptencoding_statement | source_statement | global_statement | colorscheme_statement | command_statement | comclear_statement | delcommand_statement | filetype_statement | runtime_statement | wincmd_statement | sign_statement | break_statement | continue_statement | cnext_statement | cprevious_statement | unknown_builtin_statement | edit_statement | enew_statement | find_statement | ex_statement | visual_statement | view_statement | eval_statement | user_command )
+
+  unknown_builtin_statement ::= unknown_command_name bang? command_argument* -> "arguments"
+
+  return_statement ::= _return -> "return" _expression?
+
+  break_statement ::= _break -> "break"
+
+  continue_statement ::= _continue -> "continue"
+
+  scope_dict ::= _scope_dict
+	| 'a:'
+
+  normal_statement ::= ( ( _range -> "range" ):range ':'? )? _normal -> "normal" bang? / .*/ -> "commands"
+
+  filetype ::= /[a-zA-Z][a-zA-Z_-]*/
+
+  _filetype_immediate ::= !( /[a-zA-Z][a-zA-Z_-]*/ ) -> "filetype"
+
+  filetypes ::= filetype ( !( '.' ) _filetype_immediate )*
+
+  setfiletype_statement ::= _setfiletype -> "setfiletype" 'FALLBACK' -> "fallback"? filetypes
+
+  options_statement ::= _browse -> "browse" _set -> "set"
+	| _options -> "options"
+
+  startinsert_statement ::= _startinsert -> "startinsert" bang?
+
+  stopinsert_statement ::= _stopinsert -> "stopinsert"
+
+  file_format ::= 'dos'
+	| 'unix'
+	| 'mac'
+
+  _immediate_file_format ::= ( !( 'dos' ) | !( 'unix' ) | !( 'mac' ) ) -> "file_format"
+
+  encoding ::= 'latin1'
+	| 'iso'
+	| 'koi8'
+	| 'koi8'
+	| 'macroman'
+	| 'cp437'
+	| 'cp737'
+	| 'cp775'
+	| 'cp850'
+	| 'cp852'
+	| 'cp855'
+	| 'cp857'
+	| 'cp860'
+	| 'cp861'
+	| 'cp862'
+	| 'cp863'
+	| 'cp865'
+	| 'cp866'
+	| 'cp869'
+	| 'cp874'
+	| 'cp1250'
+	| 'cp1251'
+	| 'cp1253'
+	| 'cp1254'
+	| 'cp1255'
+	| 'cp1256'
+	| 'cp1257'
+	| 'cp1258'
+	| 'cp932'
+	| 'euc-jp'
+	| 'sjis'
+	| 'cp949'
+	| 'euc-kr'
+	| 'cp936'
+	| 'euc-cn'
+	| 'cp950'
+	| 'big5'
+	| 'euc-tw'
+	| 'utf-8'
+	| 'ucs-2'
+	| 'ucs-21e'
+	| 'utf-16'
+	| 'utf-16le'
+	| 'ucs-4'
+	| 'ucs-4le'
+	| 'ansi'
+	| 'japan'
+	| 'korea'
+	| 'prc'
+	| 'chinese'
+	| 'taiwan'
+	| 'utf8'
+	| 'unicode'
+	| 'ucs2be'
+	| 'ucs-2be'
+	| 'ucs-4be'
+	| 'utf-32'
+	| 'utf-32le'
+	| 'default'
+
+  _immediate_encoding ::= ( !( 'latin1' ) | !( 'iso' ) | !( 'koi8' ) | !( 'koi8' ) | !( 'macroman' ) | !( 'cp437' ) | !( 'cp737' ) | !( 'cp775' ) | !( 'cp850' ) | !( 'cp852' ) | !( 'cp855' ) | !( 'cp857' ) | !( 'cp860' ) | !( 'cp861' ) | !( 'cp862' ) | !( 'cp863' ) | !( 'cp865' ) | !( 'cp866' ) | !( 'cp869' ) | !( 'cp874' ) | !( 'cp1250' ) | !( 'cp1251' ) | !( 'cp1253' ) | !( 'cp1254' ) | !( 'cp1255' ) | !( 'cp1256' ) | !( 'cp1257' ) | !( 'cp1258' ) | !( 'cp932' ) | !( 'euc-jp' ) | !( 'sjis' ) | !( 'cp949' ) | !( 'euc-kr' ) | !( 'cp936' ) | !( 'euc-cn' ) | !( 'cp950' ) | !( 'big5' ) | !( 'euc-tw' ) | !( 'utf-8' ) | !( 'ucs-2' ) | !( 'ucs-21e' ) | !( 'utf-16' ) | !( 'utf-16le' ) | !( 'ucs-4' ) | !( 'ucs-4le' ) | !( 'ansi' ) | !( 'japan' ) | !( 'korea' ) | !( 'prc' ) | !( 'chinese' ) | !( 'taiwan' ) | !( 'utf8' ) | !( 'unicode' ) | !( 'ucs2be' ) | !( 'ucs-2be' ) | !( 'ucs-4be' ) | !( 'utf-32' ) | !( 'utf-32le' ) | !( 'default' ) ) -> "encoding"
+
+  scriptencoding_statement ::= _scriptencoding -> "scriptencoding" encoding?
+
+  cnext_statement ::= _cnext -> "cnext" bang?
+
+  cprevious_statement ::= ( _cprevious -> "cprevious" | _cNext -> "cNext" ) bang?
+
+  _runtime_where ::= 'START'
+	| 'OPT'
+	| 'PACK'
+	| 'ALL'
+
+  runtime_statement ::= _runtime -> "runtime" bang? _runtime_where -> "where"? filename+ -> "filenames"
+
+  wincmd_statement ::= integer_literal? _wincmd -> "wincmd" ( /[a-zA-Z=<>]/ ):action
+
+  source_statement ::= ( ( _range -> "range" ):range ':'? )? _source -> "source" bang? ( filename )?:file
+
+  global_statement ::= ( ( _range -> "range" ):range ':'? )? _global -> "global" bang? _separator_first pattern _separator _statement
+
+  _filetype_state ::= 'on'
+	| 'off'
+
+  _filetype_enable ::= ( _filetype_state ):sub
+
+  _filetype_detect ::= ( 'detect' ):sub
+
+  _filetype_plugin ::= ( 'plugin' ):sub 'indent'? _filetype_state
+
+  _filetype_indent ::= ( 'indent' ):sub 'plugin'? _filetype_state
+
+  filetype_statement ::= _filetype -> "filetype" ( _filetype_enable | _filetype_detect | _filetype_plugin | _filetype_indent )?
+
+  colorscheme_statement ::= _colorscheme -> "colorscheme" filename -> "name"?
+
+  lua_statement ::= _lua -> "lua" ( chunk | script )
+
+  ruby_statement ::= _ruby -> "ruby" ( chunk | script )
+
+  python_statement ::= _python -> "python" ( chunk | script )
+
+  perl_statement ::= _perl -> "perl" ( chunk | script )
+
+  chunk ::= /<|(<[^\n<]|[^\s<])[^\n]*/
+
+  _heredoc_line ::= /[^\n]*\n/
+
+  script ::= '<<' ( _script_heredoc_marker -> "marker_definition" | '\n'  ) _heredoc_line* -> "body" _heredoc_end -> "endmarker"
+
+  for_loop ::= _for -> "for" ( _ident | list_assignment ):variable 'in' ( _expression ):iter _cmd_separator _separated_statements? -> "body" _endfor -> "endfor"
+
+  while_loop ::= _while -> "while" ( _expression ):condition _cmd_separator _separated_statements? -> "body" _endwhile -> "endwhile"
+
+  if_statement ::= _if -> "if" ( _expression ):condition _cmd_separator _separated_statements? -> "body" elseif_statement* else_statement? _endif -> "endif"
+
+  elseif_statement ::= _elseif -> "elseif" ( _expression ):condition _cmd_separator _separated_statements? -> "body"
+
+  else_statement ::= _else -> "else" _separated_statements? -> "body"
+
+  try_statement ::= _try -> "try" _cmd_separator _separated_statements? -> "body" catch_statement* finally_statement? _endtry -> "endtry"
+
+  _au_pattern ::= /\/.*\//
+	| /\?.*\?/
+
+  catch_statement ::= _catch -> "catch" _au_pattern -> "pattern"? _cmd_separator _separated_statements? -> "body"
+
+  finally_statement ::= _finally -> "finally" _separated_statements? -> "body"
+
+  throw_statement ::= _throw -> "throw" _expression
+
+  _bang_filter_bangs ::= bang bang?
+
+  _bang_filter_command_argument ::= ( /\S/ | '\\'  /./ ) ( !( /\S/ ) | !( '\\'  /./ ) )*
+	| string_literal
+
+  _bang_filter_command ::= ( filename -> "filter_command" ):filter bang? _bang_filter_command_argument -> "command_argument"*
+
+  bang_filter_statement ::= ( _range -> "range" ):range _bang_filter_bangs -> "bangs" _bang_filter_command -> "command"
+
+  scoped_identifier ::= scope identifier
+
+  argument ::= 'a:' ( !( /[a-zA-Z_](\w|#)*/ ) -> "identifier" | !( /[0-9]+/ ) -> "integer_literal" )
+
+  _curly_braces_name_expression ::= '{' _expression '}'
+
+  _immediate_curly_braces_name_expression ::= !( '{' ) _expression '}'
+
+  identifier ::= ( /[a-zA-Z_]+/ | _curly_braces_name_expression -> "curly_braces_name" ) ( !( /(\w|#)+/ ) | _immediate_curly_braces_name_expression -> "curly_braces_name" )*
+
+  _immediate_identifier ::= ( !( /[a-zA-Z_]+/ ) | _immediate_curly_braces_name_expression -> "curly_braces_name" ) ( !( /(\w|#)+/ ) | _immediate_curly_braces_name_expression -> "curly_braces_name" )*
+
+  _ident ::=  ~1(  scoped_identifier | identifier | argument )
+
+  keyword ::= /[a-zA-Z_](\w|#)*/
+
+  _let_operator ::= '='
+	| '+='
+	| '-='
+	| '*='
+	| '/='
+	| '%='
+	| '.='
+	| '..='
+
+  _assignment_variable ::= identifier
+	| scope_dict
+
+  _let_assignment ::= ( _ident | env_variable | register | option | index_expression | field_expression | list_assignment ) ( _let_operator _expression | _let_heredoc -> "heredoc" )
+
+  let_statement ::= _let -> "let" ( _let_assignment | _assignment_variable* )
+
+  _const_assignment ::= ( _ident | list_assignment ) ( '=' _expression | _let_heredoc -> "heredoc" )
+
+  const_statement ::= _const -> "const" ( _const_assignment | _assignment_variable* )
+
+  _let_heredoc ::= '=<<' _let_heredoc_parameter -> "parameter"* _let_heredoc_marker -> "marker_definition" comment? '\n'  _heredoc_line* -> "body" _heredoc_end -> "endmarker"
+
+  _let_heredoc_parameter ::= 'trim'
+	| 'eval'
+
+  option_name ::= /[a-z]+/
+	| 't_' /[a-zA-Z0-9]+/
+
+  no_option ::= _no option_name
+
+  inv_option ::= _inv option_name
+	| option_name !( '!' )
+
+  default_option ::= option_name '&' ( 'vi' | 'vim' )?
+
+  _set_option ::= 'all'
+	| 'all&'
+	| option_name
+	| option_name '?'
+	| no_option
+	| inv_option
+	| default_option
+
+  _set_operator ::= !( '=' )
+	| !( ':' )
+	| !( '+=' )
+	| !( '^=' )
+	| !( '-=' )
+
+  set_value ::= !( /([^ \n\t]|\\[\t ])+/ )
+
+  _set_rhs ::= _set_operator ( set_value )?:value
+
+  set_item ::= ( _set_option ):option _set_rhs?
+
+  set_statement ::= _set -> "set" set_item ( ' ' set_item )*
+
+  setlocal_statement ::= _setlocal -> "setlocal" set_item ( ' ' set_item )*
+
+  unlet_statement ::= _unlet -> "unlet" bang? _expression+
+
+  call_statement ::= ( ( _range -> "range" ):range ':'? )? _call -> "call" ( call_expression | method_expression )
+
+  echo_statement ::= _echo -> "echo" _expression*
+
+  echon_statement ::= _echon -> "echon" _expression*
+
+  echohl_statement ::= _echohl -> "echohl" hl_group
+
+  echomsg_statement ::= _echomsg -> "echomsg" _expression*
+
+  echoerr_statement ::= _echoerr -> "echoerr" _expression*
+
+  execute_statement ::= _execute -> "execute" _expression+
+
+  silent_statement ::= _silent -> "silent" bang? _statement
+
+  vertical_statement ::= _vertical -> "vertical" _statement
+
+  topleft_statement ::= _topleft -> "topleft" _statement
+
+  botright_statement ::= _botright -> "botright" _statement
+
+  aboveleft_statement ::= ( _leftabove -> "leftabove" | _aboveleft -> "aboveleft" ) _statement
+
+  belowright_statement ::= ( _rightbelow -> "rightbelow" | _belowright -> "belowright" ) _statement
+
+  user_command ::= command_name bang? command_argument* -> "arguments"
+
+  command_argument ::= string_literal
+	| /\S+/
+
+  function_definition ::= _function -> "function" bang? function_declaration ( 'dict' | 'range' | 'abort' | 'closure' )* _cmd_separator _separated_statements? -> "body" _endfunction -> "endfunction"
+
+  function_declaration ::=  8(  ( _ident | field_expression ):name ( parameters ):parameters )
+
+  parameters ::= '(' ( spread | ( default_parameter ( ',' default_parameter )* )? ( ',' spread )? | ( identifier ( ',' identifier )* )? ( ',' ( default_parameter ( ',' default_parameter )* )? )? ( ',' spread )? ) ')'
+
+  default_parameter ::= ( identifier ):name '=' ( _expression ):value
+
+  bang ::= !( '!' )
+
+  at ::= '@'
+
+  spread ::= '...'
+
+  _printable ::= /[^\t\n\v\f\r]/
+
+  mark ::= /'./
+
+  range_statement ::= _range
+
+  _range ::= '%' -> "file"
+	| _range_explicit
+
+  _range_explicit ::= ( _range_marker ):start ( ( ',' | ';' ) ( _range_marker ):end )?
+
+  _range_marker ::= integer_literal
+	| current_line
+	| next_line
+	| last_line
+	| '/' pattern !( '/' )?
+	| '?' pattern !( '?' )?
+	| previous_pattern
+	| mark
+
+  current_line ::= '.'
+
+  next_line ::= '+'
+
+  last_line ::= '$'
+
+  previous_pattern ::= '\/'
+	| '\?'
+	| '\&'
+
+  register_statement ::= register
+
+  map_statement ::= ( _map -> "map" | _nmap -> "nmap" | _vmap -> "vmap" | _xmap -> "xmap" | _smap -> "smap" | _omap -> "omap" | _imap -> "imap" | _lmap -> "lmap" | _cmap -> "cmap" | _tmap -> "tmap" | _noremap -> "noremap" | _vnoremap -> "vnoremap" | _nnoremap -> "nnoremap" | _xnoremap -> "xnoremap" | _snoremap -> "snoremap" | _onoremap -> "onoremap" | _inoremap -> "inoremap" | _lnoremap -> "lnoremap" | _cnoremap -> "cnoremap" | _tnoremap -> "tnoremap" ):cmd ( '<buffer>' | '<nowait>' | '<silent>' | '<unique>' | '<script>' )* _map_definition
+
+  _map_definition ::= '<expr>' ( '<buffer>' | '<nowait>' | '<silent>' | '<unique>' | '<script>' )* ( _map_lhs -> "map_side" ):lhs ( _expression ):rhs
+	| ( _map_lhs -> "map_side" ):lhs ( _map_rhs -> "map_side" ):rhs
+
+  _keycode_modifier ::= !( /([SsCcMmAaDd]|[Aa][lL][tT])-/ )
+
+  _keycode_in ::= !( /[Nn][Uu][Ll]/ )
+	| !( /[Bb][Ss]/ )
+	| !( /[Tt][aA][bB]/ )
+	| !( /[Nn][Ll]/ )
+	| !( /[Cc][Rr]/ )
+	| !( /[Rr][eE][tT][uU][rR][nN]/ )
+	| !( /[kK]?[Ee][nN][tT][eE][rR]/ )
+	| !( /[Ee][sS][cC]/ )
+	| !( /[Ss][pP][aA][cC][eE]/ )
+	| !( /[lL][tT]/ )
+	| !( /[Bb][sS][lL][aA][sS][hH]/ )
+	| !( /[Bb][aA][rR]/ )
+	| !( /[kK]?[Dd][eE][lL]/ )
+	| !( /[xX]?[Cc][Ss][Ii]/ )
+	| !( /[Ee][Oo][Ll]/ )
+	| !( /[Ii][gG][nN][oO][rR][eE]/ )
+	| !( /[Nn][Oo][Pp]/ )
+	| !( /([kK]|([SsCc]-))?[Uu][pP]/ )
+	| !( /([kK]|([SsCc]-))?[Dd][oO][wW][nN]/ )
+	| !( /([kK]|([SsCc]-))?[Ll][eE][fF][tT]/ )
+	| !( /([kK]|([SsCc]-))?[Rr][iI][gG][hH][tT]/ )
+	| !( /([SsCc]-)?[Ll][eE][fF][tT][Mm][oO][uU][sS][eE]/ )
+	| !( /([SsCc]-)?[Rr][iI][gG][hH][tT][Mm][oO][uU][sS][eE]/ )
+	| !( /([Ss]-)?[Ff][0-9]{1,2}/ )
+	| !( /[Hh][eE][lL][pP]/ )
+	| !( /[Uu][nN][dD][oO]/ )
+	| !( /[Ii][nN][sS][eE][rR][tT]/ )
+	| !( /[kK]?[Hh][oO][mM][eE]/ )
+	| !( /[kK]?[Ee][nN][dD]/ )
+	| !( /[kK]?[Pp][aA][gG][eE][Uu][pP]/ )
+	| !( /[kK]?[Pp][aA][gG][eE][Dd][oO][wW][nN]/ )
+	| !( /[kK][Pp][lL][uU][sS]/ )
+	| !( /[kK][Mm][iI][nN][uU][sS]/ )
+	| !( /[kK][Mm][uU][lL][tT][iI][pP][lL][yY]/ )
+	| !( /[kK][Dd][iI][vV][iI][dD][eE]/ )
+	| !( /[kK][Pp][oO][iI][nN][tT]/ )
+	| !( /[kK][Cc][oO][mM][mM][aA]/ )
+	| !( /[kK][Ee][qQ][uU][aA][lL]/ )
+	| !( /[kK][0-9]/ )
+	| !( /([Ll][oO][cC][aA][lL])?[Ll][eE][aA][dD][eE][rR]/ )
+	| !( /[Ss][Ii][Dd]/ )
+	| !( /[Pp][lL][uU][gG]/ )
+	| !( /([Ss]-)?[Cc][hH][aA][rR]-(0[0-7]+|0[xX][0-9a-fA-F]+|[0-9]+)+/ )
+	| _keycode_modifier ( !( /\S/ ) | _keycode_in )
+
+  _immediate_keycode ::= !( '<' ) _keycode_in !( '>' )
+
+  keycode ::= '<' _keycode_in !( '>' )
+
+  _map_lhs ::= ( /\S/ | '<' | '\\'  /./ | keycode ) ( !( /\S/ ) | !( '<' ) | !( '\\'  ) !( /./ ) | _immediate_keycode -> "keycode" )*
+
+  _map_rhs_statement ::= /<[Cc][Mm][Dd]>/ -> "keycode" _statement ( ( '\|' | /<[Bb][Aa][Rr]>/ -> "keycode" ) _statement )* /<[Cc][Rr]>/ -> "keycode"
+
+  _map_rhs ::= ( /[^\s|]/ | '<' | '\\'  /./ | keycode ) ( !( /[^|\n]/ ) | !( '<' ) | !( '\\'  ) !( /./ ) | _immediate_keycode -> "keycode" )*
+	| _map_rhs_statement
+
+  _sign_name ::= integer_literal
+	| identifier
+
+  _sign_define_arg_text ::= _printable _printable?
+
+  _sign_define_argument ::= ( 'icon' ):name !( '=' ) ( filename )?:val
+	| ( 'linehl' ):name !( '=' ) ( hl_group )?:val
+	| ( 'numhl' ):name !( '=' ) ( hl_group )?:val
+	| ( 'text' ):name !( '=' ) ( _sign_define_arg_text -> "text" )?:val
+	| ( 'texthl' ):name !( '=' ) ( hl_group )?:val
+	| ( 'culhl' ):name !( '=' ) ( hl_group )?:val
+
+  _sign_define ::= ( 'define' ):sub ( _sign_name ):name _sign_define_argument -> "sign_argument"*
+
+  _sign_undefine ::= ( 'undefine' ):sub ( _sign_name ):name
+
+  _sign_list ::= ( 'list' ):sub ( _sign_name )?:name
+
+  _sign_place_place_argument ::= ( 'line' ):name !( '=' ) ( integer_literal ):val
+	| ( 'name' ):name !( '=' ) ( _sign_name ):val
+	| ( 'buffer' ):name !( '=' ) ( integer_literal ):val
+	| ( 'group' ):name !( '=' ) ( hl_group ):val
+	| ( 'priority' ):name !( '=' ) ( integer_literal ):val
+	| ( 'file' ):name !( '=' ) ( filename ):val
+
+  _sign_place_place ::= ( integer_literal ):id _sign_place_place_argument -> "sign_argument"+
+
+  _sign_place_list_argument ::= ( 'file' ):name !( '=' ) ( filename ):val
+	| ( 'buffer' ):name !( '=' ) ( integer_literal ):val
+	| ( 'group' ):name !( '=' ) ( hl_group | !( '*' ) -> "wildcard" ):val
+
+  _sign_place_list ::= _sign_place_list_argument -> "sign_argument"+
+
+  _sign_place ::= ( 'place' ):sub ( _sign_place_place | _sign_place_list )
+
+  _sign_unplace_cursor_argument ::= ( 'group' ):name !( '=' ) ( hl_group | !( '*' ) -> "wildcard" ):val
+
+  _sign_unplace_cursor ::= _sign_unplace_cursor_argument -> "sign_argument"
+
+  _sign_unplace_id_argument ::= ( 'file' ):name !( '=' ) ( filename ):val
+	| ( 'buffer' ):name !( '=' ) ( integer_literal ):val
+	| ( 'group' ):name !( '=' ) ( hl_group | !( '*' ) -> "wildcard" ):val
+
+  _sign_unplace_id ::= ( integer_literal | '*' -> "wildcard" ):id _sign_unplace_id_argument -> "sign_argument"*
+
+  _sign_unplace ::= ( 'unplace' ):sub ( _sign_unplace_cursor | _sign_unplace_id )?
+
+  _sign_jump_argument ::= ( 'file' ):name !( '=' ) ( filename ):val
+	| ( 'buffer' ):name !( '=' ) ( integer_literal ):val
+	| ( 'group' ):name !( '=' ) ( hl_group ):val
+
+  _sign_jump ::= ( 'jump' ):sub ( integer_literal | '*' -> "wildcard" ):id _sign_jump_argument -> "sign_argument"*
+
+  sign_statement ::= _sign -> "sign" ( _sign_define | _sign_undefine | _sign_list | _sign_place | _sign_unplace | _sign_jump )
+
+  _variable ::= scope_dict | _ident | string_literal | float_literal | integer_literal | list | env_variable | register | option | lambda_expression | dictionnary | literal_dictionary
+
+  _expression ::= _variable
+	| ternary_expression
+	| index_expression
+	| slice_expression
+	| binary_operation
+	| '(' _expression ')'
+	| unary_operation
+	| field_expression
+	| call_expression
+	| method_expression
+
+  ternary_expression ::=  <1(  ( _expression ):condition '?' ( _expression ):left ':' ( _expression ):right )
+
+  match_case ::= '#'
+	| '?'
+
+  binary_operation ::=  <2(  ( _expression ):left '||' ( _expression ):right )
+	|  <3(  ( _expression ):left '&&' ( _expression ):right )
+	|  <5(  ( _expression ):left '+' ( _expression ):right )
+	|  <5(  ( _expression ):left '-' ( _expression ):right )
+	|  <6(  ( _expression ):left '*' ( _expression ):right )
+	|  <6(  ( _expression ):left '/' ( _expression ):right )
+	|  <6(  ( _expression ):left '%' ( _expression ):right )
+	|  <5(  ( _expression ):left '..' ( _expression ):right )
+	|  <5(  ( _expression ):left '.' ( _expression ):right )
+	|  <4(  ( _expression ):left '==' match_case? ( _expression ):right )
+	|  <4(  ( _expression ):left '!=' match_case? ( _expression ):right )
+	|  <4(  ( _expression ):left '>' match_case? ( _expression ):right )
+	|  <4(  ( _expression ):left '>=' match_case? ( _expression ):right )
+	|  <4(  ( _expression ):left '<' match_case? ( _expression ):right )
+	|  <4(  ( _expression ):left '<=' match_case? ( _expression ):right )
+	|  <4(  ( _expression ):left '=~' match_case? ( _expression ):right )
+	|  <4(  ( _expression ):left '!~' match_case? ( _expression ):right )
+	|  <4(  ( _expression ):left 'is' match_case? ( _expression ):right )
+	|  <4(  ( _expression ):left 'isnot' match_case? ( _expression ):right )
+
+  unary_operation ::=  <7(  ( '-' | '!' | '+' ) _expression )
+
+  float_literal ::= @( /[+-]?/ /[0-9]+/ '.' /[0-9]+/ ( /[eE]/ /[+-]?/ /[0-9]+/ )? )
+
+  integer_literal ::= @( /[-+]/? ( ( '0x' | '0X' ) /[A-Fa-f0-9]+/ | '0' /[0-7]+/ | ( '0b' | '0B' ) /[0-1]+/ | /[0-9]+/ ) )
+
+  list ::= '[' ( _expression ( ',' _expression )* )? ','? ']'
+
+  list_assignment ::= '[' ( _expression ( ',' _expression )* )? ( ';' _expression )? ']'
+
+  index_expression ::=  8(  ( _expression ):value '[' ( _expression ):index ']' )
+
+  slice_expression ::=  8(  ( _expression ):value '[' ( _expression )?:start ':' ( _expression )?:stop ']' )
+
+  field_expression ::=  <8(  ( _expression ):value '.' ( identifier ):field )
+
+  call_expression ::=  8(  ( _expression ):function '(' ( _expression ( ',' _expression )* )? ')' )
+
+  eval_statement ::= _eval -> "eval" _expression
+
+  _method_call_expression ::= ( _immediate_identifier -> "identifier" | _immediate_lambda_expression -> "lambda_expression" ):function !( '(' ) ( _expression ( ',' _expression )* )? ')'
+
+  method_expression ::=  8(  ( _expression ):value '->' _method_call_expression -> "call_expression" )
+
+  filename ::= ( /[A-Za-z0-9]/ | /[/._+,#$%~=-]/ | /[\\{}\[\]:@!]/ | /[*]/ | '\\'  /./ ) ( !( /[A-Za-z0-9]/ ) | !( /[/._+,#$%~=-]/ ) | !( /[\\{}\[\]:@!]/ ) | !( /[*]/ ) | !( '\\'  /./ ) )*
+
+  pattern_multi ::= '*'
+	| /\\[+=?]/
+	| /\\@[!>=]|<[=!]/
+	| /\\\{-?[0-9]*,?[0-9]*}/
+
+  _pattern_ordinary_atom ::= ( '[' ( '\\'  /./ | /[^\]\n\\]/ )* ']' | '\\'  /./ | /[^\\\[\n]/ )+
+
+  _pattern_atom ::= _pattern_ordinary_atom | '\(' pattern '\)' | '\%(' pattern '\)' | '\z(' pattern '\)'
+
+  _pattern_piece ::= _pattern_atom pattern_multi?
+
+  _pattern_concat ::= _pattern_piece+
+
+  _pattern_branch ::= _pattern_concat ( '\&' _pattern_concat )*
+
+  pattern ::= _pattern_branch ( '\|' _pattern_branch )*
+
+  env_variable ::= '$' identifier
+
+  register ::= /@["0-9a-zA-Z:.%#=*+_/-@]/
+
+  option ::= '&' scope? option_name
+
+  dictionnary_entry ::= ( _expression ):key ':' ( _expression ):value
+
+  dictionnary ::= '{' ( dictionnary_entry ( ',' dictionnary_entry )* )? ','? '}'
+
+  _literal_dictionary_entry ::= ( literal_key ):key ':' ( _expression ):value
+
+  literal_key ::= /[0-9a-zA-Z_-]+/
+
+  literal_dictionary ::= '#{' ( _literal_dictionary_entry ( ',' _literal_dictionary_entry )* )? ','? '}'
+
+  lambda_expression ::= '{' ( identifier ( ',' identifier )* )? '->' _expression '}'
+
+  _immediate_lambda_expression ::= !( '{' ) ( identifier ( ',' identifier )* )? '->' _expression '}'
+
+  _plus_plus_opt_bad ::= !( /./ )
+	| !( 'keep' )
+	| !( 'drop' )
+
+  plus_plus_opt ::= '++' ( ( !( 'ff' ) | !( 'fileformat' ) ):name !( '=' ) ( _immediate_file_format ):val | ( !( 'enc' ) | !( 'encoding' ) ):name !( '=' ) ( _immediate_encoding ):val | ( !( 'bin' ) | !( 'binary' ) ):name | ( !( 'nobin' ) | !( 'nobinary' ) ):name | ( !( 'bad' ) ):name !( '=' ) ( _plus_plus_opt_bad ):val | ( !( 'edit' ) ):name )
+
+  _plus_cmd_arg ::= ( !( '\\'  ) !( /./ ) | !( /[^ \n]/ ) )+
+
+  _plus_cmd_number ::=  2(  !( /[0-9]+/ ) -> "integer_literal" )
+
+  _plus_cmd_command ::=  1(  _plus_cmd_arg -> "command" )
+
+  _plus_cmd_pattern ::= '/' _plus_cmd_arg -> "pattern"
+
+  plus_cmd ::= '+' ( _plus_cmd_number | _plus_cmd_pattern | _plus_cmd_command )?
+
+  au_event ::= @(  1(  /[bB][uU][fF][aA][dD][dD]/ | /[bB][uU][fF][dD][eE][lL][eE][tT][eE]/ | /[bB][uU][fF][eE][nN][tT][eE][rR]/ | /[bB][uU][fF][fF][iI][lL][eE][pP][oO][sS][tT]/ | /[bB][uU][fF][fF][iI][lL][eE][pP][rR][eE]/ | /[bB][uU][fF][hH][iI][dD][dD][eE][nN]/ | /[bB][uU][fF][lL][eE][aA][vV][eE]/ | /[bB][uU][fF][mM][oO][dD][iI][fF][iI][eE][dD][sS][eE][tT]/ | /[bB][uU][fF][nN][eE][wW]/ | /[bB][uU][fF][nN][eE][wW][fF][iI][lL][eE]/ | /[bB][uU][fF][rR][eE][aA][dD][cC][mM][dD]/ | /[bB][uU][fF][rR][eE][aA][dD][pP][oO][sS][tT]/ | /[bB][uU][fF][rR][eE][aA][dD][pP][rR][eE]/ | /[bB][uU][fF][uU][nN][lL][oO][aA][dD]/ | /[bB][uU][fF][wW][iI][nN][eE][nN][tT][eE][rR]/ | /[bB][uU][fF][wW][iI][nN][lL][eE][aA][vV][eE]/ | /[bB][uU][fF][wW][iI][pP][eE][oO][uU][tT]/ | /[bB][uU][fF][wW][rR][iI][tT][eE][cC][mM][dD]/ | /[bB][uU][fF][wW][rR][iI][tT][eE][pP][oO][sS][tT]/ | /[bB][uU][fF][wW][rR][iI][tT][eE][pP][rR][eE]/ | /[cC][hH][aA][nN][iI][nN][fF][oO]/ | /[cC][hH][aA][nN][oO][pP][eE][nN]/ | /[cC][mM][dD][uU][nN][dD][eE][fF][iI][nN][eE][dD]/ | /[cC][mM][dD][wW][iI][nN][eE][nN][tT][eE][rR]/ | /[cC][mM][dD][wW][iI][nN][lL][eE][aA][vV][eE]/ | /[cC][mM][dD][lL][iI][nN][eE][cC][hH][aA][nN][gG][eE][dD]/ | /[cC][mM][dD][lL][iI][nN][eE][eE][nN][tT][eE][rR]/ | /[cC][mM][dD][lL][iI][nN][eE][lL][eE][aA][vV][eE]/ | /[cC][oO][lL][oO][rR][sS][cC][hH][eE][mM][eE]/ | /[cC][oO][lL][oO][rR][sS][cC][hH][eE][mM][eE][pP][rR][eE]/ | /[cC][oO][mM][pP][lL][eE][tT][eE][cC][hH][aA][nN][gG][eE][dD]/ | /[cC][oO][mM][pP][lL][eE][tT][eE][dD][oO][nN][eE]/ | /[cC][oO][mM][pP][lL][eE][tT][eE][dD][oO][nN][eE][pP][rR][eE]/ | /[cC][uU][rR][sS][oO][rR][hH][oO][lL][dD]/ | /[cC][uU][rR][sS][oO][rR][hH][oO][lL][dD][iI]/ | /[cC][uU][rR][sS][oO][rR][mM][oO][vV][eE][dD]/ | /[cC][uU][rR][sS][oO][rR][mM][oO][vV][eE][dD][iI]/ | /[dD][iI][aA][gG][nN][oO][sS][tT][iI][cC][cC][hH][aA][nN][gG][eE][dD]/ | /[dD][iI][fF][fF][uU][pP][dD][aA][tT][eE][dD]/ | /[dD][iI][rR][cC][hH][aA][nN][gG][eE][dD]/ | /[dD][iI][rR][cC][hH][aA][nN][gG][eE][dD][pP][rR][eE]/ | /[eE][nN][cC][oO][dD][iI][nN][gG][cC][hH][aA][nN][gG][eE][dD]/ | /[eE][xX][iI][tT][pP][rR][eE]/ | /[fF][iI][lL][eE][aA][pP][pP][eE][nN][dD][cC][mM][dD]/ | /[fF][iI][lL][eE][aA][pP][pP][eE][nN][dD][pP][oO][sS][tT]/ | /[fF][iI][lL][eE][aA][pP][pP][eE][nN][dD][pP][rR][eE]/ | /[fF][iI][lL][eE][cC][hH][aA][nN][gG][eE][dD][rR][oO]/ | /[fF][iI][lL][eE][cC][hH][aA][nN][gG][eE][dD][sS][hH][eE][lL][lL]/ | /[fF][iI][lL][eE][cC][hH][aA][nN][gG][eE][dD][sS][hH][eE][lL][lL][pP][oO][sS][tT]/ | /[fF][iI][lL][eE][rR][eE][aA][dD][cC][mM][dD]/ | /[fF][iI][lL][eE][rR][eE][aA][dD][pP][oO][sS][tT]/ | /[fF][iI][lL][eE][rR][eE][aA][dD][pP][rR][eE]/ | /[fF][iI][lL][eE][tT][yY][pP][eE]/ | /[fF][iI][lL][eE][wW][rR][iI][tT][eE][cC][mM][dD]/ | /[fF][iI][lL][eE][wW][rR][iI][tT][eE][pP][oO][sS][tT]/ | /[fF][iI][lL][eE][wW][rR][iI][tT][eE][pP][rR][eE]/ | /[fF][iI][lL][tT][eE][rR][rR][eE][aA][dD][pP][oO][sS][tT]/ | /[fF][iI][lL][tT][eE][rR][rR][eE][aA][dD][pP][rR][eE]/ | /[fF][iI][lL][tT][eE][rR][wW][rR][iI][tT][eE][pP][oO][sS][tT]/ | /[fF][iI][lL][tT][eE][rR][wW][rR][iI][tT][eE][pP][rR][eE]/ | /[fF][oO][cC][uU][sS][gG][aA][iI][nN][eE][dD]/ | /[fF][oO][cC][uU][sS][lL][oO][sS][tT]/ | /[fF][uU][nN][cC][uU][nN][dD][eE][fF][iI][nN][eE][dD]/ | /[gG][uU][iI][eE][nN][tT][eE][rR]/ | /[gG][uU][iI][fF][aA][iI][lL][eE][dD]/ | /[iI][nN][sS][eE][rR][tT][cC][hH][aA][nN][gG][eE]/ | /[iI][nN][sS][eE][rR][tT][cC][hH][aA][rR][pP][rR][eE]/ | /[iI][nN][sS][eE][rR][tT][eE][nN][tT][eE][rR]/ | /[iI][nN][sS][eE][rR][tT][lL][eE][aA][vV][eE]/ | /[iI][nN][sS][eE][rR][tT][lL][eE][aA][vV][eE][pP][rR][eE]/ | /[lL][sS][pP][aA][tT][tT][aA][cC][hH]/ | /[lL][sS][pP][dD][eE][tT][aA][cC][hH]/ | /[lL][sS][pP][tT][oO][kK][eE][nN][uU][pP][dD][aA][tT][eE]/ | /[mM][eE][nN][uU][pP][oO][pP][uU][pP]/ | /[mM][oO][dD][eE][cC][hH][aA][nN][gG][eE][dD]/ | /[oO][pP][tT][iI][oO][nN][sS][eE][tT]/ | /[qQ][uU][iI][cC][kK][fF][iI][xX][cC][mM][dD][pP][oO][sS][tT]/ | /[qQ][uU][iI][cC][kK][fF][iI][xX][cC][mM][dD][pP][rR][eE]/ | /[qQ][uU][iI][tT][pP][rR][eE]/ | /[rR][eE][cC][oO][rR][dD][iI][nN][gG][eE][nN][tT][eE][rR]/ | /[rR][eE][cC][oO][rR][dD][iI][nN][gG][lL][eE][aA][vV][eE]/ | /[rR][eE][mM][oO][tT][eE][rR][eE][pP][lL][yY]/ | /[sS][eE][aA][rR][cC][hH][wW][rR][aA][pP][pP][eE][dD]/ | /[sS][eE][sS][sS][iI][oO][nN][lL][oO][aA][dD][pP][oO][sS][tT]/ | /[sS][hH][eE][lL][lL][cC][mM][dD][pP][oO][sS][tT]/ | /[sS][hH][eE][lL][lL][fF][iI][lL][tT][eE][rR][pP][oO][sS][tT]/ | /[sS][iI][gG][nN][aA][lL]/ | /[sS][oO][uU][rR][cC][eE][cC][mM][dD]/ | /[sS][oO][uU][rR][cC][eE][pP][oO][sS][tT]/ | /[sS][oO][uU][rR][cC][eE][pP][rR][eE]/ | /[sS][pP][eE][lL][lL][fF][iI][lL][eE][mM][iI][sS][sS][iI][nN][gG]/ | /[sS][tT][dD][iI][nN][rR][eE][aA][dD][pP][oO][sS][tT]/ | /[sS][tT][dD][iI][nN][rR][eE][aA][dD][pP][rR][eE]/ | /[sS][wW][aA][pP][eE][xX][iI][sS][tT][sS]/ | /[sS][yY][nN][tT][aA][xX]/ | /[tT][aA][bB][cC][lL][oO][sS][eE][dD]/ | /[tT][aA][bB][eE][nN][tT][eE][rR]/ | /[tT][aA][bB][lL][eE][aA][vV][eE]/ | /[tT][aA][bB][nN][eE][wW]/ | /[tT][aA][bB][nN][eE][wW][eE][nN][tT][eE][rR][eE][dD]/ | /[tT][eE][rR][mM][cC][hH][aA][nN][gG][eE][dD]/ | /[tT][eE][rR][mM][cC][lL][oO][sS][eE]/ | /[tT][eE][rR][mM][eE][nN][tT][eE][rR]/ | /[tT][eE][rR][mM][lL][eE][aA][vV][eE]/ | /[tT][eE][rR][mM][oO][pP][eE][nN]/ | /[tT][eE][rR][mM][rR][eE][sS][pP][oO][nN][sS][eE]/ | /[tT][eE][xX][tT][cC][hH][aA][nN][gG][eE][dD]/ | /[tT][eE][xX][tT][cC][hH][aA][nN][gG][eE][dD][iI]/ | /[tT][eE][xX][tT][cC][hH][aA][nN][gG][eE][dD][pP]/ | /[tT][eE][xX][tT][cC][hH][aA][nN][gG][eE][dD][tT]/ | /[tT][eE][xX][tT][yY][aA][nN][kK][pP][oO][sS][tT]/ | /[uU][iI][eE][nN][tT][eE][rR]/ | /[uU][iI][lL][eE][aA][vV][eE]/ | /[uU][sS][eE][rR]/ | /[vV][iI][mM][eE][nN][tT][eE][rR]/ | /[vV][iI][mM][lL][eE][aA][vV][eE]/ | /[vV][iI][mM][lL][eE][aA][vV][eE][pP][rR][eE]/ | /[vV][iI][mM][rR][eE][sS][iI][zZ][eE][dD]/ | /[vV][iI][mM][rR][eE][sS][uU][mM][eE]/ | /[vV][iI][mM][sS][uU][sS][pP][eE][nN][dD]/ | /[wW][iI][nN][cC][lL][oO][sS][eE][dD]/ | /[wW][iI][nN][eE][nN][tT][eE][rR]/ | /[wW][iI][nN][lL][eE][aA][vV][eE]/ | /[wW][iI][nN][nN][eE][wW]/ | /[wW][iI][nN][rR][eE][sS][iI][zZ][eE][dD]/ | /[wW][iI][nN][sS][cC][rR][oO][lL][lL][eE][dD]/ | /[bB][uU][fF][cC][rR][eE][aA][tT][eE]/ | /[bB][uU][fF][rR][eE][aA][dD]/ | /[bB][uU][fF][wW][rR][iI][tT][eE]/ | /[fF][iI][lL][eE][eE][nN][cC][oO][dD][iI][nN][gG]/ )  )
+
+  au_event_list ::= au_event ( ',' au_event )*
+
+  _augroup_name ::= identifier -> "augroup_name"
+
+  _autocmd_pattern ::= /[^ \t\n,]+/ -> "pattern" ( ',' /[^ \t\n,]+/ -> "pattern" )*
+
+  au_once ::= '++once'
+
+  au_nested ::= '++nested'
+
+  _autocmd_command ::= au_event_list _autocmd_pattern au_once? au_nested? ( _statement ):command
+
+  _autocmd_define ::= _autocmd -> "autocmd" _augroup_name? _autocmd_command
+
+  _autocmd_remove ::= _autocmd -> "autocmd" bang _augroup_name? ( _autocmd_command | au_event_list _autocmd_pattern | _autocmd_pattern | au_event_list )?
+
+  _autocmd_list ::= _autocmd -> "autocmd" _augroup_name? ( au_event_list _autocmd_pattern | _autocmd_pattern | au_event_list )?
+
+  autocmd_statement ::= _autocmd_define
+	| _autocmd_remove
+	| _autocmd_list
+
+  augroup_statement ::= _augroup -> "augroup" bang? identifier -> "augroup_name"
+
+  command_name ::= /[A-Z][A-Za-z0-9]*/
+
+  _command_attribute_completion_behavior ::= ( !( 'arglist' ) ):name
+	| ( !( 'augroup' ) ):name
+	| ( !( 'buffer' ) ):name
+	| ( !( 'behave' ) ):name
+	| ( !( 'color' ) ):name
+	| ( !( 'command' ) ):name
+	| ( !( 'compiler' ) ):name
+	| ( !( 'dir' ) ):name
+	| ( !( 'environment' ) ):name
+	| ( !( 'even' ) ):name
+	| ( !( 'expression' ) ):name
+	| ( !( 'file' ) ):name
+	| ( !( 'file_in_path' ) ):name
+	| ( !( 'filetype' ) ):name
+	| ( !( 'function' ) ):name
+	| ( !( 'help' ) ):name
+	| ( !( 'highlight' ) ):name
+	| ( !( 'history' ) ):name
+	| ( !( 'local' ) ):name
+	| ( !( 'lua' ) ):name
+	| ( !( 'mapclear' ) ):name
+	| ( !( 'mapping' ) ):name
+	| ( !( 'menu' ) ):name
+	| ( !( 'messages' ) ):name
+	| ( !( 'option' ) ):name
+	| ( !( 'packadd' ) ):name
+	| ( !( 'shellcmd' ) ):name
+	| ( !( 'sign' ) ):name
+	| ( !( 'syntax' ) ):name
+	| ( !( 'syntime' ) ):name
+	| ( !( 'tag' ) ):name
+	| ( !( 'tag_listfiles' ) ):name
+	| ( !( 'user' ) ):name
+	| ( !( 'var' ) ):name
+	| ( !( 'custom' ) ):name !( ',' ) ( _ident ):val
+	| ( !( 'customlist' ) ):name !( ',' ) ( _ident ):val
+
+  _command_attribute_address_behavior ::= ( !( 'lines' ) ):name
+	| ( !( 'arguments' ) ):name
+	| ( !( 'buffers' ) ):name
+	| ( !( 'loaded_buffers' ) ):name
+	| ( !( 'windows' ) ):name
+	| ( !( 'tabs' ) ):name
+	| ( !( 'quickfix' ) ):name
+	| ( !( 'other' ) ):name
+
+  _command_attribute_nargs_value ::= !( /[01]/ ) -> "integer_literal"
+	| !( /[*?+]/ ) -> "pattern_multi"
+
+  _command_attribute_range_value ::= !( /[0-9]+/ ) -> "integer_literal"
+	| !( '%' ) -> "pattern_multi"
+
+  command_attribute ::= ( '-nargs' ):name !( '=' ) ( _command_attribute_nargs_value ):val
+	| ( '-complete' ):name !( '=' ) ( _command_attribute_completion_behavior -> "behavior" ):val
+	| ( '-range' ):name !( '=' ) ( _command_attribute_range_value ):val
+	| ( '-range' ):name
+	| ( '-count' ):name !( '=' ) ( !( /[0-9]+/ ) -> "integer_literal" ):val
+	| ( '-count' ):name
+	| ( '-addr' ):name !( '=' ) ( _command_attribute_address_behavior -> "behavior" ):val
+	| ( '-bang' ):name
+	| ( '-bar' ):name
+	| ( '-register' ):name
+	| ( '-buffer' ):name
+	| ( '-keepscript' ):name
+
+  command_statement ::= _command -> "command" bang? ( ( command_name ):name | command_attribute* ( command_name ):name ( /.*/ -> "command" ):repl )?
+
+  comclear_statement ::= _comclear -> "comclear"
+
+  delcommand_statement ::= _delcommand -> "delcommand" command_name
+
+  hl_group ::= /[a-zA-Z0-9_@.]+/
+
+  _hl_body_link ::= _default -> "default"? 'link' ( hl_group ):from ( hl_group ):to
+
+  _hl_body_clear ::= 'clear' hl_group?
+
+  _hl_body_none ::= hl_group 'NONE' -> "hl_group"
+
+  _hl_none ::= !( 'NONE' )
+
+  _hl_attr_list ::= ( _hl_none | !( 'bold' ) | !( 'underline' ) | !( 'undercurl' ) | !( 'underdouble' ) | !( 'underdotted' ) | !( 'underdashed' ) | !( 'strikethrough' ) | !( 'reverse' ) | !( 'inverse' ) | !( 'italic' ) | !( 'standout' ) | !( 'nocombine' ) ) ( ',' ( _hl_none | !( 'bold' ) | !( 'underline' ) | !( 'undercurl' ) | !( 'underdouble' ) | !( 'underdotted' ) | !( 'underdashed' ) | !( 'strikethrough' ) | !( 'reverse' ) | !( 'inverse' ) | !( 'italic' ) | !( 'standout' ) | !( 'nocombine' ) ) )*
+
+  _hl_key_cterm ::= ( 'term' | 'cterm' ):key !( '=' ) ( _hl_attr_list ):val
+
+  _hl_term_list ::= ( !( /\S+/ ) | _immediate_keycode )+
+
+  _hl_key_start_stop ::= ( 'start' | 'stop' ):key !( '=' ) ( _hl_term_list ):val
+
+  _hl_color_nr ::= !( /[0-9]+\*?/ )
+
+  _hl_key_ctermfg_ctermbg ::= ( 'ctermfg' | 'ctermbg' ):key !( '=' ) ( color | _hl_color_nr ):val
+
+  _hl_key_gui ::= ( 'gui' ):key !( '=' ) ( _hl_attr_list ):val
+
+  _hl_quoted_name ::= !( "'"  ) !( /[^'\n]+/ ) "'"
+
+  color ::= _hl_quoted_name
+	| _hl_none
+	| !( 'bg' )
+	| !( 'background' )
+	| !( 'fg' )
+	| !( 'foreground' )
+	| !( /#[0-9a-fA-F]{6}/ )
+	| !( /[a-zA-Z]+/ )
+
+  _hl_key_gui_color ::= ( 'guifg' | 'guibg' | 'guisp' ):key !( '=' ) ( color ):val
+
+  font ::= _hl_none
+	| _hl_quoted_name
+	| !( /[a-zA-Z0-9-]+/ )
+
+  _hl_key_font ::= ( 'font' ):key !( '=' ) ( font ):val
+
+  _hl_key_blend ::= ( 'blend' ):key !( '=' ) ( integer_literal ):val
+
+  hl_attribute ::= _hl_key_cterm
+	| _hl_key_start_stop
+	| _hl_key_ctermfg_ctermbg
+	| _hl_key_gui
+	| _hl_key_gui_color
+	| _hl_key_font
+	| _hl_key_blend
+
+  _hl_body_keys ::= _default -> "default"? hl_group hl_attribute+
+
+  _hl_body ::= hl_group
+	| _hl_body_clear
+	| _hl_body_none
+	| _hl_body_keys
+	| _hl_body_link
+
+  highlight_statement ::= _highlight -> "highlight" bang? _hl_body?
+
+  _syn_enable ::= ( 'enable' | 'on' | 'off' | 'reset' ):sub
+
+  _syn_case ::= ( 'case' ):sub ( 'match' | 'ignore' )?
+
+  _syn_spell ::= ( 'spell' ):sub ( 'toplevel' | 'notoplevel' | 'default' )?
+
+  _syn_foldlevel ::= ( 'foldlevel' ):sub ( 'start' | 'minimum' )?
+
+  _syn_iskeyword ::= ( 'iskeyword' ):sub ( 'clear' | /[^ \n]+/ -> "value" )?
+
+  _syn_conceal ::= ( 'conceal' ):sub ( 'on' | 'off' )?
+
+  _syn_hl_pattern ::= _separator_first pattern _separator
+
+  hl_groups ::= hl_group ( ',' hl_group )*
+
+  _syn_arguments_keyword ::= ( 'conceal' ):name
+	| ( 'cchar' ):name !( '=' ) ( _printable ):val
+	| ( 'contained' ):name
+	| ( 'containedin' ):name !( '=' ) ( hl_groups )?:val
+	| ( 'nextgroup' ):name !( '=' ) ( hl_groups )?:val
+	| ( 'transparent' ):name
+	| ( 'skipwhite' ):name
+	| ( 'skipnl' ):name
+	| ( 'skipempty' ):name
+
+  _syn_arguments_match ::= _syn_arguments_keyword
+	| ( 'contains' ):name !( '=' ) ( hl_groups )?:val
+	| ( 'fold' ):name
+	| ( 'display' ):name
+	| ( 'extend' ):name
+	| ( 'keepend' ):name
+	| ( 'excludenl' ):name
+
+  _syn_arguments_region ::= _syn_arguments_match
+	| ( 'matchgroup' ):name !( '=' ) ( hl_groups )?:val
+	| ( 'oneline' ):name
+	| ( 'concealends' ):name
+
+  _syn_arguments_cluster ::= ( 'contains' ):name !( '=' ) ( hl_groups )?:val
+	| ( 'add' ):name !( '=' ) ( hl_groups )?:val
+	| ( 'remove' ):name !( '=' ) ( hl_groups )?:val
+
+  _syn_pattern_offset ::= ( !( 'ms' ) | !( 'me' ) | !( 'hs' ) | !( 'he' ) | !( 'rs' ) | !( 're' ) | !( 'lc' ) ):what !( '=' ) ( !( /[se]([+-][0-9]+)?/ ) | !( /[0-9]/ ) ):offset
+
+  _syn_keyword ::= ( 'keyword' ):sub hl_group _syn_arguments_keyword -> "syntax_argument"* /[a-zA-Z0-9\[\]_]+/ -> "keyword" ( _syn_arguments_keyword -> "syntax_argument" | /[a-zA-Z0-9\[\]_]+/ -> "keyword" )*
+
+  _syn_match ::= ( 'match' ):sub hl_group _syn_arguments_match -> "syntax_argument"* _syn_hl_pattern ( _syn_pattern_offset -> "pattern_offset" ( ',' _syn_pattern_offset -> "pattern_offset" )* )? _syn_arguments_match -> "syntax_argument"*
+
+  _syn_region_start ::= ( 'start' ):name !( '=' ) ( _syn_hl_pattern ):val ( _syn_pattern_offset -> "pattern_offset" ( ',' _syn_pattern_offset -> "pattern_offset" )* )?
+
+  _syn_region_skip ::= ( 'skip' ):name !( '=' ) ( _syn_hl_pattern ):val ( _syn_pattern_offset -> "pattern_offset" ( ',' _syn_pattern_offset -> "pattern_offset" )* )?
+
+  _syn_region_end ::= ( 'end' ):name !( '=' ) ( _syn_hl_pattern ):val ( _syn_pattern_offset -> "pattern_offset" ( ',' _syn_pattern_offset -> "pattern_offset" )* )?
+
+  _syn_region ::= ( 'region' ):sub hl_group _syn_arguments_region -> "syntax_argument"* _syn_region_start -> "syntax_argument" _syn_arguments_region -> "syntax_argument"* ( _syn_region_skip -> "syntax_argument" _syn_arguments_region -> "syntax_argument"* )? ( _syn_region_end -> "syntax_argument" _syn_arguments_region -> "syntax_argument"* )+
+
+  _syn_cluster ::= ( 'cluster' ):sub hl_group _syn_arguments_cluster -> "syntax_argument"*
+
+  _syn_include ::= ( 'include' ):sub ( '@' hl_group )?:grouplist filename
+
+  _syn_sync_lines ::= ( 'minlines' | 'maxlines' ):name !( '=' ) ( /[0-9]+/ ):val
+
+  _syn_sync ::= ( 'sync' ):sub ( ( 'linebreaks' ):method !( '=' ) ( !( /[0-9]+/ ) ):val | ( 'fromstart' ):method | ( 'ccomment' ):method hl_group? _syn_sync_lines* | ( 'lines' | 'minlines' | 'maxlines' ):method !( '=' ) ( !( /[0-9]+/ ) ):val | ( 'match' | 'region' ):method hl_group ( ( 'grouphere' | 'groupthere' ) hl_group )? pattern | ( 'linecont' ):method _syn_sync_lines* pattern _syn_sync_lines* | ( 'clear' ):method hl_group? )
+
+  _syn_list ::= ( 'list' ):sub hl_group?
+
+  _syn_clear ::= ( 'clear' ):sub hl_group?
+
+  syntax_statement ::= _syntax -> "syntax" ( _syn_enable | _syn_case | _syn_spell | _syn_foldlevel | _syn_iskeyword | _syn_conceal | _syn_keyword | _syn_match | _syn_region | _syn_cluster | _syn_include | _syn_sync | _syn_list | _syn_clear )?
+
+  edit_statement ::= _edit -> "edit" bang? plus_plus_opt* plus_cmd* ( '#' !( /[0-9]+/ ) -> "integer_literal" | filename )?
+
+  enew_statement ::= _enew -> "enew" bang?
+
+  find_statement ::= _find -> "find" bang? plus_plus_opt* plus_cmd* filename
+
+  ex_statement ::= _ex -> "ex" plus_plus_opt* plus_cmd* filename?
+
+  visual_statement ::= _visual -> "visual" bang? plus_plus_opt* plus_cmd* filename?
+
+  view_statement ::= _view -> "view" bang? plus_plus_opt* plus_cmd* filename
