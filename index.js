@@ -89,6 +89,7 @@ const sampleList = [
 	["Tree-sitter-ebnf-generator-Rust", "tree-sitter-ebnf-generator.lua", "rust.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Scala", "tree-sitter-ebnf-generator.lua", "scala.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-SQL", "tree-sitter-ebnf-generator.lua", "sql.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Swift", "tree-sitter-ebnf-generator.lua", "swift.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-TlaPlus", "tree-sitter-ebnf-generator.lua", "tlaplus.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Typescript", "tree-sitter-ebnf-generator.lua", "typescript.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-V", "tree-sitter-ebnf-generator.lua", "v-analyzer.ebnf", "ace/mode/text"],
