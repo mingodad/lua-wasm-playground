@@ -1,0 +1,658 @@
+; From tree-sitter-fsharp/fsharp/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	_newline
+	_indent
+	_dedent
+	undefined
+	undefined
+	undefined
+	undefined
+	undefined
+	undefined
+	undefined
+	_struct_begin
+	_interface_begin
+	undefined
+	_triple_quoted_content
+	block_comment_content
+	_inside_string_marker
+	_newline_not_aligned
+	_error_sentinel
+	}
+
+extras ::= {
+	/[ \s\f\uFEFF\u2060\u200B]|\\\r?n/
+	block_comment
+	line_comment
+	preproc_line
+	compiler_directive_decl
+	fsi_directive_decl
+	??:STRING
+	}
+
+supertypes ::= {
+	_module_elem
+	_pattern
+	_expression
+	_type
+	_type_defn_body
+	_static_parameter
+	}
+
+inline ::= {
+	_module_elem
+	_expression_or_range
+	_object_expression_inner
+	_record_type_defn_inner
+	_union_type_defn_inner
+	_then_expression
+	}
+
+conflicts ::= {
+	{ long_identifier _identifier_or_op }
+	{ simple_type type_argument }
+	{ preproc_if preproc_if_in_expression }
+	{ rules }
+	}
+
+word ::= identifier
+
+rules:
+
+  file ::= named_module
+	| namespace+
+	| _module_elem*
+
+  namespace ::= 'namespace' ( 'global' | ( 'rec'? long_identifier ):name ) _module_elem*
+
+  named_module ::= attributes? 'module' access_modifier? ( long_identifier ):name _module_elem*
+
+  _module_elem ::= value_declaration
+	| module_defn
+	| module_abbrev
+	| import_decl
+	| fsi_directive_decl
+	| type_definition
+	| exception_definition
+	| _expression
+	| preproc_if
+
+  module_abbrev ::= attributes? 'module' identifier '=' ( _indent long_identifier _dedent ):block
+
+  module_defn ::= attributes? 'module' access_modifier? identifier '=' ( _indent _module_body _dedent ):block
+
+  _module_body ::= _module_elem  2(  _newline -> ";" _module_elem ) *
+
+  import_decl ::= 'open' long_identifier
+
+  attributes ::= _attribute_set+
+
+  _attribute_set ::= '[<' attribute  2(  ( _newline attribute )* )  '>]'
+
+  attribute ::= ( _attribute_target ':' )? _object_construction
+
+  _attribute_target ::= 'assembly'
+	| 'module'
+	| 'return'
+	| 'field'
+	| 'property'
+	| 'param'
+	| 'type'
+	| 'constructor'
+	| 'event'
+
+  _object_construction ::=  <2(  _type _expression? )
+
+  value_declaration ::= attributes? (  7(  function_or_value_defn )  |  10(  do )  )
+
+  do ::=  9(  'do' _expression_block )
+
+  _function_or_value_defns ::= _function_or_value_defn_body ( 'and' _function_or_value_defn_body )*
+
+  function_or_value_defn ::= ( 'let' | 'let!' ) ( _function_or_value_defn_body | 'rec' _function_or_value_defns )
+
+  _function_or_value_defn_body ::= ( function_declaration_left | value_declaration_left ) ( ':' _type )? '=' ( _expression_block ):body
+
+  function_declaration_left ::=  <3(  'inline'? access_modifier?  100(  _identifier_or_op )  type_arguments? argument_patterns )
+
+  value_declaration_left ::=  <2(  'mutable'? access_modifier? _pattern type_arguments? )
+
+  access_modifier ::=  100(  @(  1000(  'private' | 'internal' | 'public' )  ) )
+
+  class_as_reference ::= 'as' identifier
+
+  primary_constr_args ::= attributes? access_modifier? '(' _pattern? ')' class_as_reference?
+
+  repeat_pattern ::= _pattern  1(  ',' _pattern ) +
+
+  _pattern ::= 'null'
+	| '_' -> "wildcard_pattern"
+	| const
+	| as_pattern
+	| disjunct_pattern
+	| conjunct_pattern
+	| cons_pattern
+	| repeat_pattern
+	| paren_pattern
+	| list_pattern
+	| array_pattern
+	| record_pattern
+	| typed_pattern
+	| attribute_pattern
+	| type_check_pattern
+	| optional_pattern
+	| identifier_pattern
+
+  optional_pattern ::= '?' _pattern
+
+  type_check_pattern ::= ':?' atomic_type ( 'as' identifier )?
+
+  attribute_pattern ::= attributes _pattern
+
+  paren_pattern ::= '(' _pattern ')'
+
+  as_pattern ::= _pattern 'as' identifier
+
+  cons_pattern ::= _pattern '::' _pattern
+
+  disjunct_pattern ::= _pattern '|' _pattern
+
+  conjunct_pattern ::= _pattern '&' _pattern
+
+  typed_pattern ::=  <-1(  _pattern ':' _type ( type_argument_constraints )?:constraints )
+
+  argument_patterns ::=  <1000(  _atomic_pattern+ )
+
+  field_pattern ::=  1(  long_identifier '=' _pattern )
+
+  _atomic_pattern ::=  1000(  'null' | '_' | const | long_identifier | list_pattern | record_pattern | array_pattern | '(' _pattern ')' )
+
+  _list_pattern_content ::= ( _indent _newline? _pattern ( ( ';' | _newline ) _pattern )* _dedent ):block
+
+  list_pattern ::= '[' _list_pattern_content? ']'
+
+  array_pattern ::= '[|' _list_pattern_content? '|]'
+
+  record_pattern ::= '{' field_pattern ( ';' field_pattern )* '}'
+
+  identifier_pattern ::=  <-1(  long_identifier_or_op _pattern_param? _pattern? )
+
+  _pattern_param ::=  2(  const | long_identifier | 'null' )
+
+  _expression_block ::= _indent _expression _dedent
+
+  _expression ::= 'null'
+	| const
+	| paren_expression
+	| begin_end_expression
+	| long_identifier_or_op
+	| typed_expression
+	| infix_expression
+	| index_expression
+	| mutate_expression
+	| object_instantiation_expression
+	| list_expression
+	| array_expression
+	| ce_expression
+	| prefixed_expression
+	| brace_expression
+	| anon_record_expression
+	| typecast_expression
+	| declaration_expression
+	| do_expression
+	| fun_expression
+	| function_expression
+	| sequential_expression
+	| if_expression
+	| while_expression
+	| for_expression
+	| match_expression
+	| try_expression
+	| literal_expression
+	| tuple_expression
+	| application_expression
+	| dot_expression
+	| preproc_if_in_expression -> "preproc_if"
+
+  literal_expression ::=  21(  '<@' _expression '@>' | '<@@' _expression '@@>' )
+
+  long_identifier_or_op ::= long_identifier | long_identifier '.' _identifier_or_op | _identifier_or_op
+
+  tuple_expression ::=  >16(  _expression ',' _expression )
+
+  brace_expression ::=  16(  '{' ( _indent ( field_initializers | with_field_expression | object_expression ) _dedent ):block '}' )
+
+  anon_record_expression ::=  21(  '{|' ( _indent field_initializers _dedent ):block '|}' )
+
+  with_field_expression ::= _expression 'with' ( _indent field_initializers _dedent ):block
+
+  _object_expression_inner ::= _object_members interface_implementation*
+
+  object_expression ::=  5(  'new' _base_call _object_expression_inner )
+
+  _base_call ::= _object_construction ( 'as' identifier )?
+
+  prefixed_expression ::= ( 'return' | 'return!' | 'yield' | 'yield!' | 'lazy' | 'assert' | 'upcast' | 'downcast' | prefix_op )  >15(  _expression )
+
+  typecast_expression ::=  >16(  _expression ( ':' | ':>' | ':?' | ':?>' ) _type )
+
+  for_expression ::=  9(  'for' ( _pattern 'in' _expression_or_range | identifier '=' _expression ( 'to' | 'downto' ) _expression ) 'do' _expression_block 'done'? )
+
+  while_expression ::=  9(  'while' _expression 'do' _expression_block 'done'? )
+
+  _else_expression ::= 'else' ( _expression_block ):else
+
+  _then_expression ::= 'then' ( _expression_block ):then
+
+  elif_expression ::= 'elif' ( _expression_block ):guard _then_expression
+
+  _if_branch ::= 'if' ( _expression_block ):guard
+
+  if_expression ::= _if_branch _then_expression elif_expression* _else_expression?
+
+  fun_expression ::=  >8(  'fun' argument_patterns '->' _expression_block )
+
+  try_expression ::=  8(  'try' _expression_block _newline? ( 'with' rules | 'finally' _expression_block ) )
+
+  match_expression ::= ( 'match' | 'match!' ) _expression _newline? 'with' ( _newline rules | ( _indent rules _dedent ):block )
+
+  function_expression ::=  8(  'function' ( _indent rules _dedent ):block )
+
+  object_instantiation_expression ::=  24(  'new' _type _expression )
+
+  mutate_expression ::=  >16(  ( _expression ):assignee '<-' ( _expression ):value )
+
+  index_expression ::=  20(  _expression '.[' ( ( _expression ):index | slice_ranges ) ']' )
+
+  typed_expression ::=  21(  _expression !(  21(  '<' )  ) types?  21(  '>' )  )
+
+  declaration_expression ::= ( ( 'use' | 'use!' ) identifier '=' _expression_block | function_or_value_defn ) ( _expression ):in
+
+  do_expression ::=  8(  ( 'do' | 'do!' ) _expression_block )
+
+  _list_elements ::=  >113(  _newline? _expression  >113(  _newline -> ";" _expression ) * )
+
+  _list_element ::= _indent ( _list_elements | _comp_or_range_expression | slice_ranges ) _dedent
+
+  list_expression ::= '[' _list_element? ']'
+
+  array_expression ::= '[|' _list_element? '|]'
+
+  range_expression ::=  22(  _expression '..' _expression ( '..' _expression )? )
+
+  _expression_or_range ::= _expression
+	| range_expression
+
+  rule ::= ( _pattern ):pattern ( 'when' ( _expression ):guard )? '->' ( _expression_block ):block
+
+  rules ::= '|'? rule ( _newline? '|' rule )*
+
+  begin_end_expression ::=  21(  'begin' ( _indent _expression _dedent ):block 'end' )
+
+  paren_expression ::=  21(  '(' _expression_block ')' )
+
+  _high_prec_app ::=  <20(  _expression ( unit | !(  10000(  '(' )  ) _expression_block ')' ) )
+
+  _low_prec_app ::=  <16(  _expression _expression )
+
+  application_expression ::= _high_prec_app
+	| _low_prec_app
+
+  dot_expression ::=  >19(  ( _expression ):base '.' ( long_identifier_or_op ):field )
+
+  infix_expression ::=  <16(  _expression infix_op _expression )
+
+  ce_expression ::=  <15(   -1(  _expression )  '{' ( _indent _comp_or_range_expression _dedent ):block '}' )
+
+  sequential_expression ::=  >1(  _expression  >1(  _newline -> ";" _expression ) + )
+
+  _comp_or_range_expression ::= _expression
+	| short_comp_expression
+
+  short_comp_expression ::= 'for' _pattern 'in' _expression_or_range '->' _expression
+
+  slice_ranges ::= slice_range ( ',' slice_range )*
+
+  _slice_range_special ::=  <23(  ( _expression ):from @(  22(  '..' )  ) | @(  100022(  '..' )  ) ( _expression ):to | ( _expression ):from @(  22(  '..' )  ) ( _expression ):to )
+
+  slice_range ::= _slice_range_special
+	| _expression
+	| '*'
+
+  _type ::=  4(  simple_type | generic_type | paren_type | function_type | compound_type | postfix_type | list_type | static_type | type_argument | constrained_type | flexible_type | anon_record_type )
+
+  simple_type ::= long_identifier
+	| _static_type_identifier
+
+  generic_type ::=  >5(  long_identifier '<' type_attributes? '>' )
+
+  paren_type ::= '(' _type ')'
+
+  function_type ::= _type '->' _type
+
+  compound_type ::= _type '*' _type+
+
+  postfix_type ::=  <4(  _type long_identifier )
+
+  list_type ::= _type '[]'
+
+  static_type ::=  10(  _type type_arguments )
+
+  constrained_type ::= type_argument ':>' _type
+
+  flexible_type ::= '#' _type
+
+  anon_record_type ::= '{|' ( _indent record_fields _dedent ):block '|}'
+
+  types ::= _type  <12(  ',' _type ) *
+
+  _static_type_identifier ::=  10(  ( '^' | @(  100(  "'"  )  ) ) identifier )
+
+  _static_parameter ::= static_parameter_value
+	| named_static_parameter
+
+  named_static_parameter ::=  3(  identifier '=' static_parameter_value )
+
+  type_attribute ::= _type
+	| _static_parameter
+
+  type_attributes ::= type_attribute  >13(  ',' type_attribute ) *
+
+  atomic_type ::= '#' _type | type_argument | '(' _type ')' | long_identifier | long_identifier '<' type_attributes '>'
+
+  constraint ::=  1000000(  type_argument ':>' _type | type_argument ':' 'null' | type_argument ':' '(' ( trait_member_constraint | 'new' ':' 'unit' '->' _type ) ')' | type_argument ':' 'struct' | type_argument ':' 'not' 'struct' | type_argument ':' 'enum' '<' _type '>' | type_argument ':' 'unmanaged' | type_argument ':' 'equality' | type_argument ':' 'comparison' | type_argument ':' 'delegate' '<' _type ',' _type '>' | 'default' type_argument ':' _type )
+
+  type_argument_constraints ::= 'when' constraint ( 'and' constraint )*
+
+  type_argument ::=  10(  '_' | _static_type_identifier ( 'or' _static_type_identifier )* )
+
+  type_argument_defn ::= attributes? type_argument
+
+  type_arguments ::= '<' type_argument_defn  <13(  ',' type_argument_defn ) * type_argument_constraints? '>'
+
+  trait_member_constraint ::= 'static'? 'member' _identifier_or_op ':' _type
+
+  member_signature ::= identifier type_arguments? ':' curried_spec ( 'with' 'get' | 'with' 'set' | 'with' 'get' ',' 'set' | 'with' 'set' ',' 'get' )?
+
+  curried_spec ::= ( arguments_spec '->' )* _type
+
+  argument_spec ::= attributes? argument_name_spec? _type
+
+  arguments_spec ::= argument_spec ( '*' argument_spec )*
+
+  argument_name_spec ::= '?'? ( identifier ):name ':'
+
+  interface_spec ::= 'interface' _type
+
+  static_parameter ::= static_parameter_value
+	| 'id' '=' static_parameter_value
+
+  static_parameter_value ::= const
+	| const _expression
+
+  exception_definition ::= attributes? 'exception' ( long_identifier ):exception_name 'of' _type
+
+  type_definition ::= attributes? 'type' _type_defn_body ( attributes? 'and' _type_defn_body )*
+
+  _type_defn_body ::= delegate_type_defn
+	| record_type_defn
+	| union_type_defn
+	| interface_type_defn
+	| anon_type_defn
+	| enum_type_defn
+	| type_abbrev_defn
+	| type_extension
+
+  type_name ::=  2(  attributes? access_modifier? ( ( long_identifier ):type_name type_arguments? | type_argument? ( identifier ):type_name ) )
+
+  type_extension ::= type_name type_extension_elements
+
+  delegate_type_defn ::= type_name '=' ( _indent delegate_signature _dedent ):block
+
+  delegate_signature ::= 'delegate' 'of' _type
+
+  type_abbrev_defn ::= type_name '=' ( _indent _type _dedent ):block
+
+  _class_type_body_inner ::= class_inherits_decl
+	| _class_function_or_value_defn
+	| _type_defn_elements
+	| preproc_if_in_class_definition -> "preproc_if"
+
+  _class_type_body ::= _class_type_body_inner ( _newline _class_type_body_inner )*
+
+  _record_type_defn_inner ::= access_modifier? '{' ( _indent record_fields _dedent ):block '}' type_extension_elements?
+
+  record_type_defn ::= type_name '=' ( _indent _record_type_defn_inner _dedent ):block
+
+  record_fields ::= record_field ( _newline record_field )* _newline?
+
+  record_field ::= attributes? 'mutable'? access_modifier? identifier ':' _type
+
+  enum_type_defn ::= type_name '=' ( _indent enum_type_cases _dedent ):block
+
+  enum_type_cases ::= '|'? enum_type_case
+	| '|' enum_type_case ( '|' enum_type_case )+
+
+  enum_type_case ::= identifier '=' const
+
+  _union_type_defn_inner ::= access_modifier? union_type_cases type_extension_elements?
+
+  union_type_defn ::= type_name '=' ( _indent _union_type_defn_inner _dedent ):block
+
+  union_type_cases ::= '|'? union_type_case ( '|' union_type_case )*
+
+  union_type_case ::=  8(  attributes? ( identifier | identifier 'of' union_type_fields | identifier ':' _type ) )
+
+  union_type_fields ::= union_type_field ( '*' union_type_field )*
+
+  union_type_field ::= _type | identifier ':' _type
+
+  interface_type_defn ::=  <1(  type_name '=' _interface_begin -> "interface" ( _indent _type_defn_elements+ _dedent ):block 'end' )
+
+  anon_type_defn ::= type_name primary_constr_args? '=' ( ( _indent _class_type_body _dedent ):block | ( 'begin' | 'class' ) ( _indent _class_type_body? _dedent ):block 'end' | _struct_begin -> "struct" ( _indent _type_defn_elements* _dedent ):block 'end' )
+
+  _class_function_or_value_defn ::= attributes? 'static'? ( function_or_value_defn | 'do' _expression_block )
+
+  type_extension_elements ::= ( 'with' ( _indent _type_defn_elements _dedent ):block | _type_defn_elements )
+
+  _type_defn_elements ::= _member_defns
+	| interface_implementation+
+
+  interface_implementation ::= 'interface' _type _object_members?
+
+  _member_defns ::= member_defn member_defn*
+
+  _object_members ::= 'with' ( _indent _member_defns _dedent ):block
+
+  member_defn ::=  100016(  attributes? ( 'static'? 'member' 'inline'? access_modifier? method_or_prop_defn | 'abstract' 'member'? access_modifier? member_signature | 'override' access_modifier? method_or_prop_defn | 'default' access_modifier? method_or_prop_defn | 'static'? 'val' 'mutable'? access_modifier? identifier ':' _type | 'static' value_declaration | additional_constr_defn ) )
+
+  property_or_ident ::= ( identifier ):instance '.' ( identifier ):method
+	| _identifier_or_op
+
+  _method_defn ::= type_arguments? ( _pattern+ ):args '=' _expression_block
+
+  _property_defn ::= ( ':' _type )? '=' _expression_block ( 'with' ( 'get' | 'set' | 'get' ',' 'set' | 'set' ',' 'get' ) )?
+
+  method_or_prop_defn ::=  3(  ( property_or_ident ):name ( 'with' ( _indent _function_or_value_defns _dedent ):block | _method_defn | _property_defn ) )
+
+  additional_constr_defn ::= access_modifier? 'new' _pattern '=' _expression_block
+
+  class_inherits_decl ::= 'inherit' ( _indent _type _expression? _dedent ):block
+
+  field_initializer ::=  17(  ( long_identifier ):field @(  10000000(  '=' )  ) ( _expression ):value )
+
+  field_initializers ::=  10000000(  field_initializer ( _newline field_initializer )* )
+
+  _escape_char ::= !(  100(  /\\["\'ntbrafv]/ )  )
+
+  _non_escape_char ::= !(  100(  /\\[^"\'ntbrafv]/ )  )
+
+  _simple_char_char ::= !( /[^\n\t\r\u0008\a\f\v'\\]/ )
+
+  _unicodegraph_short ::= /\\u[0-9a-fA-F]{4}/
+
+  _unicodegraph_long ::= /\\u[0-9a-fA-F]{8}/
+
+  _trigraph ::= /\\[0-9]{3}/
+
+  _char_char ::= _simple_char_char
+	| _escape_char
+	| _trigraph
+	| _unicodegraph_short
+
+  _simple_string_char ::= _inside_string_marker
+	| !(  1(  /[^\t\r\u0008\a\f\v\\"]/ )  )
+
+  _string_char ::= _simple_string_char
+	| _escape_char
+	| _trigraph
+	| _unicodegraph_short
+	| _non_escape_char
+	| _unicodegraph_long
+
+  char ::=  -1(  /'([^\n\t\r\u0008\a\f\v'\\]|\\["\'ntbrafv]|\\[0-9]{3}|\\u[0-9a-fA-F]{4})*'B?/ )
+
+  format_string_eval ::= !(  1000(  '{' )  ) _expression '}'
+
+  format_string ::= @(  100(  '$"' )  ) ( format_string_eval | _string_char )* '"'
+
+  _string_literal ::= '"'  _string_char* '"'
+
+  string ::= _string_literal
+	| format_string
+
+  _verbatim_string_char ::= _simple_string_char
+	| _non_escape_char
+	| '\\'
+	| /\"\"/
+
+  verbatim_string ::= '@"' _verbatim_string_char* !( '"'  )
+
+  bytearray ::= '"'  _string_char* !( '"B' )
+
+  verbatim_bytearray ::= '@"' _verbatim_string_char* !( '"B' )
+
+  format_triple_quoted_string ::= @(  100(  '$"""' )  ) _triple_quoted_content '"""'
+
+  triple_quoted_string ::= '"""' _triple_quoted_content '"""'
+	| format_triple_quoted_string
+
+  bool ::= @( 'true' | 'false' )
+
+  unit ::= @(  100000(  '()' )  )
+
+  const ::= sbyte
+	| int16
+	| int32
+	| int64
+	| byte
+	| uint16
+	| uint32
+	| int
+	| xint
+	| nativeint
+	| unativeint
+	| decimal
+	| float
+	| uint64
+	| ieee32
+	| ieee64
+	| bignum
+	| char
+	| string
+	| verbatim_string
+	| triple_quoted_string
+	| bytearray
+	| verbatim_bytearray
+	| bool
+	| unit
+
+  long_identifier ::= identifier ( '.' identifier )*
+
+  active_pattern ::=  1000(  '(|' identifier -> "active_pattern_op_name" ( '|' identifier -> "active_pattern_op_name" )* ( '|' '_' -> "wildcard_active_pattern_op" )? '|)' )
+
+  op_identifier ::= @(  1000(  '(' /\s*/ ( '?' | /[!%&*+-./<=>@^|~][!%&*+-./<=>@^|~?]*/ | '.. ..' ) /\s*/ ')' )  )
+
+  _identifier_or_op ::= identifier
+	| op_identifier
+	| active_pattern
+
+  _infix_or_prefix_op ::= '+'
+	| '-'
+	| '+.'
+	| '-.'
+	| '%'
+	| '&'
+	| '&&'
+
+  prefix_op ::= _infix_or_prefix_op | '~'+ | /[!?][!%&*+-./<=>@^|~?]*/
+
+  infix_op ::=  4(  _infix_or_prefix_op | !(  1(  /[+-]/ )  ) | /[-+<>|&^*/'%@][!%&*+./<=>@^|~?-]*/ | '||' | '=' | '!=' | ':=' | '::' | '$' | 'or' | '?' | '?' | '?<-' )
+
+  int ::= @( /[+-]?([0-9]_?)+/ )
+
+  xint ::= @( /0[xX]([0-9a-fA-F]_?)+/ | /0[oO]([0-7]_?)+/ | /0[bB]([0-1]_?)+/ )
+
+  sbyte ::= ( int | xint ) !( 'y' )
+
+  byte ::= ( int | xint ) !( 'uy' )
+
+  int16 ::= ( int | xint ) !( 's' )
+
+  uint16 ::= ( int | xint ) !( 'us' )
+
+  int32 ::= ( int | xint ) !( 'l' )
+
+  uint32 ::= ( int | xint ) !( 'ul' | 'u' )
+
+  nativeint ::= ( int | xint ) !( 'n' )
+
+  unativeint ::= ( int | xint ) !( 'un' )
+
+  int64 ::= ( int | xint ) !( 'L' )
+
+  uint64 ::= ( int | xint ) !( 'UL' | 'uL' )
+
+  ieee32 ::= float !( 'f' )
+	| xint !( 'lf' )
+
+  ieee64 ::= xint !( 'LF' )
+
+  bignum ::= int !( /[QRZING]/ )
+
+  decimal ::= ( float | int ) !( /[Mm]/ )
+
+  float ::= ( int !( '.' ) int? | int ( !( '.' ) int )? !( /[eE][+-]?/ ) int ) -> "float"
+
+  block_comment ::= '(*' block_comment_content !( '*)' )
+
+  line_comment ::= @( /\/\/+[^\n\r]*/ )
+
+  identifier ::= @( /[_\p{XID_Start}][_'\p{XID_Continue}]*/ | /``([^`\n\r\t])+``/ )
+
+  compiler_directive_decl ::=  100000(  '#nowarn' _string_literal -> "string" _newline_not_aligned | '#light' _newline_not_aligned )
+
+  fsi_directive_decl ::= ( '#r' | '#load' ) _string_literal -> "string" /\n/
+
+  preproc_line ::= /#(line)?/ -> "#line" int ( _string_literal -> "string" | verbatim_string )? _newline_not_aligned
+
+  preproc_if ::= '#if' ( identifier ):condition _newline_not_aligned _module_elem ( preproc_else )?:alternative '#endif'
+
+  preproc_else ::= '#else' _module_elem
+
+  preproc_if_in_expression ::=  -2(  '#if' ( identifier ):condition _newline_not_aligned ( _newline? _expression )* ( preproc_else_in_expression -> "preproc_else" )?:alternative '#endif' )
+
+  preproc_else_in_expression ::=  -2(  '#else' ( _newline? _expression )* )
+
+  preproc_if_in_class_definition ::=  -2(  '#if' ( identifier ):condition _newline_not_aligned ( _newline? _class_type_body_inner )* ( preproc_else_in_class_definition -> "preproc_else" )?:alternative '#endif' )
+
+  preproc_else_in_class_definition ::=  -2(  '#else' ( _newline? _class_type_body_inner )* )
+

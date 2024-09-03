@@ -1,0 +1,167 @@
+; From tree-sitter-bison/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	undelimited_code_block
+	error_sentinel
+	}
+
+extras ::= {
+	/\s/
+	comment
+	}
+
+supertypes ::= {
+	}
+
+inline ::= {
+	}
+
+conflicts ::= {
+	}
+
+rules:
+
+  sections ::= ( prologue | declaration ';'? )* grammar_rules_section
+
+  prologue ::= '%{' prologue_body -> "embedded_code"? '%}'
+
+  prologue_body ::= ( @( /([^%\n"]|%[^{}\n]|"([^"\\]|\\.)+")+/ ) )+
+
+  grammar_rules_section ::= '%%' grammar_rules_body ( '%%' epilogue )?
+
+  grammar_rules_body ::= ( grammar_rule | declaration ';' )+
+
+  grammar_rule ::= grammar_rule_identifier -> "grammar_rule_declaration" ':' ( action? directive_empty -> "directive" action? | _component+ )? ( '|' ( directive_empty -> "directive" | _component+ ) )* ';'
+
+  _component ::= ( char_literal | string_literal | grammar_rule_identifier ) ( '[' /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ ']' )?
+	| directive_merge -> "directive"
+	| action
+
+  action ::= code_block
+
+  declaration ::= _decl_type
+	| _decl_require
+	| _decl_token
+	| _decl_nterm
+	| _decl_op_precedence
+	| _decl_initial_declaration
+	| _decl_glr_parser
+	| _decl_destructor
+	| _decl_printer
+	| _decl_expect
+	| _decl_start
+	| _decl_define
+	| _decl_code
+	| _decl_union
+	| _decl_debug
+	| _decl_header
+	| decl_language
+	| _decl_locations
+	| _decl_name_prefix
+	| _decl_no_lines
+	| _decl_no_lines
+	| _decl_output
+	| _decl_pure_parser
+	| _decl_skeleton
+	| _decl_token_table
+	| _decl_verbose
+	| _decl_yacc
+	| _decl_initial_action
+	| _decl_parse_param
+	| _decl_param
+	| _decl_lex_param
+
+  _decl_type ::= ( '%' !( 'type' ) ) -> "declaration_name" type_tag? ( grammar_rule_identifier | char_literal | string_literal )+ ( type_tag ( grammar_rule_identifier | char_literal | string_literal )+ )*
+
+  _decl_require ::= ( '%' !( 'require' ) ) -> "declaration_name" string_literal
+
+  _decl_token ::= ( '%' !( 'token' ) ) -> "declaration_name" type_tag? ( grammar_rule_identifier number_literal? string? )+ ( type_tag ( grammar_rule_identifier number_literal? string_literal? )+ )*
+
+  _decl_nterm ::= ( '%' !( 'nterm' ) ) -> "declaration_name" type_tag? grammar_rule_identifier+ ( type_tag grammar_rule_identifier* )*
+
+  _decl_op_precedence ::= ( '%' !( 'left' | 'right' | 'nonassoc' | 'precedence' ) ) -> "declaration_name" type_tag? ( ( grammar_rule_identifier | string_literal | char_literal ) number_literal? )+ ( type_tag ( ( grammar_rule_identifier | string_literal | char_literal ) number_literal? )+ )*
+
+  _decl_initial_declaration ::= ( '%' !( 'initial-declaration' ) ) -> "declaration_name" code_block
+
+  _decl_glr_parser ::= ( '%' !( 'glr-parser' ) ) -> "declaration_name"
+
+  _decl_destructor ::= ( '%' !( 'destructor' ) ) -> "declaration_name" code_block ( type_tag | '<' '*'? '>' | grammar_rule_identifier )*
+
+  _decl_printer ::= ( '%' !( 'printer' ) ) -> "declaration_name" code_block ( type_tag | '<' '*'? '>' | grammar_rule_identifier )*
+
+  _decl_expect ::= ( '%' !( 'expect' | 'expect-rr' ) ) -> "declaration_name" @( /[0-9]+/ )
+
+  _decl_start ::= ( '%' !( 'start' ) ) -> "declaration_name" grammar_rule_identifier
+
+  _decl_define ::= ( '%' !( 'define' ) ) -> "declaration_name" /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ ( '.' /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ )* ( /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ | '{' ( /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ | string_literal ) '}' | string_literal )?
+
+  _decl_code ::= ( '%' !( 'code' ) ) -> "declaration_name" ( /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ ( '-' /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ )* )? code_block
+
+  _decl_union ::= ( '%' !( 'union' ) ) -> "declaration_name" /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/? code_block
+
+  _decl_debug ::= ( '%' !( 'debug' ) ) -> "declaration_name"
+
+  _decl_header ::= ( '%' !( 'header' ) ) -> "declaration_name" string_literal?
+
+  decl_language ::= ( '%' !( 'language' ) ) -> "declaration_name" ( string_literal ):language
+
+  _decl_locations ::= ( '%' !( 'locations' ) ) -> "declaration_name"
+
+  _decl_name_prefix ::= ( '%' !( 'name-prefix' ) ) -> "declaration_name" string_literal
+
+  _decl_no_lines ::= ( '%' !( 'no-lines' ) ) -> "declaration_name"
+
+  _decl_output ::= ( '%' !( 'output' ) ) -> "declaration_name" string_literal
+
+  _decl_pure_parser ::= ( '%' !( 'pure-parser' ) ) -> "declaration_name"
+
+  _decl_skeleton ::= ( '%' !( 'skeleton' ) ) -> "declaration_name" string_literal
+
+  _decl_token_table ::= ( '%' !( 'token-table' ) ) -> "declaration_name"
+
+  _decl_verbose ::= ( '%' !( 'verbose' ) ) -> "declaration_name"
+
+  _decl_yacc ::= ( '%' !( 'yacc' ) ) -> "declaration_name"
+
+  _decl_initial_action ::= ( '%' !( 'initial-action' ) ) -> "declaration_name" code_block
+
+  _decl_parse_param ::= ( '%' !( 'parse-param' ) ) -> "declaration_name" code_block
+
+  _decl_param ::= ( '%' !( 'param' ) ) -> "declaration_name" code_block
+
+  _decl_lex_param ::= ( '%' !( 'lex-param' ) ) -> "declaration_name" code_block
+
+  directive_merge ::= '%merge' '<' type '>'
+
+  directive_empty ::= @( '%empty' )
+
+  epilogue ::= undelimited_code_block -> "embedded_code"
+
+  string ::= string_literal
+	| '_(' string_literal ')'
+
+  string_literal ::= ( 'L"' | 'u"' | 'U"' | 'u8"' | '"'  ) ( !(  1(  /[^\\"\n]+/ )  ) -> "string_content" )* '"'
+
+  number_literal ::= @( /[-\+]/? ( /0[xX]/ | /0[bB]/ )? ( ( /[0-9]/+ ( "'"  /[0-9]/+ )* | /0[bB]/ /[0-9]/+ ( "'"  /[0-9]/+ )* | /0[xX]/ /[0-9a-fA-F]/+ ( "'"  /[0-9a-fA-F]/+ )* ) ( '.' ( /[0-9a-fA-F]/+ ( "'"  /[0-9a-fA-F]/+ )* )? )? | '.' /[0-9]/+ ( "'"  /[0-9]/+ )* ) ( /[eEpP]/ ( /[-\+]/? /[0-9a-fA-F]/+ ( "'"  /[0-9a-fA-F]/+ )* )? )? /[uUlLwWfFbBdD]*/ )
+
+  type_tag ::= '<' type '>'
+
+  type ::= _type_atom ( '<' type '>' )?
+
+  _type_atom ::= /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ ( '::'? /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ )* '*'?
+
+  grammar_rule_identifier ::= /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ !( !( '.' ) ( !( 'opt' ) | !( '1' ) ) )
+
+  code_block ::= '{' undelimited_code_block -> "embedded_code" '}'
+
+  char_literal ::= "'"  '\\' ? /[^\n']/ "'"
+
+  comment ::= '//' /.*/
+	| '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/'

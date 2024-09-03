@@ -1,0 +1,231 @@
+; From tree-sitter-squirrel/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	verbatim_string
+	}
+
+extras ::= {
+	comment
+	/\s/
+	}
+
+supertypes ::= {
+	expression
+	primary_expression
+	}
+
+inline ::= {
+	expression_statement
+	_statements
+	_statement
+	}
+
+conflicts ::= {
+	}
+
+word ::= identifier
+
+rules:
+
+  script ::= _statements
+
+  _statements ::= _statement+
+
+  _statement ::= block
+	| if_statement
+	| while_statement
+	| do_while_statement
+	| switch_statement
+	| for_statement
+	| foreach_statement
+	| break
+	| continue
+	| return
+	| yield
+	| local_declaration
+	| var_statement
+	| function_declaration
+	| class_declaration
+	| try_statement
+	| throw_statement
+	| const_declaration
+	| enum_declaration
+	| expression_statement
+
+  expression_statement ::= expression ';'? | ';'
+
+  block ::= '{' _statement* '}'
+
+  if_statement ::=  >1(  'if' ( parenthesized_expression ):condition ( _statement ):consequence else_statement? )
+
+  else_statement ::=  >1(  'else' ( _statement ):alternative )
+
+  while_statement ::= 'while' '(' expression ')' _statement?
+
+  do_while_statement ::= 'do' _statement 'while' '(' expression ')'
+
+  switch_statement ::= 'switch' '(' expression ')' '{' case_statement* default_statement? '}'
+
+  case_statement ::= 'case' ( expression ):case ':' _statement*
+
+  default_statement ::= 'default' ':' _statement*
+
+  for_statement ::= 'for' '(' ( expression | local_declaration )?:initial ';' ( expression )?:condition ';' ( expression )?:increment ')' _statement
+
+  foreach_statement ::= 'foreach' '(' ( ( identifier ):index ',' )? ( identifier ):value 'in' ( expression ):collection ')' _statement
+
+  break ::= 'break' ';'
+
+  continue ::= 'continue' ';'
+
+  return ::= 'return' ( expression | table )? ';'?
+
+  yield ::= 'yield' expression? ( ';' | '\n'  )
+
+  resume_expression ::= 'resume' expression
+
+  local_declaration ::= 'local' _initz ';'?
+
+  _initz ::= identifier ( ( '=' | '<-' ) ( expression | table ) )? ( ',' _initz )?
+
+  function_declaration ::= 'function' identifier ( '::' identifier )* '(' parameters? ')' _statement
+
+  parameters ::= parameter ( ',' parameter )*
+
+  parameter ::= identifier ( '=' const_value )?
+	| '...'
+
+  class_declaration ::= 'class' identifier ( '.' identifier )* ( 'extends' identifier )? attribute_declaration? '{' member_declaration* '}'
+
+  member_declaration ::= attribute_declaration? ( 'static'? identifier '=' ( expression | table ) ';'? | '[' expression ']' '=' expression ';'? | function_declaration | 'constructor' '(' parameters? ')' _statement )
+
+  try_statement ::= 'try' _statement catch_statement
+
+  catch_statement ::= 'catch' '(' identifier ')' _statement
+
+  throw_statement ::= 'throw' expression ';'?
+
+  const_declaration ::= 'const' identifier '=' const_value ( ';' | '\n'  )
+
+  const_value ::= array
+	| table
+	| integer
+	| float
+	| string
+	| verbatim_string
+	| char
+	| bool
+	| null
+	| call_expression
+	| identifier
+	| global_variable
+
+  enum_declaration ::= 'enum' identifier attribute_declaration? '{' identifier ( '=' const_value )? ( ',' identifier ( '=' const_value )? )* '}' ';'?
+
+  attribute_declaration ::= '</' ( identifier ):left ( '=' ):operator ( const_value ):right ( ',' ( identifier ):left ( '=' ):operator ( const_value ):right )* '/>'
+
+  expression ::= delete_expression
+	| clone_expression
+	| array
+	| assignment_expression
+	| update_expression
+	| resume_expression
+	| primary_expression
+
+  primary_expression ::= unary_expression | binary_expression | ternary_expression | anonymous_function | deref_expression | index_expression | call_expression | lambda_expression | parenthesized_expression | integer | float | string | verbatim_string | char | bool | null | identifier | global_variable
+
+  unary_expression ::=  <13(  ( '-' | '~' | '!' | 'typeof' | '++' | '--' ):operator ( expression | table ):operand ';'? | ( expression ):operand ( '++' | '--' ):operator ';'? )
+
+  binary_expression ::=  <11(  ( expression ):left ( '+' ):operator ( expression ):right ';'? )
+	|  <11(  ( expression ):left ( '-' ):operator ( expression ):right ';'? )
+	|  <12(  ( expression ):left ( '*' ):operator ( expression ):right ';'? )
+	|  <12(  ( expression ):left ( '/' ):operator ( expression ):right ';'? )
+	|  <12(  ( expression ):left ( '%' ):operator ( expression ):right ';'? )
+	|  <3(  ( expression ):left ( '||' ):operator ( expression ):right ';'? )
+	|  <4(  ( expression ):left ( '&&' ):operator ( expression ):right ';'? )
+	|  <4(  ( expression ):left ( 'in' ):operator ( expression ):right ';'? )
+	|  <5(  ( expression ):left ( '|' ):operator ( expression ):right ';'? )
+	|  <6(  ( expression ):left ( '^' ):operator ( expression ):right ';'? )
+	|  <7(  ( expression ):left ( '&' ):operator ( expression ):right ';'? )
+	|  <8(  ( expression ):left ( '==' ):operator ( expression ):right ';'? )
+	|  <8(  ( expression ):left ( '!=' ):operator ( expression ):right ';'? )
+	|  <9(  ( expression ):left ( '<=>' ):operator ( expression ):right ';'? )
+	|  <9(  ( expression ):left ( '>' ):operator ( expression ):right ';'? )
+	|  <9(  ( expression ):left ( '>=' ):operator ( expression ):right ';'? )
+	|  <9(  ( expression ):left ( '<=' ):operator ( expression ):right ';'? )
+	|  <9(  ( expression ):left ( '<' ):operator ( expression ):right ';'? )
+	|  <9(  ( expression ):left ( 'instanceof' ):operator ( expression ):right ';'? )
+	|  <10(  ( expression ):left ( '<<' ):operator ( expression ):right ';'? )
+	|  <10(  ( expression ):left ( '>>' ):operator ( expression ):right ';'? )
+	|  <10(  ( expression ):left ( '>>>' ):operator ( expression ):right ';'? )
+
+  ternary_expression ::=  >2(  ( expression ):condition '?' ( expression | table ):consequence ':' ( expression | table ):alternative )
+
+  assignment_expression ::=  >1(  ( expression ):left ( '=' ):operator ( expression | table ):right )
+
+  update_expression ::=  >1(  ( expression ):left ( '<-' | '+=' | '-=' | '*=' | '/=' | '%=' ):operator ( expression | table ):right )
+
+  table ::= '{' table_slots? '}' ( '.' expression )?
+
+  table_slots ::= table_slot ( ','? table_slot )* ','?
+
+  table_slot ::= identifier '=' ( expression | table )
+	| '[' expression ']' '=' ( expression | table )
+	| expression ':' ( expression | table )
+	| function_declaration
+
+  delete_expression ::= 'delete' expression ( ';' | '\n'  )
+
+  var_statement ::= 'var' identifier '=' expression
+
+  deref_expression ::=  15(  expression '.' identifier )
+
+  index_expression ::=  <15(  ( expression ):object '[' ( expression ):index ']' )
+
+  call_expression ::=  <14(  ( ( expression ):function | 'rawcall' ) '(' call_args? ')' )
+
+  call_args ::= ( expression | table ) ( ',' ( expression | table ) )*
+
+  anonymous_function ::= 'function' '(' parameters? ')' _statement
+
+  lambda_expression ::= '@' '(' parameters? ')' expression
+
+  parenthesized_expression ::=  -1(  '(' expression ')' )
+
+  clone_expression ::= 'clone' expression
+
+  array ::= '[' ( expression ( ',' expression )* )? ','? ']'
+
+  identifier ::= /[a-zA-Z_][a-zA-Z0-9_]*/
+
+  global_variable ::= '::' identifier
+
+  integer ::= @( /0/ | /-?[1-9][0-9]*/ | /0[xX][0-9A-Fa-f]+/ | /'''[.]+'''/ | /0[0-7]+/ )
+
+  float ::= @( /-?[0-9]+\.[0-9]+/ | /[0-9]+\.[eE][+-]?[0-9]+/ )
+
+  string ::= '"'  ( string_content | _escape_sequence )* '"'
+
+  string_content ::= !(  1(  /[^"\\]+/ )  )
+
+  char ::= "'"  ( escape_sequence | /[^\\']/ ) "'"
+	| "'#'"
+
+  _escape_sequence ::=  2(  !( '\\'  /[^abfnrtvxu'\"\\\?]/ ) )
+	|  1(  escape_sequence )
+
+  escape_sequence ::= !( '\\'  ( /[^xu0-7]/ | /[0-7]{1,3}/ | /x[0-9a-fA-F]{2}/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F]+\}/ ) )
+
+  bool ::= 'true'
+	| 'false'
+
+  null ::= 'null'
+
+  comment ::= @( '#' /.*/ | '//' /(\\(.|\r?\n)|[^\\\n])*/ | '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/' )

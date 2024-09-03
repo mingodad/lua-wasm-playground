@@ -1,0 +1,502 @@
+; From tree-sitter-gleam/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	quoted_content
+	}
+
+extras ::= {
+	/\r?\n/
+	/\s/
+	module_comment
+	statement_comment
+	comment
+	}
+
+supertypes ::= {
+	}
+
+inline ::= {
+	}
+
+conflicts ::= {
+	{ _maybe_record_expression _maybe_tuple_expression }
+	{ _maybe_record_expression _maybe_tuple_expression remote_constructor_name }
+	{ case_subjects }
+	{ source_file }
+	{ _constant_value _case_clause_guard_unit }
+	{ integer }
+	}
+
+rules:
+
+  source_file ::= ( target_group | _module_statement | _statement_seq )*
+
+  _module_statement ::= import
+	| constant
+	| external_type
+	| external_function
+	| function
+	| type_definition
+	| type_alias
+	| attribute
+
+  module_comment ::= @( '////' /.*/ )
+
+  statement_comment ::= @( '///' /.*/ )
+
+  comment ::= @( '//' /.*/ )
+
+  target_group ::= 'if' ( target ):target '{' _module_statement* '}'
+
+  target ::= 'erlang'
+	| 'javascript'
+
+  attribute ::= '@' ( identifier ):name ( _attribute_arguments -> "arguments" )?:arguments
+
+  _attribute_arguments ::= '(' attribute_value ( ',' attribute_value )* ','? ')'
+
+  attribute_value ::= _constant_value
+	| ( label ):label ':' ( _constant_value ):value
+
+  import ::= 'import' ( module ):module ( '.' ( unqualified_imports ):imports )? ( 'as' ( identifier | discard ):alias )?
+
+  module ::= _name ( '/' _name )*
+
+  unqualified_imports ::= '{' ( unqualified_import ( ',' unqualified_import )* ','? )? '}'
+
+  unqualified_import ::= ( identifier ):name ( 'as' ( identifier ):alias )?
+	| 'type'? ( type_identifier ):name ( 'as' ( type_identifier ):alias )?
+
+  constant ::= visibility_modifier? 'const' ( identifier ):name _constant_type_annotation? '=' ( _constant_value ):value
+
+  _constant_value ::= string
+	| float
+	| integer
+	| constant_tuple -> "tuple"
+	| constant_list -> "list"
+	| _constant_bit_string -> "bit_string"
+	| constant_record -> "record"
+	| identifier
+	| constant_field_access -> "field_access"
+
+  constant_tuple ::= '#' '(' ( _constant_value ( ',' _constant_value )* ','? )? ')'
+
+  constant_list ::= '[' ( _constant_value ( ',' _constant_value )* ','? )? ']'
+
+  _constant_bit_string ::= '<<' ( constant_bit_string_segment -> "bit_string_segment" ( ',' constant_bit_string_segment -> "bit_string_segment" )* ','? )? '>>'
+
+  constant_bit_string_segment ::= ( _constant_value ):value ( ':' constant_bit_string_segment_options -> "bit_string_segment_options" )?:options
+
+  constant_bit_string_segment_options ::= _constant_bit_string_segment_option ( '-' _constant_bit_string_segment_option )* '-'?
+
+  _constant_bit_string_segment_option ::= _constant_bit_string_named_segment_option
+	| integer
+
+  _constant_bit_string_named_segment_option ::= ( _bit_string_segment_option | _constant_bit_string_segment_option_size ) -> "bit_string_segment_option"
+
+  _constant_bit_string_segment_option_size ::= 'size' '(' integer ')'
+
+  constant_record ::= ( constructor_name | remote_constructor_name ):name ( constant_record_arguments -> "arguments" )?:arguments
+
+  constant_record_arguments ::= '(' ( constant_record_argument -> "argument" ( ',' constant_record_argument -> "argument" )* ','? )? ')'
+
+  constant_record_argument ::= ( ( label ):label ':' )? ( _constant_value ):value
+	| ( label ):label ':'
+
+  constant_field_access ::= ( identifier ):record '.' ( label ):field
+
+  _constant_type ::= type_hole
+	| constant_tuple_type -> "tuple_type"
+	| constant_function_type -> "function_type"
+	| constant_type -> "type"
+
+  _constant_type_annotation ::= ':' ( _constant_type ):type
+
+  constant_tuple_type ::= '#' '(' ( _constant_type ( ',' _constant_type )* ','? )? ')'
+
+  constant_function_type ::= 'fn' ( constant_function_parameter_types -> "function_parameter_types" )?:parameter_types '->' ( _constant_type ):return_type
+
+  constant_function_parameter_types ::= '(' ( _constant_type ( ',' _constant_type )* ','? )? ')'
+
+  constant_type ::= ( type_identifier | remote_type_identifier ):name ( constant_type_arguments -> "type_arguments" )?:arguments
+
+  constant_type_arguments ::= '(' ( constant_type_argument -> "type_argument" ( ',' constant_type_argument -> "type_argument" )* ','? )? ')'
+
+  constant_type_argument ::= _constant_type
+
+  external_type ::= visibility_modifier? 'external'? 'type' type_name
+
+  external_function ::= visibility_modifier? 'external' 'fn' ( identifier ):name ( external_function_parameters -> "function_parameters" ):parameters '->' ( _type ):return_type '=' ( external_function_body ):body
+
+  external_function_parameters ::= '(' ( external_function_parameter -> "function_parameter" ( ',' external_function_parameter -> "function_parameter" )* ','? )? ')'
+
+  external_function_parameter ::= ( ( identifier ):name ':' )? ( _type ):type
+
+  external_function_body ::= string string
+
+  function ::= visibility_modifier? 'fn' ( identifier ):name ( function_parameters ):parameters ( '->' ( _type ):return_type )? ( '{' ( _statement_seq -> "function_body" )?:body '}' )?
+
+  function_parameters ::= '(' ( function_parameter ( ',' function_parameter )* ','? )? ')'
+
+  function_parameter ::= ( _labeled_discard_param | _discard_param | _labeled_name_param | _name_param ) _type_annotation?
+
+  _labeled_discard_param ::= ( label ):label ( discard ):name
+
+  _discard_param ::= ( discard ):name
+
+  _labeled_name_param ::= ( label ):label ( identifier ):name
+
+  _name_param ::= ( identifier ):name
+
+  _statement_seq ::= _statement+
+
+  _statement ::= _expression
+	| let
+	| let_assert
+	| use
+
+  _expression ::= _expression_unit
+	| binary_expression
+
+  binary_expression ::=  <1(  ( _expression ):left ( '||' ):operator ( _expression ):right )
+	|  <2(  ( _expression ):left ( '&&' ):operator ( _expression ):right )
+	|  <3(  ( _expression ):left ( '==' ):operator ( _expression ):right )
+	|  <3(  ( _expression ):left ( '!=' ):operator ( _expression ):right )
+	|  <4(  ( _expression ):left ( '<' ):operator ( _expression ):right )
+	|  <4(  ( _expression ):left ( '<=' ):operator ( _expression ):right )
+	|  <4(  ( _expression ):left ( '<.' ):operator ( _expression ):right )
+	|  <4(  ( _expression ):left ( '<=.' ):operator ( _expression ):right )
+	|  <4(  ( _expression ):left ( '>' ):operator ( _expression ):right )
+	|  <4(  ( _expression ):left ( '>=' ):operator ( _expression ):right )
+	|  <4(  ( _expression ):left ( '>.' ):operator ( _expression ):right )
+	|  <4(  ( _expression ):left ( '>=.' ):operator ( _expression ):right )
+	|  <5(  ( _expression ):left ( '|>' ):operator ( _expression ):right )
+	|  <6(  ( _expression ):left ( '+' ):operator ( _expression ):right )
+	|  <6(  ( _expression ):left ( '+.' ):operator ( _expression ):right )
+	|  <6(  ( _expression ):left ( '-' ):operator ( _expression ):right )
+	|  <6(  ( _expression ):left ( '-.' ):operator ( _expression ):right )
+	|  <7(  ( _expression ):left ( '*' ):operator ( _expression ):right )
+	|  <7(  ( _expression ):left ( '*.' ):operator ( _expression ):right )
+	|  <7(  ( _expression ):left ( '/' ):operator ( _expression ):right )
+	|  <7(  ( _expression ):left ( '/.' ):operator ( _expression ):right )
+	|  <7(  ( _expression ):left ( '%' ):operator ( _expression ):right )
+	|  <7(  ( _expression ):left ( '<>' ):operator ( _expression ):right )
+
+  _expression_unit ::= string
+	| integer
+	| float
+	| record
+	| identifier
+	| todo
+	| panic
+	| tuple
+	| list
+	| _expression_bit_string -> "bit_string"
+	| anonymous_function
+	| block
+	| case
+	| assert
+	| boolean_negation
+	| integer_negation
+	| record_update
+	| tuple_access
+	| field_access
+	| function_call
+
+  record ::= ( constructor_name | remote_constructor_name ):name ( arguments )?:arguments
+
+  todo ::= 'todo' ( '(' ( string ):message ')' | 'as' ( _expression ):message )?
+
+  panic ::= 'panic' ( '(' ( string ):message ')' | 'as' ( _expression ):message )?
+
+  tuple ::= '#' '(' ( _expression ( ',' _expression )* ','? )? ')'
+
+  list ::= '[' ( _expression ( ',' _expression )*? ','? ( '..' ( _expression ):spread )? )? ']'
+
+  _expression_bit_string ::= '<<' ( expression_bit_string_segment -> "bit_string_segment" ( ',' expression_bit_string_segment -> "bit_string_segment" )* ','? )? '>>'
+
+  expression_bit_string_segment ::= ( _expression_unit ):value ( ':' expression_bit_string_segment_options -> "bit_string_segment_options" )?:options
+
+  expression_bit_string_segment_options ::= _expression_bit_string_segment_option ( '-' _expression_bit_string_segment_option )* '-'?
+
+  _expression_bit_string_segment_option ::= _expression_bit_string_named_segment_option
+	| integer
+
+  _expression_bit_string_named_segment_option ::= ( _bit_string_segment_option | _expression_bit_string_segment_option_size ) -> "bit_string_segment_option"
+
+  _expression_bit_string_segment_option_size ::= 'size' '(' _expression ')'
+
+  anonymous_function ::= 'fn' ( anonymous_function_parameters -> "function_parameters" ):parameters ( '->' ( _type ):return_type )? '{' ( _statement_seq -> "function_body" ):body '}'
+
+  anonymous_function_parameters ::= '(' ( anonymous_function_parameter -> "function_parameter" ( ',' anonymous_function_parameter -> "function_parameter" )* ','? )? ')'
+
+  anonymous_function_parameter ::= ( _discard_param | _name_param ) _type_annotation?
+
+  block ::= '{' _statement_seq '}'
+
+  case ::= 'case' ( case_subjects ):subjects '{' ( case_clauses )?:clauses '}'
+
+  case_subjects ::= _expression ( ',' _expression )* ','?
+
+  case_clauses ::= case_clause+
+
+  case_clause ::= ( case_clause_patterns ):patterns ( case_clause_guard )?:guard '->' ( _expression ):value
+
+  case_clause_patterns ::= case_clause_pattern ( '|' case_clause_pattern )* '|'?
+
+  case_clause_pattern ::= _pattern ( ',' _pattern )* ','?
+
+  case_clause_guard ::= 'if' _case_clause_guard_expression
+
+  _case_clause_guard_expression ::= _case_clause_guard_unit
+	| _case_clause_guard_binary_expression -> "binary_expression"
+	| boolean_negation
+
+  _case_clause_guard_binary_expression ::=  <1(  ( _case_clause_guard_expression ):left ( '||' ):operator ( _case_clause_guard_expression ):right )
+	|  <2(  ( _case_clause_guard_expression ):left ( '&&' ):operator ( _case_clause_guard_expression ):right )
+	|  <3(  ( _case_clause_guard_expression ):left ( '==' ):operator ( _case_clause_guard_expression ):right )
+	|  <3(  ( _case_clause_guard_expression ):left ( '!=' ):operator ( _case_clause_guard_expression ):right )
+	|  <4(  ( _case_clause_guard_expression ):left ( '<' ):operator ( _case_clause_guard_expression ):right )
+	|  <4(  ( _case_clause_guard_expression ):left ( '<=' ):operator ( _case_clause_guard_expression ):right )
+	|  <4(  ( _case_clause_guard_expression ):left ( '<.' ):operator ( _case_clause_guard_expression ):right )
+	|  <4(  ( _case_clause_guard_expression ):left ( '<=.' ):operator ( _case_clause_guard_expression ):right )
+	|  <4(  ( _case_clause_guard_expression ):left ( '>' ):operator ( _case_clause_guard_expression ):right )
+	|  <4(  ( _case_clause_guard_expression ):left ( '>=' ):operator ( _case_clause_guard_expression ):right )
+	|  <4(  ( _case_clause_guard_expression ):left ( '>.' ):operator ( _case_clause_guard_expression ):right )
+	|  <4(  ( _case_clause_guard_expression ):left ( '>=.' ):operator ( _case_clause_guard_expression ):right )
+	|  <5(  ( _case_clause_guard_expression ):left ( '+' ):operator ( _case_clause_guard_expression ):right )
+	|  <5(  ( _case_clause_guard_expression ):left ( '+.' ):operator ( _case_clause_guard_expression ):right )
+	|  <5(  ( _case_clause_guard_expression ):left ( '-' ):operator ( _case_clause_guard_expression ):right )
+	|  <5(  ( _case_clause_guard_expression ):left ( '-.' ):operator ( _case_clause_guard_expression ):right )
+	|  <6(  ( _case_clause_guard_expression ):left ( '*' ):operator ( _case_clause_guard_expression ):right )
+	|  <6(  ( _case_clause_guard_expression ):left ( '*.' ):operator ( _case_clause_guard_expression ):right )
+	|  <6(  ( _case_clause_guard_expression ):left ( '/' ):operator ( _case_clause_guard_expression ):right )
+	|  <6(  ( _case_clause_guard_expression ):left ( '/.' ):operator ( _case_clause_guard_expression ):right )
+	|  <6(  ( _case_clause_guard_expression ):left ( '%' ):operator ( _case_clause_guard_expression ):right )
+
+  _case_clause_guard_unit ::= identifier
+	|  1(  _case_clause_tuple_access -> "tuple_access" )
+	| '{' _case_clause_guard_expression '}'
+	| _constant_value
+
+  _case_clause_tuple_access ::= ( identifier ):tuple '.' ( integer ):index
+
+  let_assert ::= 'let' 'assert' _assignment
+
+  let ::= 'let' _assignment
+
+  use ::= 'use' ( use_assignments )?:assignments '<-' ( _expression ):value
+
+  use_assignments ::= use_assignment ( ',' use_assignment )* ','?
+
+  use_assignment ::= _pattern _type_annotation?
+
+  assert ::= 'assert' _assignment
+
+  boolean_negation ::= '!' _expression_unit
+
+  integer_negation ::= '-' _expression_unit
+
+  _assignment ::= ( _pattern ):pattern _type_annotation? '=' ( _expression ):value
+
+  record_update ::= ( constructor_name | remote_constructor_name ):constructor '(' '..' ( _expression ):spread ',' ( record_update_arguments ):arguments ')'
+
+  record_update_arguments ::= record_update_argument ( ',' record_update_argument )* ','?
+
+  record_update_argument ::= ( label ):label ':' ( _expression ):value
+	| ( label ):label ':'
+
+  _maybe_tuple_expression ::= identifier
+	| function_call
+	| tuple
+	| block
+	| case
+	| field_access
+	| tuple_access
+
+  tuple_access ::= ( _maybe_tuple_expression ):tuple '.' ( integer ):index
+
+  _maybe_record_expression ::= record
+	| identifier
+	| function_call
+	| block
+	| case
+	| record_update
+	| field_access
+	| tuple_access
+
+  field_access ::= ( _maybe_record_expression ):record '.' ( label ):field
+
+  _maybe_function_expression ::= identifier
+	| anonymous_function
+	| block
+	| case
+	| tuple_access
+	| field_access
+	| function_call
+
+  arguments ::= '(' ( argument ( ',' argument )* ','? )? ')'
+
+  argument ::= ( ( label ):label ':' )? ( hole | _expression ):value
+	| ( label ):label ':'
+
+  hole ::= _discard_name
+
+  function_call ::= ( _maybe_function_expression ):function ( arguments ):arguments
+
+  _pattern_expression ::= identifier
+	| discard
+	| record_pattern
+	| string
+	| integer
+	| float
+	| tuple_pattern
+	| _pattern_bit_string -> "bit_string_pattern"
+	| list_pattern
+	| _pattern_binary_expression -> "binary_expression"
+
+  _pattern_binary_expression ::=  <1(  ( _pattern_expression ):left ( '<>' ):operator ( _pattern_expression ):right )
+	|  <1(  ( string ):left ( 'as' ):operator ( identifier ):right )
+
+  _pattern ::= _pattern_expression ( 'as' identifier )?:assign
+
+  record_pattern ::= ( constructor_name | remote_constructor_name ):name ( record_pattern_arguments )?:arguments
+
+  record_pattern_arguments ::= '(' ( record_pattern_argument ( ',' record_pattern_argument )* ','? )? pattern_spread? ')'
+
+  record_pattern_argument ::= ( ( label ):label ':' )? ( _pattern ):pattern
+	| ( label ):label ':'
+
+  pattern_spread ::= '..' ','?
+
+  tuple_pattern ::= '#' '(' ( _pattern ( ',' _pattern )* ','? )? ')'
+
+  _pattern_bit_string ::= '<<' ( pattern_bit_string_segment -> "bit_string_segment" ( ',' pattern_bit_string_segment -> "bit_string_segment" )* ','? )? '>>'
+
+  pattern_bit_string_segment ::= ( _pattern ):value ( ':' pattern_bit_string_segment_options -> "bit_string_segment_options" )?:options
+
+  pattern_bit_string_segment_options ::= _pattern_bit_string_segment_option ( '-' _pattern_bit_string_segment_option )* '-'?
+
+  _pattern_bit_string_segment_option ::= _pattern_bit_string_named_segment_option
+	| integer
+
+  _pattern_bit_string_named_segment_option ::= ( _bit_string_segment_option | _pattern_bit_string_segment_option_size ) -> "bit_string_segment_option"
+
+  _pattern_bit_string_segment_option_size ::= 'size' '(' _pattern_bit_string_segment_argument ')'
+
+  _pattern_bit_string_segment_argument ::= identifier
+	| integer
+
+  list_pattern ::= '[' ( _pattern ( ',' _pattern )* ','? )? list_pattern_tail? ']'
+
+  list_pattern_tail ::= '..' ( identifier | discard )?
+
+  visibility_modifier ::= 'pub'
+
+  opacity_modifier ::= 'opaque'
+
+  type_definition ::= visibility_modifier? opacity_modifier? 'type' type_name '{' data_constructors '}'
+
+  data_constructors ::= data_constructor+
+
+  data_constructor ::= ( constructor_name ):name ( data_constructor_arguments )?:arguments
+
+  data_constructor_arguments ::= '(' ( data_constructor_argument ( ',' data_constructor_argument )* ','? )? ')'
+
+  data_constructor_argument ::= ( ( label ):label ':' )? ( _type ):value
+
+  type_alias ::= visibility_modifier? opacity_modifier? 'type' type_name '=' _type
+
+  string ::= '"'  ( escape_sequence | quoted_content )* !( '"'  )
+
+  escape_sequence ::= !( /\\[efnrt\"\\]/ )
+	| !( /\\u\{[0-9a-fA-F]{1,6}\}/ )
+
+  float ::= /-?[0-9_]+\.[0-9_]*(e-?[0-9_]+)?/
+
+  integer ::= '-'? ( _hex | _decimal | _octal | _binary )
+
+  _hex ::= /0[xX][0-9a-fA-F_]+/
+
+  _decimal ::= /[0-9][0-9_]*/
+
+  _octal ::= /0[oO][0-7_]+/
+
+  _binary ::= /0[bB][0-1_]+/
+
+  _bit_string_segment_option ::= 'binary'
+	| 'bytes'
+	| 'int'
+	| 'float'
+	| 'bit_string'
+	| 'bits'
+	| 'utf8'
+	| 'utf16'
+	| 'utf32'
+	| 'utf8_codepoint'
+	| 'utf16_codepoint'
+	| 'utf32_codepoint'
+	| 'signed'
+	| 'unsigned'
+	| 'big'
+	| 'little'
+	| 'native'
+	| 'unit' '(' integer ')'
+
+  _type ::= type_hole
+	| tuple_type
+	| function_type
+	| type
+	| type_var
+
+  _type_annotation ::= ':' ( _type ):type
+
+  type_hole ::= _discard_name
+
+  tuple_type ::= '#' '(' ( _type ( ',' _type )* ','? )? ')'
+
+  function_type ::= 'fn' ( function_parameter_types )?:parameter_types '->' ( _type ):return_type
+
+  function_parameter_types ::= '(' ( _type ( ',' _type )* ','? )? ')'
+
+  type ::= ( type_identifier | remote_type_identifier ):name ( type_arguments )?:arguments
+
+  type_arguments ::= '(' ( type_argument ( ',' type_argument )* ','? )? ')'
+
+  type_argument ::= _type
+
+  type_var ::= _name
+
+  type_name ::= ( type_identifier | remote_type_identifier ):name ( type_parameters )?:parameters
+
+  type_parameters ::= '(' ( type_parameter ( ',' type_parameter )* ','? )? ')'
+
+  type_parameter ::= _name
+
+  identifier ::= _name
+
+  label ::= _name
+
+  discard ::= _discard_name
+
+  type_identifier ::= _upname
+
+  remote_type_identifier ::= ( identifier ):module '.' ( type_identifier ):name
+
+  constructor_name ::= _upname
+
+  remote_constructor_name ::= ( identifier ):module '.' ( constructor_name ):name
+
+  _discard_name ::= /_[_0-9a-z]*/
+
+  _name ::= /[_a-z][_0-9a-z]*/
+
+  _upname ::= /[A-Z][0-9a-zA-Z]*/
+

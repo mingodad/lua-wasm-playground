@@ -1,0 +1,245 @@
+; From tree-sitter-awk/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	concatenating_space
+	_if_else_separator
+	_no_space
+	}
+
+extras ::= {
+	/[\s\t]/
+	??:STRING
+	??:STRING
+	}
+
+precedences ::= {
+	{ getline_file getline_input grouping field_ref func_call update_exp 'binary_exponent' 'binary_times' 'binary_plus' string_concat unary_exp 'binary_relation' 'binary_match' _binary_in 'binary_and' 'binary_or' ternary_exp exp_list piped_io_exp range_pattern _statement }
+	{ func_call _exp }
+	{ update_exp _exp }
+	{ if_statement _statement_separated }
+	{ else_clause _statement_separated }
+	{ print_statement printf_statement grouping }
+	{ _print_args grouping piped_io_exp 'binary_relation' }
+	{ for_in_statement _exp }
+	{ _exp string_concat assignment_exp }
+	{ _print_args _binary_in }
+	}
+
+supertypes ::= {
+	}
+
+inline ::= {
+	}
+
+conflicts ::= {
+	}
+
+word ::= identifier
+
+rules:
+
+  program ::= ( rule | func_def | directive | comment )*
+
+  rule ::= pattern block? | pattern? block
+
+  pattern ::= _exp | range_pattern | _special_pattern
+
+  range_pattern ::= ( _exp ):start ',' ( _exp ):stop
+
+  _special_pattern ::= 'BEGIN'
+	| 'END'
+	| 'BEGINFILE'
+	| 'ENDFILE'
+
+  directive ::= ( '@include' | '@load' | '@namespace' ) string
+
+  _statement ::= _statement_separated _statement | _statement_separated | _control_statement | _io_statement | _exp
+
+  _statement_separated ::= _statement ( ';' | '\n'  | '\r\n' )
+
+  _control_statement ::= if_statement
+	| while_statement
+	| do_while_statement
+	| for_statement
+	| for_in_statement
+	| break_statement
+	| continue_statement
+	| delete_statement
+	| exit_statement
+	| return_statement
+	| switch_statement
+
+  if_statement ::= 'if' ( '(' _exp ')' ):condition comment* ( block | _statement | ';' ) ( _if_else_separator comment* else_clause )?
+
+  else_clause ::= 'else' ( block | _statement )
+
+  while_statement ::= 'while' ( '(' _exp ')' ):condition comment* ( block | _statement | ';' )
+
+  do_while_statement ::= 'do' comment* ( block | _statement ) 'while' ( '(' _exp ')' ):condition
+
+  for_statement ::= 'for' '(' ( _exp )?:initializer ';' ( _exp )?:condition ';' ( _exp )?:advancement ')' comment* ( block | _statement | ';' )
+
+  for_in_statement ::= 'for' '(' ( identifier | ns_qualified_name ):left 'in' ( identifier | array_ref | ns_qualified_name ):right ')' comment* ( block | _statement | ';' )
+
+  break_statement ::= 'break'
+
+  continue_statement ::= 'continue'
+
+  delete_statement ::= 'delete' ( identifier | array_ref | ns_qualified_name )
+
+  exit_statement ::= 'exit' _exp?
+
+  return_statement ::= 'return' _exp?
+
+  switch_statement ::= 'switch' '(' _exp ')' comment* switch_body
+
+  switch_body ::= '{' ( switch_case | switch_default | comment )* '}'
+
+  switch_case ::= 'case' ( _primitive | regex ):value ':' comment* _statement?
+
+  switch_default ::= 'default' ':' comment* _statement?
+
+  _io_statement ::= next_statement
+	| nextfile_statement
+	| print_statement
+	| printf_statement
+	| redirected_io_statement
+	| piped_io_statement
+
+  _getline_exp ::= getline_input
+	| getline_file
+
+  getline_input ::= 'getline' ( identifier | ns_qualified_name | array_ref )?
+
+  getline_file ::= 'getline' ( identifier | ns_qualified_name )? '<' ( _exp ):filename
+
+  next_statement ::= 'next'
+
+  nextfile_statement ::= 'nextfile'
+
+  _print_args ::= _exp | exp_list
+
+  print_statement ::= 'print' ( _print_args | !( '(' ) _print_args ')' )?
+
+  printf_statement ::= 'printf' ( _print_args | '(' _print_args ')' )
+
+  redirected_io_statement ::= ( print_statement | printf_statement ) ( '>' | '>>' ) ( _exp ):filename
+
+  piped_io_statement ::= ( print_statement | printf_statement ) ( '|' | '|&' ) ( _exp ):command
+
+  block ::= '{' _block_content* '}'
+
+  _block_content ::= block | _statement | comment
+
+  _exp ::= identifier
+	| ns_qualified_name
+	| ternary_exp
+	| binary_exp
+	| unary_exp
+	| update_exp
+	| assignment_exp
+	| field_ref
+	| func_call
+	| indirect_func_call
+	| _primitive
+	| array_ref
+	| regex
+	| regex_constant
+	| grouping
+	| piped_io_exp
+	| string_concat
+	| _getline_exp
+
+  ternary_exp ::= ( _exp ):condition '?' comment? ( _exp ):consequence ':' comment? ( _exp ):alternative
+
+  binary_exp ::=  <binary_exponent(  ( _exp ):left ( '^' ):operator ( _exp ):right )
+	|  <binary_exponent(  ( _exp ):left ( '**' ):operator ( _exp ):right )
+	|  <binary_times(  ( _exp ):left ( '*' ):operator ( _exp ):right )
+	|  <binary_times(  ( _exp ):left ( '/' ):operator ( _exp ):right )
+	|  <binary_times(  ( _exp ):left ( '%' ):operator ( _exp ):right )
+	|  <binary_plus(  ( _exp ):left ( '+' ):operator ( _exp ):right )
+	|  <binary_plus(  ( _exp ):left ( '-' ):operator ( _exp ):right )
+	|  <binary_relation(  ( _exp ):left ( '<' ):operator ( _exp ):right )
+	|  <binary_relation(  ( _exp ):left ( '>' ):operator ( _exp ):right )
+	|  <binary_relation(  ( _exp ):left ( '<=' ):operator ( _exp ):right )
+	|  <binary_relation(  ( _exp ):left ( '>=' ):operator ( _exp ):right )
+	|  <binary_relation(  ( _exp ):left ( '==' ):operator ( _exp ):right )
+	|  <binary_relation(  ( _exp ):left ( '!=' ):operator ( _exp ):right )
+	|  <binary_match(  ( _exp ):left ( '~' ):operator ( _exp ):right )
+	|  <binary_match(  ( _exp ):left ( '!~' ):operator ( _exp ):right )
+	|  <binary_and(  ( _exp ):left ( '&&' ):operator ( _exp ):right )
+	|  <binary_or(  ( _exp ):left ( '||' ):operator ( _exp ):right )
+	| _binary_in
+
+  _binary_in ::= ( '(' exp_list ')' | _exp ):left ( 'in' ):operator ( _exp ):right
+
+  unary_exp ::= ( '!' ):operator ( _exp ):argument
+	| ( '+' ):operator ( _exp ):argument
+	| ( '-' ):operator ( _exp ):argument
+
+  update_exp ::= ( identifier | field_ref | array_ref | ns_qualified_name ):argument ( '++' | '--' ):operator | ( '++' | '--' ):operator ( identifier | field_ref | array_ref | ns_qualified_name ):argument
+
+  assignment_exp ::= ( identifier | array_ref | field_ref | ns_qualified_name ):left ( '=' | '+=' | '-=' | '*=' | '/=' | '%=' | '^=' ) ( _exp ):right
+
+  piped_io_exp ::= ( _exp ):command ( '|' | '|&' ) getline_input
+
+  string_concat ::= ( identifier | ns_qualified_name | ternary_exp | binary_exp | unary_exp | field_ref | func_call | _primitive | array_ref | grouping | string_concat ):left concatenating_space ( identifier | ns_qualified_name | ternary_exp | binary_exp | unary_exp | field_ref | func_call | _primitive | array_ref | grouping | string_concat ):right
+
+  field_ref ::= '$' _exp
+
+  array_ref ::= ( identifier | array_ref | ns_qualified_name ) '[' ( _exp | exp_list ):index ']'
+
+  exp_list ::= ( _exp ',' )+ _exp
+
+  regex ::= '/' ( regex_pattern )?:pattern !( '/' ) ( regex_flags )?:flags
+
+  _regex_char ::= !( /[^/\\\[\n\r]/ )
+
+  _regex_char_escaped ::= !( '\\'  /./ )
+
+  _regex_char_class ::= !( '[' ) !( ':' ) ( 'alnum' | 'alpha' | 'blank' | 'cntrl' | 'digit' | 'graph' | 'lower' | 'print' | 'punct' | 'space' | 'upper' | 'xdigit' ) !( ':' ) !( ']' )
+
+  _regex_bracket_exp ::= !( '[' ) ( _regex_char_escaped | _regex_char | _regex_char_class )+ !( ']' )
+
+  regex_pattern ::= ( _regex_char | _regex_char_escaped | _regex_bracket_exp )+
+
+  regex_flags ::= !( /[a-z]+/ )
+
+  regex_constant ::= '@' regex
+
+  grouping ::= '(' _exp ')'
+
+  _primitive ::= number
+	| string
+
+  identifier ::= /[a-zA-Z_][a-zA-Z0-9_]*/
+
+  namespace ::= identifier -> "namespace"
+
+  ns_qualified_name ::= namespace !( '::' ) _no_space identifier
+
+  number ::= /[\d.]+/
+	| /[\d.]+e[\d.+-]+/
+
+  string ::= '"'  ( /[^"\\]+/ | escape_sequence )* '"'
+
+  escape_sequence ::= !( '\\'  ( '"'  | /[\\abfnrtv]/ | /x[0-9a-fA-F]{1,2}/ | /[0-7]{1,3}/ ) )
+
+  func_def ::= ( 'function' | 'func' ) ( identifier | ns_qualified_name ):name '(' param_list? ')' block
+
+  param_list ::= identifier ( ',' comment? identifier )*
+
+  func_call ::= ( identifier | ns_qualified_name ):name !( '(' ) args? ')'
+
+  indirect_func_call ::= '@' func_call
+
+  args ::= _exp ( ',' _exp )*
+
+  comment ::= '#' /.*/
