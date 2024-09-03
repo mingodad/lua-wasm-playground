@@ -1,0 +1,107 @@
+; From tree-sitter-regex/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	}
+
+extras ::= {
+	/\r?\n/
+	}
+
+supertypes ::= {
+	}
+
+inline ::= {
+	_character_escape
+	_class_atom
+	}
+
+conflicts ::= {
+	{ character_class class_range }
+	}
+
+rules:
+
+  pattern ::= alternation
+	| term
+
+  alternation ::= term? ( '|' term? )+
+
+  term ::= ( ( start_assertion | end_assertion | boundary_assertion | non_boundary_assertion | lookaround_assertion | pattern_character | character_class | any_character | decimal_escape | character_class_escape | _character_escape | backreference_escape | anonymous_capturing_group | named_capturing_group | non_capturing_group ) ( zero_or_more | one_or_more | optional | count_quantifier )? )+
+
+  any_character ::= '.'
+
+  start_assertion ::= '^'
+
+  end_assertion ::= '$'
+
+  boundary_assertion ::= '\b'
+
+  non_boundary_assertion ::= '\B'
+
+  lookaround_assertion ::= _lookahead_assertion
+	| _lookbehind_assertion
+
+  _lookahead_assertion ::= '(?' ( '=' | '!' ) pattern ')'
+
+  _lookbehind_assertion ::= '(?<' ( '=' | '!' ) pattern ')'
+
+  pattern_character ::= /[^\^\$\\\.\*\+\?\(\)\[\]\|\r?\n]/
+
+  character_class ::= '[' '^'? ( class_range | _class_atom )* ']'
+
+  class_range ::= _class_atom '-' _class_atom
+
+  _class_atom ::= '-' -> "class_character"
+	| class_character
+	| '\-' -> "identity_escape"
+	| character_class_escape
+	| _character_escape
+
+  class_character ::= /[^\\\]\-]/
+
+  anonymous_capturing_group ::= '(' pattern ')'
+
+  named_capturing_group ::= '(?<' group_name '>' pattern ')'
+
+  non_capturing_group ::= '(?:' pattern ')'
+
+  zero_or_more ::= '*' '?' -> "lazy"?
+
+  one_or_more ::= '+' '?' -> "lazy"?
+
+  optional ::= '?' '?' -> "lazy"?
+
+  count_quantifier ::= '{' decimal_digits ( ',' decimal_digits )? '}' '?' -> "lazy"?
+
+  backreference_escape ::= '\k' group_name
+
+  decimal_escape ::= /\\[1-9][0-9]*/
+
+  character_class_escape ::= /\\[dDsSwW]/
+	| /\\[pP]/ '{' unicode_property_value_expression '}'
+
+  unicode_property_value_expression ::= ( unicode_property -> "unicode_property_name" '=' )? unicode_property -> "unicode_property_value"
+
+  unicode_property ::= /[a-zA-Z_0-9]+/
+
+  _character_escape ::= control_escape
+	| control_letter_escape
+	| identity_escape
+
+  control_escape ::= /\\[bfnrtv0]/
+
+  control_letter_escape ::= /\\c[a-zA-Z]/
+
+  identity_escape ::= @( '\\'  /[^kdDsSpPwWbfnrtv0-9]/ )
+
+  group_name ::= /[A-Za-z0-9]+/
+
+  decimal_digits ::= /\d+/
+

@@ -84,6 +84,7 @@ const sampleList = [
 	["Tree-sitter-ebnf-generator-Ocaml", "tree-sitter-ebnf-generator.lua", "ocaml.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-PHP", "tree-sitter-ebnf-generator.lua", "php.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Python", "tree-sitter-ebnf-generator.lua", "python.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Regex", "tree-sitter-ebnf-generator.lua", "regex.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Ruby", "tree-sitter-ebnf-generator.lua", "ruby.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Rust", "tree-sitter-ebnf-generator.lua", "rust.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Scala", "tree-sitter-ebnf-generator.lua", "scala.ebnf", "ace/mode/text"],
