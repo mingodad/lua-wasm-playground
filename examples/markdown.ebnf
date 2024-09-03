@@ -1,0 +1,380 @@
+; From tree-sitter-markdown/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	_eof
+	_lka
+	_thm_brk_bgn
+	_thm_brk_end_mkr
+	_pgh_bgn_mkr
+	_pgh_end_mkr
+	_lnk_ref_def_end_mkr
+	_stx_bgn_1
+	_stx_bgn_2
+	_stx_end_mkr
+	_atx_bgn_1
+	_atx_bgn_2
+	_atx_bgn_3
+	_atx_bgn_4
+	_atx_bgn_5
+	_atx_bgn_6
+	_atx_end_mkr
+	_ind_cod_bgn_pfx
+	_ind_cod_bgn_mkr
+	_ind_cod_end_mkr
+	_fen_cod_ctn_bgn_mkr
+	_fen_cod_bgn
+	_fen_cod_end
+	_fen_cod_end_mkr
+	_htm_blk_scr_bgn_mkr
+	_htm_blk_scr_end
+	_htm_blk_scr_end_mkr
+	_htm_blk_cmt_bgn_mkr
+	_htm_blk_cmt_end
+	_htm_blk_cmt_end_mkr
+	_htm_blk_prc_bgn_mkr
+	_htm_blk_prc_end
+	_htm_blk_prc_end_mkr
+	_htm_blk_dcl_bgn_mkr
+	_htm_blk_dcl_end
+	_htm_blk_dcl_end_mkr
+	_htm_blk_cda_bgn_mkr
+	_htm_blk_cda_end
+	_htm_blk_cda_end_mkr
+	_htm_blk_div_bgn_mkr
+	_htm_blk_div_end_mkr
+	_htm_blk_cmp_bgn_mkr
+	_htm_blk_cmp_end_mkr
+	_bqt_bgn
+	_bqt_end_mkr
+	_lst_bgn_mkr
+	_lst_end_mkr
+	_lst_itm_bgn
+	_lst_itm_end_mkr
+	_lst_itm_cnt_bgn_mkr
+	_lst_itm_cnt_end_mkr
+	_tbl_hed_row_bgn_mkr
+	_tbl_dlm_row_bgn_mkr
+	_tbl_dat_row_bgn_mkr
+	_tbl_row_end_mkr
+	_bsl_esc
+	_chr_ref
+	_emp_bgn
+	_emp_end
+	_stg_bgn
+	_stg_end
+	_del_bgn
+	_del_end
+	_img_bgn
+	_lnk_bgn
+	_lnk_end
+	_lnk_ref_def_bgn
+	_lnk_ref_def_cln
+	_lnk_inl_bgn
+	_lnk_inl_end
+	_lnk_dst_bgn
+	_lnk_dst_end
+	_lnk_dst_bgn_mkr
+	_lnk_dst_end_mkr
+	_lnk_tit_bgn
+	_lnk_tit_end
+	_lnk_ref_bgn
+	_lnk_ref_end
+	_ext_www_aut_lnk_bgn_mkr
+	_ext_url_aut_lnk_bgn_mkr
+	_ext_eml_aut_lnk_bgn_mkr
+	_ext_aut_lnk_end_mkr
+	_uri_aut_lnk_bgn
+	_eml_aut_lnk_bgn
+	_aut_lnk_end
+	_cod_spn_bgn
+	_cod_spn_end
+	_htm_opn_tag_bgn
+	_htm_tag_end
+	_htm_cls_tag_bgn
+	_htm_slf_tag_end
+	_htm_dcl_bgn
+	_htm_atr_eql
+	_htm_atr_val_bgn
+	_htm_atr_val_end
+	_htm_atr_val_bgn_mkr
+	_htm_atr_val_end_mkr
+	_htm_cmt_bgn
+	_htm_cmt_end
+	_htm_prc_bgn
+	_htm_prc_end
+	_htm_cda_bgn
+	_htm_cda_end
+	_atx_end
+	_lst_chk_box
+	_tbl_col_sep
+	_tbl_col_aln
+	_fen_cod_inf_bgn_mkr
+	_fen_cod_inf_end_mkr
+	_hrd_lbk
+	_sft_lbk
+	_blk_lbk
+	_bnk_lbk
+	_lit_lbk
+	_wsp
+	_txt_frg
+	_wrd
+	_vtr_spc
+	}
+
+extras ::= {
+	_lka
+	_lit_lbk
+	_wsp
+	}
+
+supertypes ::= {
+	}
+
+inline ::= {
+	}
+
+conflicts ::= {
+	{ _chk_box_pgh_ctn _chk_box_lik_stx_ctn }
+	{ _fen_cod_ctn }
+	}
+
+rules:
+
+  document ::= ( _blk_nod | _bnk_lbk )* _eof
+
+  _blk_nod ::= _thm_brk
+	| _pgh
+	| _lnk_ref_def
+	| _stx
+	| _atx
+	| _ind_cod
+	| _fen_cod
+	| _htm_blk_scr
+	| _htm_blk_cmt
+	| _htm_blk_prc
+	| _htm_blk_dcl
+	| _htm_blk_cda
+	| _htm_blk_div
+	| _htm_blk_cmp
+	| _bqt
+	| _tig_lst
+	| _los_lst
+	| _tbl -> "table"
+
+  _thm_brk ::= _thm_brk_hed -> "thematic_break" _thm_brk_end_mkr
+
+  _thm_brk_hed ::= _thm_brk_bgn
+
+  _pgh ::= _pgh_hed -> "paragraph" _pgh_end_mkr
+
+  _pgh_hed ::= _pgh_bgn_mkr ( _inl_nod | _inl_lbk )*
+
+  _lnk_ref_def ::= _lnk_ref_def_hed -> "link_reference_definition" _lnk_ref_def_end_mkr
+
+  _lnk_ref_def_hed ::= _pgh_bgn_mkr _lnk_ref_def_bgn ( _txt -> "text" | _bsl_esc -> "backslash_escape" )* -> "link_label" _lnk_end _lnk_ref_def_cln _lnk_dst -> "link_destination" _lnk_tit -> "link_title"?
+
+  _stx ::= _stx_hed -> "setext_heading" _stx_end_mkr
+
+  _stx_bgn ::= _stx_bgn_1 -> "setext_h1_underline"
+	| _stx_bgn_2 -> "setext_h2_underline"
+
+  _stx_hed ::= _pgh_hed -> "heading_content" _pgh_end_mkr _stx_bgn
+
+  _atx ::= _atx_hed -> "atx_heading" _atx_end_mkr
+
+  _atx_bgn ::= _atx_bgn_1 -> "atx_h1_marker"
+	| _atx_bgn_2 -> "atx_h2_marker"
+	| _atx_bgn_3 -> "atx_h3_marker"
+	| _atx_bgn_4 -> "atx_h4_marker"
+	| _atx_bgn_5 -> "atx_h5_marker"
+	| _atx_bgn_6 -> "atx_h6_marker"
+
+  _atx_hed ::= _atx_bgn _inl_nod* -> "heading_content" _atx_end?
+
+  _ind_cod ::= _ind_cod_bgn_pfx _ind_cod_hed -> "indented_code_block" _ind_cod_end_mkr
+
+  _ind_cod_hed ::= _ind_cod_bgn_mkr ( _vtr_spc -> "virtual_space" | _txt -> "text" | _blk_lbk -> "line_break" )*
+
+  _fen_cod ::= _fen_cod_hed -> "fenced_code_block" _fen_cod_end_mkr
+
+  _fen_cod_hed ::= _fen_cod_bgn _fen_cod_inf? ( _blk_lbk _fen_cod_ctn -> "code_fence_content"? )? ( _blk_lbk _fen_cod_end )?
+
+  _fen_cod_inf ::= _fen_cod_inf_bgn_mkr ( _inl_txt )* -> "info_string" _fen_cod_inf_end_mkr
+
+  _fen_cod_ctn ::= _fen_cod_ctn_bgn_mkr ( _vtr_spc -> "virtual_space" | _txt -> "text" | _blk_lbk -> "line_break" )*
+
+  _htm_blk_scr ::= _htm_blk_scr_hed -> "html_block" _htm_blk_scr_end_mkr
+
+  _htm_blk_scr_hed ::= _htm_blk_scr_bgn_mkr ( _vtr_spc -> "virtual_space" | _txt -> "text" | _blk_lbk -> "line_break" )* _htm_blk_scr_end?
+
+  _htm_blk_cmt ::= _htm_blk_cmt_hed -> "html_block" _htm_blk_cmt_end_mkr
+
+  _htm_blk_cmt_hed ::= _htm_blk_cmt_bgn_mkr ( _vtr_spc -> "virtual_space" | _txt -> "text" | _blk_lbk -> "line_break" )* _htm_blk_cmt_end?
+
+  _htm_blk_prc ::= _htm_blk_prc_hed -> "html_block" _htm_blk_prc_end_mkr
+
+  _htm_blk_prc_hed ::= _htm_blk_prc_bgn_mkr ( _vtr_spc -> "virtual_space" | _txt -> "text" | _blk_lbk -> "line_break" )* _htm_blk_prc_end?
+
+  _htm_blk_dcl ::= _htm_blk_dcl_hed -> "html_block" _htm_blk_dcl_end_mkr
+
+  _htm_blk_dcl_hed ::= _htm_blk_dcl_bgn_mkr ( _vtr_spc -> "virtual_space" | _txt -> "text" | _blk_lbk -> "line_break" )* _htm_blk_dcl_end?
+
+  _htm_blk_cda ::= _htm_blk_cda_hed -> "html_block" _htm_blk_cda_end_mkr
+
+  _htm_blk_cda_hed ::= _htm_blk_cda_bgn_mkr ( _vtr_spc -> "virtual_space" | _txt -> "text" | _blk_lbk -> "line_break" )* _htm_blk_cda_end?
+
+  _htm_blk_div ::= _htm_blk_div_hed -> "html_block" _htm_blk_div_end_mkr
+
+  _htm_blk_div_hed ::= _htm_blk_div_bgn_mkr ( _vtr_spc -> "virtual_space" | _txt -> "text" | _blk_lbk -> "line_break" )*
+
+  _htm_blk_cmp ::= _htm_blk_cmp_hed -> "html_block" _htm_blk_cmp_end_mkr
+
+  _htm_blk_cmp_hed ::= _htm_blk_cmp_bgn_mkr ( _vtr_spc -> "virtual_space" | _txt -> "text" | _blk_lbk -> "line_break" )*
+
+  _bqt ::= _bqt_hed -> "block_quote" _bqt_end_mkr
+
+  _bqt_hed ::= _bqt_bgn ( _blk_nod | _bnk_lbk )*
+
+  _tig_lst ::= _tig_lst_hed -> "tight_list" _lst_end_mkr
+
+  _tig_lst_hed ::= _lst_bgn_mkr _tig_lst_itm*
+
+  _los_lst ::= _los_lst_hed -> "loose_list" _lst_end_mkr
+
+  _los_lst_hed ::= _lst_bgn_mkr _tig_lst_itm* ( _bnk_lbk | _los_lst_itm ) ( _tig_lst_itm | _los_lst_itm | _bnk_lbk )*
+
+  _tig_lst_itm ::= ( _tig_lst_itm_hed -> "list_item" | _tig_chk_box_lst_itm_hed -> "task_list_item" ) _lst_itm_cnt_end_mkr _lst_itm_end_mkr
+
+  _tig_lst_itm_hed ::= _lst_itm_bgn -> "list_marker" _lst_itm_cnt_bgn_mkr _chk_box_lik_stx? _blk_nod*
+
+  _tig_chk_box_lst_itm_hed ::= _lst_itm_bgn -> "list_marker" _lst_itm_cnt_bgn_mkr _chk_box_pgh _blk_nod*
+
+  _los_lst_itm ::= ( _los_lst_itm_hed -> "list_item" | _los_chk_box_lst_itm_hed -> "task_list_item" ) _lst_itm_cnt_end_mkr _lst_itm_end_mkr
+
+  _los_lst_itm_hed ::= _lst_itm_bgn -> "list_marker" _lst_itm_cnt_bgn_mkr _chk_box_lik_stx? _blk_nod* _bnk_lbk ( _bnk_lbk | _blk_nod )*
+
+  _los_chk_box_lst_itm_hed ::= _lst_itm_bgn -> "list_marker" _lst_itm_cnt_bgn_mkr _chk_box_pgh _blk_nod* _bnk_lbk ( _bnk_lbk | _blk_nod )*
+
+  _chk_box_pgh ::= _pgh_bgn_mkr _chk_box_pgh_ctn -> "paragraph" _pgh_end_mkr
+
+  _chk_box_pgh_ctn ::= _lst_chk_box -> "task_list_item_marker" ( _inl_nod | _inl_lbk )*
+
+  _chk_box_lik_stx ::= _chk_box_lik_stx_hed -> "setext_heading" _stx_end_mkr
+
+  _chk_box_lik_stx_hed ::= _pgh_bgn_mkr _chk_box_lik_stx_ctn -> "heading_content" _pgh_end_mkr _stx_bgn
+
+  _chk_box_lik_stx_ctn ::= _lst_chk_box ( _inl_nod | _inl_lbk )*
+
+  _tbl ::= _tbl_hed_row _tbl_dlm_row _tbl_dat_row*
+
+  _tbl_hed_row ::= _tbl_hed_row_hed -> "table_header_row" _tbl_row_end_mkr
+
+  _tbl_hed_row_hed ::= _tbl_hed_row_bgn_mkr _tbl_col_sep? _tbl_dat_cel -> "table_cell" ( _tbl_col_sep _tbl_dat_cel -> "table_cell" )* _tbl_col_sep?
+
+  _tbl_dlm_row ::= _tbl_dlm_row_hed -> "table_delimiter_row" _tbl_row_end_mkr
+
+  _tbl_dlm_row_hed ::= _tbl_dlm_row_bgn_mkr _tbl_col_sep? _tbl_col_aln -> "table_column_alignment" ( _tbl_col_sep _tbl_col_aln -> "table_column_alignment" )* _tbl_col_sep?
+
+  _tbl_dat_row ::= _tbl_dat_row_hed -> "table_data_row" _tbl_row_end_mkr
+
+  _tbl_dat_row_hed ::= _tbl_dat_row_bgn_mkr _tbl_col_sep? _tbl_dat_cel -> "table_cell" ( _tbl_col_sep _tbl_dat_cel -> "table_cell" )* _tbl_col_sep?
+
+  _tbl_dat_cel ::= _inl_nod+
+
+  _inl_nod ::= _inl_txt
+	| _emp -> "emphasis"
+	| _stg -> "strong_emphasis"
+	| _del -> "strikethrough"
+	| _lnk -> "link"
+	| _img -> "image"
+	| _ext_www_aut_lnk -> "www_autolink"
+	| _ext_url_aut_lnk -> "uri_autolink"
+	| _ext_eml_aut_lnk -> "email_autolink"
+	| _uri_aut_lnk -> "uri_autolink"
+	| _eml_aut_lnk -> "email_autolink"
+	| _cod_spn -> "code_span"
+	| _htm_opn_tag -> "html_open_tag"
+	| _htm_slf_cls_tag -> "html_self_closing_tag"
+	| _htm_cls_tag -> "html_close_tag"
+	| _htm_cmt -> "html_comment"
+	| _htm_prc -> "html_processing_instruction"
+	| _htm_dcl -> "html_declaration"
+	| _htm_cda -> "html_cdata_section"
+
+  _inl_txt ::= _txt -> "text"
+	| _bsl_esc -> "backslash_escape"
+	| _chr_ref -> "character_reference"
+
+  _inl_lbk ::= _sft_lbk -> "soft_line_break"
+	| _hrd_lbk -> "hard_line_break"
+
+  _emp ::= _emp_bgn ( _inl_nod | _inl_lbk )* _emp_end
+
+  _stg ::= _stg_bgn ( _inl_nod | _inl_lbk )* _stg_end
+
+  _del ::= _del_bgn ( _inl_nod | _inl_lbk )* _del_end
+
+  _lnk ::= _lnk_bgn ( _inl_nod | _inl_lbk )* -> "link_text" _lnk_tal
+
+  _img ::= _img_bgn ( _inl_nod | _inl_lbk )* -> "image_description" _lnk_tal
+
+  _lnk_tal ::= _lnk_end ( _lnk_tal_inl | _lnk_tal_ful | _lnk_tal_clp )?
+
+  _lnk_tal_inl ::= _lnk_inl_bgn ( _lnk_dst -> "link_destination" _lnk_tit -> "link_title"? )? _lnk_inl_end
+
+  _lnk_tal_ful ::= _lnk_ref_bgn ( _txt -> "text" | _bsl_esc -> "backslash_escape" )+ -> "link_label" _lnk_ref_end
+
+  _lnk_tal_clp ::= _lnk_ref_bgn _lnk_ref_end
+
+  _lnk_dst ::= _lnk_dst_bgn _inl_txt* _lnk_dst_end
+	| _lnk_dst_bgn_mkr _inl_txt* _lnk_dst_end_mkr
+
+  _lnk_tit ::= _lnk_tit_bgn _inl_txt* _lnk_tit_end
+
+  _ext_www_aut_lnk ::= _ext_www_aut_lnk_hed _ext_aut_lnk_end_mkr
+
+  _ext_www_aut_lnk_hed ::= _ext_www_aut_lnk_bgn_mkr ( _txt -> "text" | _bsl_esc -> "backslash_escape" )*
+
+  _ext_url_aut_lnk ::= _ext_url_aut_lnk_hed _ext_aut_lnk_end_mkr
+
+  _ext_url_aut_lnk_hed ::= _ext_url_aut_lnk_bgn_mkr ( _txt -> "text" | _bsl_esc -> "backslash_escape" )*
+
+  _ext_eml_aut_lnk ::= _ext_eml_aut_lnk_hed _ext_aut_lnk_end_mkr
+
+  _ext_eml_aut_lnk_hed ::= _ext_eml_aut_lnk_bgn_mkr ( _txt -> "text" | _bsl_esc -> "backslash_escape" )*
+
+  _uri_aut_lnk ::= _uri_aut_lnk_bgn ( _txt -> "text" | _bsl_esc -> "backslash_escape" )* _aut_lnk_end
+
+  _eml_aut_lnk ::= _eml_aut_lnk_bgn ( _txt -> "text" | _bsl_esc -> "backslash_escape" )* _aut_lnk_end
+
+  _cod_spn ::= _cod_spn_bgn ( _txt -> "text" | _bsl_esc -> "backslash_escape" )* _cod_spn_end
+
+  _htm_opn_tag ::= _htm_opn_tag_hed _htm_tag_end
+
+  _htm_slf_cls_tag ::= _htm_opn_tag_hed _htm_slf_tag_end
+
+  _htm_opn_tag_hed ::= _htm_opn_tag_bgn _wrd -> "html_tag_name" _htm_atr -> "html_atrribute"*
+
+  _htm_cls_tag ::= _htm_cls_tag_bgn _wrd -> "html_tag_name" _htm_tag_end
+
+  _htm_cmt ::= _htm_cmt_bgn ( _txt -> "text" | _bsl_esc -> "backslash_escape" )* _htm_cmt_end
+
+  _htm_prc ::= _htm_prc_bgn ( _txt -> "text" | _bsl_esc -> "backslash_escape" )* _htm_prc_end
+
+  _htm_dcl ::= _htm_dcl_bgn _wrd -> "html_declaration_name" ( _txt -> "text" | _bsl_esc -> "backslash_escape" )* _htm_tag_end
+
+  _htm_cda ::= _htm_cda_bgn ( _txt -> "text" | _bsl_esc -> "backslash_escape" )* _htm_cda_end
+
+  _htm_atr ::= _wrd -> "html_attribute_key" ( _htm_atr_eql _htm_atr_val -> "html_attribute_value" )?
+
+  _htm_atr_val ::= _htm_atr_val_bgn ( _txt -> "text" | _bsl_esc -> "backslash_escape" )* _htm_atr_val_end
+	| _htm_atr_val_bgn_mkr ( _txt -> "text" | _bsl_esc -> "backslash_escape" )* _htm_atr_val_end_mkr
+
+  _txt ::= _txt_frg+

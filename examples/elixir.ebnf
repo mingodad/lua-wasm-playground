@@ -1,0 +1,344 @@
+; From tree-sitter-elixir/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	_quoted_content_i_single
+	_quoted_content_i_double
+	_quoted_content_i_heredoc_single
+	_quoted_content_i_heredoc_double
+	_quoted_content_i_parenthesis
+	_quoted_content_i_curly
+	_quoted_content_i_square
+	_quoted_content_i_angle
+	_quoted_content_i_bar
+	_quoted_content_i_slash
+	_quoted_content_single
+	_quoted_content_double
+	_quoted_content_heredoc_single
+	_quoted_content_heredoc_double
+	_quoted_content_parenthesis
+	_quoted_content_curly
+	_quoted_content_square
+	_quoted_content_angle
+	_quoted_content_bar
+	_quoted_content_slash
+	_newline_before_do
+	_newline_before_binary_operator
+	_newline_before_comment
+	_before_unary_op
+	_not_in
+	_quoted_atom_start
+	}
+
+extras ::= {
+	/\r?\n/
+	/[ \t]|\r?\n|\\\r?\n/
+	comment
+	_newline_before_comment
+	_newline_before_binary_operator
+	}
+
+supertypes ::= {
+	}
+
+inline ::= {
+	}
+
+conflicts ::= {
+	{ _expression _local_call_without_parentheses }
+	{ binary_operator _stab_clause_arguments_without_parentheses }
+	{ _stab_clause_arguments_without_parentheses _stab_clause_arguments_with_parentheses }
+	{ operator_identifier stab_clause }
+	{ unary_operator operator_identifier }
+	{ body }
+	}
+
+rules:
+
+  source ::= _terminator? ( _expression ( _terminator _expression )* _terminator? )?
+
+  _terminator ::= /\r?\n/* ';' | /\r?\n/+
+
+  _expression ::= block
+	| identifier
+	| alias
+	| integer
+	| float
+	| char
+	| boolean
+	| nil
+	| _atom
+	| string
+	| charlist
+	| sigil
+	| list
+	| tuple
+	| bitstring
+	| map
+	| _nullary_operator
+	| unary_operator
+	| binary_operator
+	| dot
+	| call
+	| access_call
+	| anonymous_function
+
+  block ::= '(' _terminator? ( ( stab_clause ) ( _terminator ( stab_clause ) )* | ( _expression ) ( _terminator ( _expression ) )* _terminator? )? ')'
+
+  identifier ::= /[_\p{Ll}\p{Lm}\p{Lo}\p{Nl}\u1885\u1886\u2118\u212E\u309B\u309C][\p{ID_Continue}]*[?!]?/
+	| '...'
+
+  alias ::= @( /[A-Z][_a-zA-Z0-9]*/ ( /\s*\.\s*/ /[A-Z][_a-zA-Z0-9]*/ )* )
+
+  integer ::= @( /[0-9]+/ ( '_' /[0-9]+/ )* | '0b' /[0-1]+/ ( '_' /[0-1]+/ )* | '0o' /[0-7]+/ ( '_' /[0-7]+/ )* | '0x' /[0-9a-fA-F]+/ ( '_' /[0-9a-fA-F]+/ )* )
+
+  float ::= @( /[0-9]+/ ( '_' /[0-9]+/ )* '.' /[0-9]+/ ( '_' /[0-9]+/ )* ( /[eE]/ ( '-' | '+' )? ( /[0-9]+/ ( '_' /[0-9]+/ )* | '0b' /[0-1]+/ ( '_' /[0-1]+/ )* | '0o' /[0-7]+/ ( '_' /[0-7]+/ )* | '0x' /[0-9a-fA-F]+/ ( '_' /[0-9a-fA-F]+/ )* ) )? )
+
+  char ::= /\?(.|\\.)/
+
+  boolean ::= 'true'
+	| 'false'
+
+  nil ::= 'nil'
+
+  _atom ::= atom
+	| quoted_atom
+
+  atom ::= @( ':' ( /[\p{ID_Start}_][\p{ID_Continue}@]*[?!]?/ | '->' | '::' | '|' | '&' | '=' | '^^^' | '//' | '..' | '**' | '.' | '@' | '<-' | '\\' | '||' | '|||' | '&&' | '&&&' | '==' | '!=' | '=~' | '===' | '!==' | '<' | '>' | '<=' | '>=' | '|>' | '<<<' | '>>>' | '<<~' | '~>>' | '<~' | '~>' | '<~>' | '<|>' | '++' | '--' | '+++' | '---' | '<>' | '+' | '-' | '*' | '/' | '+' | '-' | '!' | '^' | '~~~' | '...' | '%{}' | '{}' | '%' | '<<>>' | '..//' ) )
+
+  quoted_atom ::= _quoted_atom_start -> ":" ( _quoted_i_double | _quoted_i_single )
+
+  _quoted_i_double ::= ( '"'  ):quoted_start _quoted_content_i_double -> "quoted_content"? ( ( interpolation | escape_sequence ) _quoted_content_i_double -> "quoted_content"? )* ( '"'  ):quoted_end
+
+  _quoted_double ::= ( '"'  ):quoted_start _quoted_content_double -> "quoted_content"? ( escape_sequence _quoted_content_double -> "quoted_content"? )* ( '"'  ):quoted_end
+
+  _quoted_i_single ::= ( "'"  ):quoted_start _quoted_content_i_single -> "quoted_content"? ( ( interpolation | escape_sequence ) _quoted_content_i_single -> "quoted_content"? )* ( "'"  ):quoted_end
+
+  _quoted_single ::= ( "'"  ):quoted_start _quoted_content_single -> "quoted_content"? ( escape_sequence _quoted_content_single -> "quoted_content"? )* ( "'"  ):quoted_end
+
+  _quoted_i_heredoc_single ::= ( "'''" ):quoted_start _quoted_content_i_heredoc_single -> "quoted_content"? ( ( interpolation | escape_sequence ) _quoted_content_i_heredoc_single -> "quoted_content"? )* ( "'''" ):quoted_end
+
+  _quoted_heredoc_single ::= ( "'''" ):quoted_start _quoted_content_heredoc_single -> "quoted_content"? ( escape_sequence _quoted_content_heredoc_single -> "quoted_content"? )* ( "'''" ):quoted_end
+
+  _quoted_i_heredoc_double ::= ( '"""' ):quoted_start _quoted_content_i_heredoc_double -> "quoted_content"? ( ( interpolation | escape_sequence ) _quoted_content_i_heredoc_double -> "quoted_content"? )* ( '"""' ):quoted_end
+
+  _quoted_heredoc_double ::= ( '"""' ):quoted_start _quoted_content_heredoc_double -> "quoted_content"? ( escape_sequence _quoted_content_heredoc_double -> "quoted_content"? )* ( '"""' ):quoted_end
+
+  _quoted_i_parenthesis ::= ( '(' ):quoted_start _quoted_content_i_parenthesis -> "quoted_content"? ( ( interpolation | escape_sequence ) _quoted_content_i_parenthesis -> "quoted_content"? )* ( ')' ):quoted_end
+
+  _quoted_parenthesis ::= ( '(' ):quoted_start _quoted_content_parenthesis -> "quoted_content"? ( escape_sequence _quoted_content_parenthesis -> "quoted_content"? )* ( ')' ):quoted_end
+
+  _quoted_i_curly ::= ( '{' ):quoted_start _quoted_content_i_curly -> "quoted_content"? ( ( interpolation | escape_sequence ) _quoted_content_i_curly -> "quoted_content"? )* ( '}' ):quoted_end
+
+  _quoted_curly ::= ( '{' ):quoted_start _quoted_content_curly -> "quoted_content"? ( escape_sequence _quoted_content_curly -> "quoted_content"? )* ( '}' ):quoted_end
+
+  _quoted_i_square ::= ( '[' ):quoted_start _quoted_content_i_square -> "quoted_content"? ( ( interpolation | escape_sequence ) _quoted_content_i_square -> "quoted_content"? )* ( ']' ):quoted_end
+
+  _quoted_square ::= ( '[' ):quoted_start _quoted_content_square -> "quoted_content"? ( escape_sequence _quoted_content_square -> "quoted_content"? )* ( ']' ):quoted_end
+
+  _quoted_i_angle ::= ( '<' ):quoted_start _quoted_content_i_angle -> "quoted_content"? ( ( interpolation | escape_sequence ) _quoted_content_i_angle -> "quoted_content"? )* ( '>' ):quoted_end
+
+  _quoted_angle ::= ( '<' ):quoted_start _quoted_content_angle -> "quoted_content"? ( escape_sequence _quoted_content_angle -> "quoted_content"? )* ( '>' ):quoted_end
+
+  _quoted_i_bar ::= ( '|' ):quoted_start _quoted_content_i_bar -> "quoted_content"? ( ( interpolation | escape_sequence ) _quoted_content_i_bar -> "quoted_content"? )* ( '|' ):quoted_end
+
+  _quoted_bar ::= ( '|' ):quoted_start _quoted_content_bar -> "quoted_content"? ( escape_sequence _quoted_content_bar -> "quoted_content"? )* ( '|' ):quoted_end
+
+  _quoted_i_slash ::= ( '/' ):quoted_start _quoted_content_i_slash -> "quoted_content"? ( ( interpolation | escape_sequence ) _quoted_content_i_slash -> "quoted_content"? )* ( '/' ):quoted_end
+
+  _quoted_slash ::= ( '/' ):quoted_start _quoted_content_slash -> "quoted_content"? ( escape_sequence _quoted_content_slash -> "quoted_content"? )* ( '/' ):quoted_end
+
+  string ::= _quoted_i_double
+	| _quoted_i_heredoc_double
+
+  charlist ::= _quoted_i_single
+	| _quoted_i_heredoc_single
+
+  interpolation ::= '#{' _expression? '}'
+
+  escape_sequence ::= @( '\\'  ( /[^ux]/ | /x[0-9a-fA-F]{1,2}/ | /x\{[0-9a-fA-F]+\}/ | /u\{[0-9a-fA-F]+\}/ | /u[0-9a-fA-F]{4}/ ) )
+
+  sigil ::= '~' ( !( /[a-z]/ ) -> "sigil_name" ( _quoted_i_double | _quoted_i_single | _quoted_i_heredoc_single | _quoted_i_heredoc_double | _quoted_i_parenthesis | _quoted_i_curly | _quoted_i_square | _quoted_i_angle | _quoted_i_bar | _quoted_i_slash ) | !( /[A-Z][A-Z0-9]*/ ) -> "sigil_name" ( _quoted_double | _quoted_single | _quoted_heredoc_single | _quoted_heredoc_double | _quoted_parenthesis | _quoted_curly | _quoted_square | _quoted_angle | _quoted_bar | _quoted_slash ) ) !( /[a-zA-Z0-9]+/ ) -> "sigil_modifiers"?
+
+  keywords ::= pair ( ',' pair )*
+
+  _keywords_with_trailing_separator ::= pair ( ',' pair )* ','?
+
+  pair ::= ( _keyword ):key ( _expression ):value
+
+  _keyword ::= keyword
+	| quoted_keyword
+
+  keyword ::= @( ( /[\p{ID_Start}_][\p{ID_Continue}@]*[?!]?/ | '->' | '|' | '&' | '=' | '^^^' | '//' | '..' | '**' | '.' | '@' | '<-' | '\\' | '||' | '|||' | '&&' | '&&&' | '==' | '!=' | '=~' | '===' | '!==' | '<' | '>' | '<=' | '>=' | '|>' | '<<<' | '>>>' | '<<~' | '~>>' | '<~' | '~>' | '<~>' | '<|>' | '++' | '--' | '+++' | '---' | '<>' | '+' | '-' | '*' | '/' | '+' | '-' | '!' | '^' | '~~~' | '...' | '%{}' | '{}' | '%' | '<<>>' | '..//' ) /:\s/ )
+
+  quoted_keyword ::= ( _quoted_i_double | _quoted_i_single ) !( /:\s/ )
+
+  list ::= '[' _items_with_trailing_separator? ']'
+
+  tuple ::= '{' _items_with_trailing_separator? '}'
+
+  bitstring ::= '<<' _items_with_trailing_separator? '>>'
+
+  map ::=  1(  '%' struct? '{' _items_with_trailing_separator -> "map_content"? '}' )
+
+  struct ::= alias | _atom | identifier | unary_operator | dot | _call_with_parentheses -> "call"
+
+  _items_with_trailing_separator ::= ( _expression ( ',' _expression )* ','? | ( _expression ( ',' _expression )* ',' )? _keywords_with_trailing_separator -> "keywords" )
+
+  _nullary_operator ::=  160(  '..' )  -> "operator_identifier"
+
+  unary_operator ::=  ~-1(   60(  _before_unary_op? ( '&' ):operator ( _capture_expression ):operand )  )
+	|  ~-1(   200(  _before_unary_op? ( '+' | '-' | '!' | '^' | '~~~' | 'not' ):operator ( _expression ):operand )  )
+	|  ~-1(   220(  _before_unary_op? ( '@' ):operator ( _expression ):operand )  )
+	|  ~-1(   235(  _before_unary_op? ( '&' ):operator ( integer ):operand )  )
+
+  _capture_expression ::=  1(  '(' _expression ')' )
+	| _expression
+
+  binary_operator ::=  <10(  ( _expression ):left ( '<-' | '\\' ):operator ( _expression ):right )
+	|  >20(  ( _expression ):left ( 'when' ):operator ( _expression | keywords ):right )
+	|  >30(  ( _expression ):left ( '::' ):operator ( _expression ):right )
+	|  >40(  ( _expression ):left ( '|' ):operator ( _expression | keywords ):right )
+	|  >50(  ( _expression ):left ( '=>' ):operator ( _expression ):right )
+	|  >70(  ( _expression ):left ( '=' ):operator ( _expression ):right )
+	|  <80(  ( _expression ):left ( '||' | '|||' | 'or' ):operator ( _expression ):right )
+	|  <90(  ( _expression ):left ( '&&' | '&&&' | 'and' ):operator ( _expression ):right )
+	|  <100(  ( _expression ):left ( '==' | '!=' | '=~' | '===' | '!==' ):operator ( _expression ):right )
+	|  <110(  ( _expression ):left ( '<' | '>' | '<=' | '>=' ):operator ( _expression ):right )
+	|  <120(  ( _expression ):left ( '|>' | '<<<' | '>>>' | '<<~' | '~>>' | '<~' | '~>' | '<~>' | '<|>' ):operator ( _expression ):right )
+	|  <130(  ( _expression ):left ( 'in' | _not_in -> "not in" ):operator ( _expression ):right )
+	|  <140(  ( _expression ):left ( '^^^' ):operator ( _expression ):right )
+	|  >150(  ( _expression ):left ( '//' ):operator ( _expression ):right )
+	|  >160(  ( _expression ):left ( '++' | '--' | '+++' | '---' | '<>' ):operator ( _expression ):right )
+	|  >160(  ( _expression ):left ( '..' ):operator ( _expression ):right )
+	|  <170(  ( _expression ):left ( '+' | '-' ):operator ( _expression ):right )
+	|  <180(  ( _expression ):left ( '*' | '/' ):operator ( _expression ):right )
+	|  <190(  ( _expression ):left ( '**' ):operator ( _expression ):right )
+	|  <180(  ( operator_identifier ):left ( '/' ):operator ( integer ):right )
+
+  operator_identifier ::=  60(  '&' )
+	|  200(  '+' | '-' | '!' | '^' | '~~~' | 'not' )
+	|  220(  '@' )
+	| '<-'
+	| '\\'
+	| 'when'
+	| '::'
+	| '|'
+	| '='
+	| '||'
+	| '|||'
+	| 'or'
+	| '&&'
+	| '&&&'
+	| 'and'
+	| '=='
+	| '!='
+	| '=~'
+	| '==='
+	| '!=='
+	| '<'
+	| '>'
+	| '<='
+	| '>='
+	| '|>'
+	| '<<<'
+	| '>>>'
+	| '<<~'
+	| '~>>'
+	| '<~'
+	| '~>'
+	| '<~>'
+	| '<|>'
+	| 'in'
+	| _not_in -> "not in"
+	| '^^^'
+	| '++'
+	| '--'
+	| '+++'
+	| '---'
+	| '<>'
+	| '*'
+	| '/'
+	| '**'
+	| '->'
+
+  dot ::=  210(  ( _expression ):left ( '.' ):operator ( alias | tuple ):right )
+
+  call ::= _call_without_parentheses
+	| _call_with_parentheses
+
+  _call_without_parentheses ::= _local_call_without_parentheses
+	| _local_call_just_do_block
+	| _remote_call_without_parentheses
+
+  _call_with_parentheses ::= _local_call_with_parentheses
+	| _remote_call_with_parentheses
+	| _anonymous_call
+	| _double_call
+
+  _local_call_without_parentheses ::= ( identifier ):target _call_arguments_without_parentheses -> "arguments" ( _newline_before_do? do_block )?
+
+  _local_call_with_parentheses ::= ( identifier ):target _call_arguments_with_parentheses_immediate -> "arguments" ( _newline_before_do? do_block )?
+
+  _local_call_just_do_block ::=  -1(  ( identifier ):target do_block )
+
+  _remote_call_without_parentheses ::= ( _remote_dot -> "dot" ):target _call_arguments_without_parentheses -> "arguments"? ( _newline_before_do? do_block )?
+
+  _remote_call_with_parentheses ::= ( _remote_dot -> "dot" ):target _call_arguments_with_parentheses_immediate -> "arguments" ( _newline_before_do? do_block )?
+
+  _remote_dot ::=  210(  ( _expression ):left ( '.' ):operator ( identifier | ( 'and' | 'in' | 'not' | 'or' | 'when' | 'true' | 'false' | 'nil' | 'after' | 'catch' | 'do' | 'else' | 'end' | 'fn' | 'rescue' ) -> "identifier" | operator_identifier | _quoted_i_double -> "string" | _quoted_i_single -> "charlist" ):right )
+
+  _anonymous_call ::= ( _anonymous_dot -> "dot" ):target _call_arguments_with_parentheses -> "arguments"
+
+  _anonymous_dot ::=  210(  ( _expression ):left ( '.' ):operator )
+
+  _double_call ::= ( ( _local_call_with_parentheses | _remote_call_with_parentheses | _anonymous_call ) -> "call" ):target _call_arguments_with_parentheses -> "arguments" ( _newline_before_do? do_block )?
+
+  _call_arguments_with_parentheses ::= '(' _call_arguments_with_trailing_separator? ')'
+
+  _call_arguments_with_parentheses_immediate ::= !( '(' ) _call_arguments_with_trailing_separator? ')'
+
+  _call_arguments_with_trailing_separator ::= _expression ( ',' _expression )* ( ',' _keywords_with_trailing_separator -> "keywords" )?
+	| _keywords_with_trailing_separator -> "keywords"
+
+  _call_arguments_without_parentheses ::=  ~-1(  _expression ( ',' _expression )* ( ',' keywords )? | keywords )
+
+  do_block ::= 'do' _terminator? ( ( stab_clause ) ( _terminator ( stab_clause ) )* | ( _expression ) ( _terminator ( _expression ) )* _terminator? )? ( after_block | rescue_block | catch_block | else_block )* 'end'
+
+  after_block ::= 'after' _terminator? ( ( stab_clause ) ( _terminator ( stab_clause ) )* | ( _expression ) ( _terminator ( _expression ) )* _terminator? )?
+
+  rescue_block ::= 'rescue' _terminator? ( ( stab_clause ) ( _terminator ( stab_clause ) )* | ( _expression ) ( _terminator ( _expression ) )* _terminator? )?
+
+  catch_block ::= 'catch' _terminator? ( ( stab_clause ) ( _terminator ( stab_clause ) )* | ( _expression ) ( _terminator ( _expression ) )* _terminator? )?
+
+  else_block ::= 'else' _terminator? ( ( stab_clause ) ( _terminator ( stab_clause ) )* | ( _expression ) ( _terminator ( _expression ) )* _terminator? )?
+
+  access_call ::=  205(  ( _expression ):target !( '[' ) ( _expression ):key ']' )
+
+  stab_clause ::= ( _stab_clause_left )?:left ( '->' ):operator ( body )?:right
+
+  _stab_clause_left ::= _stab_clause_arguments_with_parentheses -> "arguments"
+	| _stab_clause_arguments_with_parentheses_with_guard -> "binary_operator"
+	| _stab_clause_arguments_without_parentheses -> "arguments"
+	| _stab_clause_arguments_without_parentheses_with_guard -> "binary_operator"
+
+  _stab_clause_arguments_with_parentheses ::=  1(  '(' (  >20(  _expression )  ( ','  >20(  _expression )  )* ( ',' keywords )? | keywords )? ')' )
+
+  _stab_clause_arguments_without_parentheses ::=  20(   20(  _expression )  ( ','  20(  _expression )  )* ( ',' keywords )? | keywords )
+
+  _stab_clause_arguments_with_parentheses_with_guard ::= ( _stab_clause_arguments_with_parentheses -> "arguments" ):left ( 'when' ):operator ( _expression ):right
+
+  _stab_clause_arguments_without_parentheses_with_guard ::=  ~1(  ( _stab_clause_arguments_without_parentheses -> "arguments" ):left ( 'when' ):operator ( _expression ):right )
+
+  body ::= _terminator
+	| _terminator? _expression ( _terminator _expression )* _terminator?
+
+  anonymous_function ::= 'fn' _terminator? stab_clause ( _terminator stab_clause )* 'end'
+
+  comment ::= @(  -1(  '#' /.*/ )  )

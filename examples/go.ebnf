@@ -1,0 +1,351 @@
+; From tree-sitter-go/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	}
+
+extras ::= {
+	comment
+	/\s/
+	}
+
+supertypes ::= {
+	_expression
+	_type
+	_simple_type
+	_statement
+	_simple_statement
+	}
+
+inline ::= {
+	_type
+	_type_identifier
+	_field_identifier
+	_package_identifier
+	_top_level_declaration
+	_string_literal
+	_interface_elem
+	}
+
+conflicts ::= {
+	{ _simple_type _expression }
+	{ _simple_type generic_type _expression }
+	{ qualified_type _expression }
+	{ generic_type _simple_type }
+	{ parameter_declaration _simple_type }
+	{ type_parameter_declaration _simple_type _expression }
+	{ type_parameter_declaration _expression }
+	{ type_parameter_declaration _simple_type generic_type _expression }
+	}
+
+word ::= identifier
+
+rules:
+
+  source_file ::= ( _statement ( /\n/ | ';' | '\0'  ) | _top_level_declaration ( /\n/ | ';' | '\0'  ) )* _top_level_declaration?
+
+  _top_level_declaration ::= package_clause
+	| function_declaration
+	| method_declaration
+	| import_declaration
+
+  package_clause ::= 'package' _package_identifier
+
+  import_declaration ::= 'import' ( import_spec | import_spec_list )
+
+  import_spec ::= ( dot | blank_identifier | _package_identifier )?:name ( _string_literal ):path
+
+  dot ::= '.'
+
+  blank_identifier ::= '_'
+
+  import_spec_list ::= '(' ( import_spec ( ( /\n/ | ';' | '\0'  ) import_spec )* ( /\n/ | ';' | '\0'  )? )? ')'
+
+  _declaration ::= const_declaration
+	| type_declaration
+	| var_declaration
+
+  const_declaration ::= 'const' ( const_spec | '(' ( const_spec ( /\n/ | ';' | '\0'  ) )* ')' )
+
+  const_spec ::= ( identifier ( ',' identifier )* ):name ( ( _type )?:type '=' ( expression_list ):value )?
+
+  var_declaration ::= 'var' ( var_spec | var_spec_list )
+
+  var_spec ::= ( identifier ):name ( ',' ( identifier ):name )* ( ( _type ):type ( '=' ( expression_list ):value )? | '=' ( expression_list ):value )
+
+  var_spec_list ::= '(' ( var_spec ( /\n/ | ';' | '\0'  ) )* ')'
+
+  function_declaration ::=  >1(  'func' ( identifier ):name ( type_parameter_list )?:type_parameters ( parameter_list ):parameters ( parameter_list | _simple_type )?:result ( block )?:body )
+
+  method_declaration ::=  >1(  'func' ( parameter_list ):receiver ( _field_identifier ):name ( parameter_list ):parameters ( parameter_list | _simple_type )?:result ( block )?:body )
+
+  type_parameter_list ::= '[' type_parameter_declaration ( ',' type_parameter_declaration )* ','? ']'
+
+  type_parameter_declaration ::= ( identifier ):name ( ',' ( identifier ):name )* ( type_elem -> "type_constraint" ):type
+
+  parameter_list ::= '(' ( ( ( parameter_declaration | variadic_parameter_declaration ) ( ',' ( parameter_declaration | variadic_parameter_declaration ) )* )? ','? )? ')'
+
+  parameter_declaration ::= ( ( identifier ):name ( ',' ( identifier ):name )* )? ( _type ):type
+
+  variadic_parameter_declaration ::= ( identifier )?:name '...' ( _type ):type
+
+  type_alias ::= ( _type_identifier ):name '=' ( _type ):type
+
+  type_declaration ::= 'type' ( type_spec | type_alias | '(' ( ( type_spec | type_alias ) ( /\n/ | ';' | '\0'  ) )* ')' )
+
+  type_spec ::= ( _type_identifier ):name ( type_parameter_list )?:type_parameters ( _type ):type
+
+  field_name_list ::= _field_identifier ( ',' _field_identifier )*
+
+  expression_list ::= _expression ( ',' _expression )*
+
+  _type ::= _simple_type
+	| parenthesized_type
+
+  parenthesized_type ::= '(' _type ')'
+
+  _simple_type ::=  ~-1(  _type_identifier )
+	| generic_type
+	| qualified_type
+	| pointer_type
+	| struct_type
+	| interface_type
+	| array_type
+	| slice_type
+	| map_type
+	| channel_type
+	| function_type
+	| negated_type
+
+  generic_type ::=  ~1(  ( _type_identifier | qualified_type | negated_type ):type ( type_arguments ):type_arguments )
+
+  type_arguments ::=  ~2(  '[' type_elem ( ',' type_elem )* ','? ']' )
+
+  pointer_type ::=  6(  '*' _type )
+
+  array_type ::= '[' ( _expression ):length ']' ( _type ):element
+
+  implicit_length_array_type ::= '[' '...' ']' ( _type ):element
+
+  slice_type ::= '[' ']' ( _type ):element
+
+  struct_type ::= 'struct' field_declaration_list
+
+  negated_type ::= '~' _type
+
+  field_declaration_list ::= '{' ( field_declaration ( ( /\n/ | ';' | '\0'  ) field_declaration )* ( /\n/ | ';' | '\0'  )? )? '}'
+
+  field_declaration ::= ( ( _field_identifier ):name ( ',' ( _field_identifier ):name )* ( _type ):type | '*'? ( _type_identifier | qualified_type | generic_type ):type ) ( _string_literal )?:tag
+
+  interface_type ::= 'interface' '{' ( _interface_elem ( ( /\n/ | ';' | '\0'  ) _interface_elem )* ( /\n/ | ';' | '\0'  )? )? '}'
+
+  _interface_elem ::= method_elem
+	| type_elem
+
+  method_elem ::= ( _field_identifier ):name ( parameter_list ):parameters ( parameter_list | _simple_type )?:result
+
+  type_elem ::= _type ( '|' _type )*
+
+  map_type ::= 'map' '[' ( _type ):key ']' ( _type ):value
+
+  channel_type ::= 'chan' ( _type ):value | 'chan' '<-' ( _type ):value |  6(  '<-' 'chan' ( _type ):value )
+
+  function_type ::= 'func' ( parameter_list ):parameters ( parameter_list | _simple_type )?:result
+
+  block ::= '{' _statement_list? '}'
+
+  _statement_list ::= _statement ( ( /\n/ | ';' | '\0'  ) _statement )* ( ( /\n/ | ';' | '\0'  ) empty_labeled_statement -> "labeled_statement"? )?
+	| empty_labeled_statement -> "labeled_statement"
+
+  _statement ::= _declaration
+	| _simple_statement
+	| return_statement
+	| go_statement
+	| defer_statement
+	| if_statement
+	| for_statement
+	| expression_switch_statement
+	| type_switch_statement
+	| select_statement
+	| labeled_statement
+	| fallthrough_statement
+	| break_statement
+	| continue_statement
+	| goto_statement
+	| block
+	| empty_statement
+
+  empty_statement ::= ';'
+
+  _simple_statement ::= expression_statement
+	| send_statement
+	| inc_statement
+	| dec_statement
+	| assignment_statement
+	| short_var_declaration
+
+  expression_statement ::= _expression
+
+  send_statement ::= ( _expression ):channel '<-' ( _expression ):value
+
+  receive_statement ::= ( ( expression_list ):left ( '=' | ':=' ) )? ( _expression ):right
+
+  inc_statement ::= _expression '++'
+
+  dec_statement ::= _expression '--'
+
+  assignment_statement ::= ( expression_list ):left ( '*=' | '/=' | '%=' | '<<=' | '>>=' | '&=' | '&^=' | '+=' | '-=' | '|=' | '^=' | '=' ):operator ( expression_list ):right
+
+  short_var_declaration ::= ( expression_list ):left ':=' ( expression_list ):right
+
+  labeled_statement ::= ( identifier -> "label_name" ):label ':' _statement
+
+  empty_labeled_statement ::= ( identifier -> "label_name" ):label ':'
+
+  fallthrough_statement ::= 'fallthrough'
+
+  break_statement ::= 'break' identifier -> "label_name"?
+
+  continue_statement ::= 'continue' identifier -> "label_name"?
+
+  goto_statement ::= 'goto' identifier -> "label_name"
+
+  return_statement ::= 'return' expression_list?
+
+  go_statement ::= 'go' _expression
+
+  defer_statement ::= 'defer' _expression
+
+  if_statement ::= 'if' ( ( _simple_statement ):initializer ';' )? ( _expression ):condition ( block ):consequence ( 'else' ( block | if_statement ):alternative )?
+
+  for_statement ::= 'for' ( _expression | for_clause | range_clause )? ( block ):body
+
+  for_clause ::= ( _simple_statement )?:initializer ';' ( _expression )?:condition ';' ( _simple_statement )?:update
+
+  range_clause ::= ( ( expression_list ):left ( '=' | ':=' ) )? 'range' ( _expression ):right
+
+  expression_switch_statement ::= 'switch' ( ( _simple_statement ):initializer ';' )? ( _expression )?:value '{' ( expression_case | default_case )* '}'
+
+  expression_case ::= 'case' ( expression_list ):value ':' _statement_list?
+
+  default_case ::= 'default' ':' _statement_list?
+
+  type_switch_statement ::= 'switch' _type_switch_header '{' ( type_case | default_case )* '}'
+
+  _type_switch_header ::= ( ( _simple_statement ):initializer ';' )? ( ( expression_list ):alias ':=' )? ( _expression ):value '.' '(' 'type' ')'
+
+  type_case ::= 'case' ( _type ( ',' _type )* ):type ':' _statement_list?
+
+  select_statement ::= 'select' '{' ( communication_case | default_case )* '}'
+
+  communication_case ::= 'case' ( send_statement | receive_statement ):communication ':' _statement_list?
+
+  _expression ::= unary_expression
+	| binary_expression
+	| selector_expression
+	| index_expression
+	| slice_expression
+	| call_expression
+	| type_assertion_expression
+	| type_conversion_expression
+	| type_instantiation_expression
+	| identifier
+	| ( 'new' | 'make' ) -> "identifier"
+	| composite_literal
+	| func_literal
+	| _string_literal
+	| int_literal
+	| float_literal
+	| imaginary_literal
+	| rune_literal
+	| nil
+	| true
+	| false
+	| iota
+	| parenthesized_expression
+
+  parenthesized_expression ::= '(' _expression ')'
+
+  call_expression ::=  7(  ( ( 'new' | 'make' ) -> "identifier" ):function ( special_argument_list -> "argument_list" ):arguments | ( _expression ):function ( type_arguments )?:type_arguments ( argument_list ):arguments )
+
+  variadic_argument ::= _expression '...'
+
+  special_argument_list ::= '(' ( _type ( ',' _expression )* ','? )? ')'
+
+  argument_list ::= '(' ( ( _expression | variadic_argument ) ( ',' ( _expression | variadic_argument ) )* ','? )? ')'
+
+  selector_expression ::=  7(  ( _expression ):operand '.' ( _field_identifier ):field )
+
+  index_expression ::=  7(  ( _expression ):operand '[' ( _expression ):index ']' )
+
+  slice_expression ::=  7(  ( _expression ):operand '[' ( ( _expression )?:start ':' ( _expression )?:end | ( _expression )?:start ':' ( _expression ):end ':' ( _expression ):capacity ) ']' )
+
+  type_assertion_expression ::=  7(  ( _expression ):operand '.' '(' ( _type ):type ')' )
+
+  type_conversion_expression ::=  ~-1(  ( _type ):type '(' ( _expression ):operand ','? ')' )
+
+  type_instantiation_expression ::=  ~-1(  ( _type ):type '[' _type ( ',' _type )* ','? ']' )
+
+  composite_literal ::=  -1(  ( map_type | slice_type | array_type | implicit_length_array_type | struct_type | _type_identifier | generic_type | qualified_type ):type ( literal_value ):body )
+
+  literal_value ::= '{' ( ( ( literal_element | keyed_element ) ( ',' ( literal_element | keyed_element ) )* )? ','? )? '}'
+
+  literal_element ::= _expression
+	| literal_value
+
+  keyed_element ::= literal_element ':' literal_element
+
+  func_literal ::= 'func' ( parameter_list ):parameters ( parameter_list | _simple_type )?:result ( block ):body
+
+  unary_expression ::=  6(  ( '+' | '-' | '!' | '^' | '*' | '&' | '<-' ):operator ( _expression ):operand )
+
+  binary_expression ::=  <5(  ( _expression ):left ( '*' | '/' | '%' | '<<' | '>>' | '&' | '&^' ):operator ( _expression ):right )
+	|  <4(  ( _expression ):left ( '+' | '-' | '|' | '^' ):operator ( _expression ):right )
+	|  <3(  ( _expression ):left ( '==' | '!=' | '<' | '<=' | '>' | '>=' ):operator ( _expression ):right )
+	|  <2(  ( _expression ):left ( '&&' ):operator ( _expression ):right )
+	|  <1(  ( _expression ):left ( '||' ):operator ( _expression ):right )
+
+  qualified_type ::= ( _package_identifier ):package '.' ( _type_identifier ):name
+
+  identifier ::= /[_\p{XID_Start}][_\p{XID_Continue}]*/
+
+  _type_identifier ::= identifier -> "type_identifier"
+
+  _field_identifier ::= identifier -> "field_identifier"
+
+  _package_identifier ::= identifier -> "package_identifier"
+
+  _string_literal ::= raw_string_literal
+	| interpreted_string_literal
+
+  raw_string_literal ::= @( '`' /[^`]/* '`' )
+
+  interpreted_string_literal ::= '"'  ( _interpreted_string_literal_basic_content | escape_sequence )* !( '"'  )
+
+  _interpreted_string_literal_basic_content ::= !(  1(  /[^"\n\\]+/ )  )
+
+  escape_sequence ::= !( '\\'  ( /[^xuU]/ | /\d{2,3}/ | /x[0-9a-fA-F]{2,}/ | /u[0-9a-fA-F]{4}/ | /U[0-9a-fA-F]{8}/ ) )
+
+  int_literal ::= @( '0' ( 'b' | 'B' ) '_'? /[01]/ ( '_'? /[01]/ )* | '0' | /[1-9]/ ( '_'? /[0-9]/ ( '_'? /[0-9]/ )* )? | '0' ( 'o' | 'O' )? '_'? /[0-7]/ ( '_'? /[0-7]/ )* | '0' ( 'x' | 'X' ) '_'? /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* )
+
+  float_literal ::= @( /[0-9]/ ( '_'? /[0-9]/ )* '.' ( /[0-9]/ ( '_'? /[0-9]/ )* )? ( ( 'e' | 'E' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* )? | /[0-9]/ ( '_'? /[0-9]/ )* ( 'e' | 'E' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* | '.' /[0-9]/ ( '_'? /[0-9]/ )* ( ( 'e' | 'E' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* )? | '0' ( 'x' | 'X' ) ( '_'? /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* '.' ( /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* )? | '_'? /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* | '.' /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* ) ( 'p' | 'P' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* )
+
+  imaginary_literal ::= @( ( /[0-9]/ ( '_'? /[0-9]/ )* | '0' ( 'b' | 'B' ) '_'? /[01]/ ( '_'? /[01]/ )* | '0' | /[1-9]/ ( '_'? /[0-9]/ ( '_'? /[0-9]/ )* )? | '0' ( 'o' | 'O' )? '_'? /[0-7]/ ( '_'? /[0-7]/ )* | '0' ( 'x' | 'X' ) '_'? /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* | /[0-9]/ ( '_'? /[0-9]/ )* '.' ( /[0-9]/ ( '_'? /[0-9]/ )* )? ( ( 'e' | 'E' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* )? | /[0-9]/ ( '_'? /[0-9]/ )* ( 'e' | 'E' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* | '.' /[0-9]/ ( '_'? /[0-9]/ )* ( ( 'e' | 'E' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* )? | '0' ( 'x' | 'X' ) ( '_'? /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* '.' ( /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* )? | '_'? /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* | '.' /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* ) ( 'p' | 'P' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* ) 'i' )
+
+  rune_literal ::= @( "'"  ( /[^'\\]/ | '\\'  ( 'x' /[0-9a-fA-F]/ /[0-9a-fA-F]/ | /[0-7]/ /[0-7]/ /[0-7]/ | 'u' /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ | 'U' /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ | ( 'a' | 'b' | 'f' | 'n' | 'r' | 't' | 'v' | '\\'  | "'"  | '"'  ) ) ) "'"  )
+
+  nil ::= 'nil'
+
+  true ::= 'true'
+
+  false ::= 'false'
+
+  iota ::= 'iota'
+
+  comment ::= @( '//' /.*/ | '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/' )

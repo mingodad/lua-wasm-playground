@@ -1,0 +1,392 @@
+; From tree-sitter-julia/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	block_comment
+	_immediate_paren
+	_immediate_bracket
+	_immediate_brace
+	_string_start
+	_command_start
+	_immediate_string_start
+	_immediate_command_start
+	_string_end
+	_command_end
+	_string_content
+	_string_content_no_interp
+	}
+
+extras ::= {
+	/\s/
+	line_comment
+	block_comment
+	}
+
+supertypes ::= {
+	_expression
+	_statement
+	_definition
+	}
+
+inline ::= {
+	_terminator
+	_definition
+	_statement
+	_operation
+	}
+
+conflicts ::= {
+	{ juxtaposition_expression _primary_expression }
+	{ juxtaposition_expression _expression }
+	{ matrix_row comprehension_expression }
+	{ argument_list tuple_expression }
+	{ argument_list parenthesized_expression }
+	{ named_field _primary_expression }
+	}
+
+word ::= _word_identifier
+
+rules:
+
+  source_file ::= _block
+
+  _block ::= ( _expression | assignment | open_tuple ) ( _terminator ( _expression | assignment | open_tuple ) )* _terminator?
+
+  assignment ::=  >-2(  ( _primary_expression | open_tuple | _operation | operator ) '=' -> "operator" ( _expression | assignment | open_tuple ) )
+
+  _closed_assignment ::=  >-2(  ( _primary_expression | _operation | operator ) '=' -> "operator" ( _expression | _closed_assignment -> "assignment" ) )
+
+  open_tuple ::=  -1(  _expression  -1(  ',' _expression ) + )
+
+  _expression ::= _definition
+	| _statement
+	| _primary_expression
+	| _operation
+	| compound_assignment_expression
+	| macrocall_expression
+	| function_expression
+	| juxtaposition_expression
+	| ternary_expression
+	| operator
+	| integer_literal
+	| float_literal
+	|  -1(  ':' -> "operator" )
+	|  -1(  'begin' -> "identifier" )
+
+  _definition ::= module_definition
+	| abstract_definition
+	| primitive_definition
+	| struct_definition
+	| function_definition
+	| macro_definition
+
+  module_definition ::= ( 'module' | 'baremodule' ) ( identifier | interpolation_expression ):name _terminator? _block? 'end'
+
+  abstract_definition ::= 'abstract' 'type' ( identifier | interpolation_expression ):name ( _immediate_brace curly_expression -> "type_parameter_list" )? type_clause? 'end'
+
+  primitive_definition ::= 'primitive' 'type' ( identifier | interpolation_expression ):name ( _immediate_brace curly_expression -> "type_parameter_list" )? type_clause? integer_literal 'end'
+
+  struct_definition ::= 'mutable'? 'struct' ( identifier | interpolation_expression ):name ( _immediate_brace curly_expression -> "type_parameter_list" )? type_clause? _terminator? _block? 'end'
+
+  type_clause ::= '<:' -> "operator" _primary_expression
+
+  function_definition ::= 'function' signature _terminator? _block? 'end'
+
+  macro_definition ::= 'macro' signature _terminator? _block? 'end'
+
+  signature ::= identifier | ( call_expression | argument_list ) ( unary_typed_expression )?:return_type where_clause?
+
+  where_clause ::= 'where' _expression
+
+  _statement ::= compound_statement
+	| quote_statement
+	| let_statement
+	| if_statement
+	| try_statement
+	| for_statement
+	| while_statement
+	| break_statement
+	| continue_statement
+	| return_statement
+	| const_statement
+	| global_statement
+	| local_statement
+	| export_statement
+	| import_statement
+
+  compound_statement ::= 'begin' _terminator? _block? 'end'
+
+  quote_statement ::= 'quote' _terminator? _block? 'end'
+
+  let_statement ::= 'let' ( ( identifier | _closed_assignment -> "let_binding" ) ( ',' ( identifier | _closed_assignment -> "let_binding" ) )* )? _terminator _block? 'end'
+
+  if_statement ::= 'if' ( _expression ):condition _terminator? _block? ( elseif_clause* ):alternative ( else_clause )?:alternative 'end'
+
+  elseif_clause ::= 'elseif' ( _expression ):condition _terminator? _block?
+
+  else_clause ::= 'else' _terminator? _block?
+
+  try_statement ::= 'try' _terminator? _block? ( catch_clause else_clause? finally_clause? | finally_clause catch_clause? ) 'end'
+
+  catch_clause ::=  1(  'catch' identifier? _terminator? _block? )
+
+  finally_clause ::= 'finally' _terminator? _block?
+
+  for_statement ::= 'for' for_binding ( ',' for_binding )* _terminator? _block? 'end'
+
+  while_statement ::= 'while' ( _expression ):condition _terminator? _block? 'end'
+
+  break_statement ::= 'break'
+
+  continue_statement ::= 'continue'
+
+  return_statement ::=  >-3(  'return' ( _expression | assignment | open_tuple )? )
+
+  const_statement ::=  >-3(  'const' assignment )
+
+  global_statement ::=  >-3(  'global' ( _expression | assignment | open_tuple ) )
+
+  local_statement ::=  >-3(  'local' ( _expression | assignment | open_tuple ) )
+
+  import_alias ::= _importable 'as' _exportable
+
+  import_path ::= @( '.'+ ) ( identifier | scoped_identifier )
+
+  _exportable ::= identifier
+	| macro_identifier
+	| operator
+	| interpolation_expression
+	| '(' _exportable ')'
+
+  _importable ::= _exportable
+	| scoped_identifier
+	| import_path
+
+  _import_list ::= ( _importable | import_alias ) ( ',' ( _importable | import_alias ) )*
+
+  selected_import ::= _importable !( ':' ) _import_list
+
+  export_statement ::= 'export' _exportable ( ',' _exportable )*
+
+  import_statement ::= ( 'import' | 'using' ) ( _import_list | selected_import )
+
+  _primary_expression ::= identifier
+	| boolean_literal
+	| curly_expression
+	| parenthesized_expression
+	| tuple_expression
+	| _array
+	| _string
+	| adjoint_expression
+	| broadcast_call_expression
+	| call_expression
+	| _closed_macrocall_expression -> "macrocall_expression"
+	| parametrized_type_expression
+	| field_expression
+	| index_expression
+	| interpolation_expression
+	| quote_expression
+
+  _array ::= comprehension_expression
+	| matrix_expression
+	| vector_expression
+
+  comprehension_expression ::=  -1(  '[' ( _expression | _closed_assignment -> "assignment" ) _terminator? _comprehension_clause ']' )
+
+  _comprehension_clause ::= for_clause '\n' ? ( ( for_clause | if_clause ) ( '\n' ? ( for_clause | if_clause ) )* )? '\n' ?
+
+  if_clause ::= 'if' _expression
+
+  for_clause ::= 'for' for_binding ( ',' for_binding )*
+
+  for_binding ::=  1(  'outer'? ( identifier | tuple_expression | typed_expression | interpolation_expression ) ( 'in' | '=' | '∈' ) _expression )
+
+  matrix_expression ::=  -1(  '[' ( matrix_row _terminator '\n' ? | matrix_row ( _terminator '\n' ? matrix_row )* ) _terminator? '\n' ? ']' )
+
+  matrix_row ::=  -1(  _expression | _closed_assignment -> "assignment" ) +
+
+  vector_expression ::= '[' ( ( _expression | _closed_assignment -> "assignment" ) ( ',' ( _expression | _closed_assignment -> "assignment" ) )* )? ','? ']'
+
+  parenthesized_expression ::= '(' ( _expression | _closed_assignment -> "assignment" ) ( ';' ( _expression | _closed_assignment -> "assignment" ) )* _comprehension_clause? ';'? ')'
+
+  tuple_expression ::= '(' ( ( _expression | named_field ) ',' | ( _expression | named_field ) ( ',' ( _expression | named_field ) )+ ( _comprehension_clause | ',' )? | ';' | ';' ( _expression | named_field ) ( ',' ( _expression | named_field ) )* ','? )? ')'
+
+  curly_expression ::= '{' ( ( _expression | _closed_assignment -> "assignment" ) ( ',' ( _expression | _closed_assignment -> "assignment" ) )* )? ','? '}'
+
+  adjoint_expression ::=  26(  _primary_expression !( "'"  ) )
+
+  field_expression ::=  30(  ( _primary_expression ):value !( '.' ) ( identifier | interpolation_expression | quote_expression | _string ) )
+
+  index_expression ::= _primary_expression _immediate_bracket _array
+
+  parametrized_type_expression ::= _primary_expression _immediate_brace curly_expression
+
+  call_expression ::=  29(  ( _primary_expression | operator ) _immediate_paren argument_list do_clause? )
+
+  broadcast_call_expression ::=  29(  _primary_expression !( '.' ) _immediate_paren argument_list do_clause? )
+
+  _closed_macrocall_expression ::=  29(  ( _primary_expression !( '.' ) )? macro_identifier ( _immediate_brace curly_expression | _immediate_bracket _array | _immediate_paren argument_list do_clause? ) )
+
+  macrocall_expression ::= ( _primary_expression !( '.' ) )? macro_identifier macro_argument_list?
+
+  macro_argument_list ::=  -4(  _expression | assignment | open_tuple ) +
+
+  argument_list ::= '(' ';'? ( ( _expression | _closed_assignment -> "named_argument" | _expression _comprehension_clause ) ( ( ',' | ';' ) ( _expression | _closed_assignment -> "named_argument" | _expression _comprehension_clause ) )* )? ','? ')'
+
+  do_clause ::= 'do' _do_parameter_list -> "argument_list" _block? 'end'
+
+  _do_parameter_list ::= ( ( identifier | splat_expression | typed_expression | tuple_expression | parenthesized_expression ) ( ',' ( identifier | splat_expression | typed_expression | tuple_expression | parenthesized_expression ) )* )? _terminator
+
+  named_field ::= identifier '=' _expression
+
+  interpolation_expression ::=  >25(  '$' ( integer_literal | float_literal | identifier | curly_expression | parenthesized_expression | tuple_expression | _array | _string ) )
+
+  quote_expression ::=  >25(  ':' ( integer_literal | float_literal | _string | identifier | operator | _immediate_brace curly_expression | _immediate_bracket _array | _immediate_paren ( parenthesized_expression | tuple_expression | '(' ( '::' | ':=' | '.=' | '=' | _assignment_operator | _lazy_or_operator | _lazy_and_operator | _syntactic_operator ) -> "operator" ')' ) | ( _assignment_operator | _lazy_or_operator | _lazy_and_operator | _syntactic_operator ) -> "operator" | !( 'baremodule' | 'module' | 'abstract' | 'primitive' | 'mutable' | 'struct' | 'quote' | 'let' | 'if' | 'else' | 'elseif' | 'try' | 'catch' | 'finally' | 'for' | 'while' | 'break' | 'continue' | 'using' | 'import' | 'const' | 'global' | 'local' | 'end' ) -> "identifier" ) )
+
+  _operation ::= unary_expression
+	| binary_expression
+	| range_expression
+	| splat_expression
+	| typed_expression
+	| unary_typed_expression
+	| where_expression
+
+  binary_expression ::=  >11(  _expression _pair_operator -> "operator" _expression )
+	|  >13(  _expression _arrow_operator -> "operator" _expression )
+	|  <14(  _expression _lazy_or_operator -> "operator" _expression )
+	|  <15(  _expression _lazy_and_operator -> "operator" _expression )
+	|  <17(  _expression ( 'in' | 'isa' | _comparison_operator | _type_order_operator ) -> "operator" _expression )
+	|  >18(  _expression _pipe_left_operator -> "operator" _expression )
+	|  <19(  _expression _pipe_right_operator -> "operator" _expression )
+	|  <20(  _expression _ellipsis_operator -> "operator" _expression )
+	|  <21(  _expression ( _unary_plus_operator | _plus_operator ) -> "operator" _expression )
+	|  <22(  _expression _times_operator -> "operator" _expression )
+	|  <23(  _expression _rational_operator -> "operator" _expression )
+	|  <24(  _expression _bitshift_operator -> "operator" _expression )
+	|  <27(  _expression _power_operator -> "operator" _expression )
+
+  unary_expression ::=  >25(  ( _tilde_operator | _type_order_operator | _unary_operator | _unary_plus_operator ) -> "operator" _expression )
+
+  range_expression ::=  <20(  _expression !( ':' ) _expression )
+
+  splat_expression ::=  20(  _expression '...' )
+
+  ternary_expression ::=  >12(  _expression '?' ( _expression | assignment ) ':' ( _expression | assignment ) )
+
+  typed_expression ::=  28(  _expression '::' ( _primary_expression ) )
+
+  unary_typed_expression ::=  >25(  '::' ( _primary_expression ) )
+
+  function_expression ::=  >10(  ( identifier | argument_list | typed_expression ) '->' ( _expression | assignment ) )
+
+  juxtaposition_expression ::= ( integer_literal | float_literal | adjoint_expression ) _primary_expression
+
+  compound_assignment_expression ::=  >-2(  _primary_expression ( _assignment_operator | _tilde_operator ) -> "operator" _expression )
+
+  where_expression ::=  <16(  _expression 'where' _expression )
+
+  macro_identifier ::= '@' ( identifier | scoped_identifier | operator | _syntactic_operator -> "operator" )
+
+  scoped_identifier ::= ( identifier | scoped_identifier ) !( '.' ) ( identifier | interpolation_expression | quote_expression )
+
+  _word_identifier ::= /[_\p{XID_Start}°∀-∇∎-∑∫-∳\p{Emoji}&&[^0-9#*]][^"'`\s\.\-\[\]#$,:;@~(){}+==*=/=//=\\=^=%=<<=>>=>>>=|=&=−=÷=⊻=≔⩴≕<><>←→↔↚↛↞↠↢↣↦↤↮⇎⇍⇏⇐⇒⇔⇴⇶⇷⇸⇹⇺⇻⇼⇽⇾⇿⟵⟶⟷⟹⟺⟻⟼⟽⟾⟿⤀⤁⤂⤃⤄⤅⤆⤇⤌⤍⤎⤏⤐⤑⤔⤕⤖⤗⤘⤝⤞⤟⤠⥄⥅⥆⥇⥈⥊⥋⥎⥐⥒⥓⥖⥗⥚⥛⥞⥟⥢⥤⥦⥧⥨⥩⥪⥫⥬⥭⥰⧴⬱⬰⬲⬳⬴⬵⬶⬷⬸⬹⬺⬻⬼⬽⬾⬿⭀⭁⭂⭃⥷⭄⥺⭇⭈⭉⭊⭋⭌￩￫⇜⇝↜↝↩↪↫↬↼↽⇀⇁⇄⇆⇇⇉⇋⇌⇚⇛⇠⇢↷↶↺↻><>=<=========≥≤≡≠≢∈∉∋∌⊆⊈⊂⊄⊊∝∊∍∥∦∷∺∻∽∾≁≃≂≄≅≆≇≈≉≊≋≌≍≎≐≑≒≓≖≗≘≙≚≛≜≝≞≟≣≦≧≨≩≪≫≬≭≮≯≰≱≲≳≴≵≶≷≸≹≺≻≼≽≾≿⊀⊁⊃⊅⊇⊉⊋⊏⊐⊑⊒⊜⊩⊬⊮⊰⊱⊲⊳⊴⊵⊶⊷⋍⋐⋑⋕⋖⋗⋘⋙⋚⋛⋜⋝⋞⋟⋠⋡⋢⋣⋤⋥⋦⋧⋨⋩⋪⋫⋬⋭⋲⋳⋴⋵⋶⋷⋸⋹⋺⋻⋼⋽⋾⋿⟈⟉⟒⦷⧀⧁⧡⧣⧤⧥⩦⩧⩪⩫⩬⩭⩮⩯⩰⩱⩲⩳⩵⩶⩷⩸⩹⩺⩻⩼⩽⩾⩿⪀⪁⪂⪃⪄⪅⪆⪇⪈⪉⪊⪋⪌⪍⪎⪏⪐⪑⪒⪓⪔⪕⪖⪗⪘⪙⪚⪛⪜⪝⪞⪟⪠⪡⪢⪣⪤⪥⪦⪧⪨⪩⪪⪫⪬⪭⪮⪯⪰⪱⪲⪳⪴⪵⪶⪷⪸⪹⪺⪻⪼⪽⪾⪿⫀⫁⫂⫃⫄⫅⫆⫇⫈⫉⫊⫋⫌⫍⫎⫏⫐⫑⫒⫓⫔⫕⫖⫗⫘⫙⫷⫸⫹⫺⊢⊣⟂⫪⫫…⁝⋮⋱⋰⋯++|−¦⊕⊖⊞⊟∪∨⊔±∓∔∸≏⊎⊻⊽⋎⋓⟇⧺⧻⨈⨢⨣⨤⨥⨦⨧⨨⨩⨪⨫⨬⨭⨮⨹⨺⩁⩂⩅⩊⩌⩏⩐⩒⩔⩖⩗⩛⩝⩡⩢⩣*/%&\\⌿÷··⋅∘×∩∧⊗⊘⊙⊚⊛⊠⊡⊓∗∙∤⅋≀⊼⋄⋆⋇⋉⋊⋋⋌⋏⋒⟑⦸⦼⦾⦿⧶⧷⨇⨰⨱⨲⨳⨴⨵⨶⨷⨸⨻⨼⨽⩀⩃⩄⩋⩍⩎⩑⩓⩕⩘⩚⩜⩞⩟⩠⫛⊍▷⨝⟕⟖⟗⨟<<>>>>>^↑↓⇵⟰⟱⤈⤉⤊⤋⤒⤓⥉⥌⥍⥏⥑⥔⥕⥘⥙⥜⥝⥠⥡⥣⥥⥮⥯￪￬¬√∛∜+±∓]*/
+
+  identifier ::= _word_identifier
+
+  boolean_literal ::= 'true'
+	| 'false'
+
+  integer_literal ::= @( '0b' /[01]([01]|_[01])*/ )
+	| @( '0o' /[0-7]([0-7]|_[0-7])*/ )
+	| @( '0x' /[0-9a-fA-F]([0-9a-fA-F]|_[0-9a-fA-F])*/ )
+	| /[0-9]([0-9]|_[0-9])*/
+
+  float_literal ::= @( '.' /[0-9]([0-9]|_[0-9])*/ /[eEf][+-]?\d+/? )
+	| /[0-9]([0-9]|_[0-9])*/ !( '.' /[0-9]([0-9]|_[0-9])*/? /[eEf][+-]?\d+/? )
+	| @( /[0-9]([0-9]|_[0-9])*/ /[eEf][+-]?\d+/ )
+	| @( ( '0x' /[0-9a-fA-F]([0-9a-fA-F]|_[0-9a-fA-F])*/ '.'? /[0-9a-fA-F]([0-9a-fA-F]|_[0-9a-fA-F])*/? | '0x.' /[0-9a-fA-F]([0-9a-fA-F]|_[0-9a-fA-F])*/ ) /p[+-]?\d+/ )
+
+  _string ::= character_literal
+	| string_literal
+	| command_literal
+	| prefixed_string_literal
+	| prefixed_command_literal
+
+  escape_sequence ::= @( '\\'  ( /[^uUx0-7]/ | /[uU][0-9a-fA-F]{1,6}/ | /[0-7]{1,3}/ | /x[0-9a-fA-F]{2}/ ) )
+
+  character_literal ::= @( "'"  ( /[^'\\]/ | @( '\\'  ( /[^uUx0-7]/ | /[uU][0-9a-fA-F]{1,6}/ | /[0-7]{1,3}/ | /x[0-9a-fA-F]{2}/ ) ) ) "'"  )
+
+  string_literal ::= _string_start ( _string_content | string_interpolation | escape_sequence )* _string_end
+
+  command_literal ::= _command_start ( _string_content | string_interpolation | escape_sequence )* _command_end
+
+  prefixed_string_literal ::= ( identifier ):prefix _immediate_string_start ( _string_content_no_interp | escape_sequence )* _string_end ( identifier )?:suffix
+
+  prefixed_command_literal ::= ( identifier ):prefix _immediate_command_start ( _string_content_no_interp | escape_sequence )* _command_end ( identifier )?:suffix
+
+  string_interpolation ::= '$' ( identifier | _immediate_paren '(' ( _expression | named_field -> "assignment" ) ')' )
+
+  operator ::= _pair_operator
+	| _arrow_operator
+	| _comparison_operator
+	| _pipe_left_operator
+	| _pipe_right_operator
+	| _ellipsis_operator
+	| _plus_operator
+	| _times_operator
+	| _rational_operator
+	| _bitshift_operator
+	| _power_operator
+	| _tilde_operator
+	| _type_order_operator
+	| _unary_operator
+	| _unary_plus_operator
+
+  _assignment_operator ::= @( ':=' | '$=' | '.=' | '.'? ( '+=' | '-=' | '*=' | '/=' | '//=' | '\=' | '^=' | '%=' | '<<=' | '>>=' | '>>>=' | '|=' | '&=' | '−=' | '÷=' | '⊻=' | '≔' | '⩴' | '≕' ) )
+
+  _pair_operator ::= @( '.'? ( '=>' ) )
+
+  _arrow_operator ::= @( '.'? ( '<--' | '-->' | '<-->' | '←' | '→' | '↔' | '↚' | '↛' | '↞' | '↠' | '↢' | '↣' | '↦' | '↤' | '↮' | '⇎' | '⇍' | '⇏' | '⇐' | '⇒' | '⇔' | '⇴' | '⇶' | '⇷' | '⇸' | '⇹' | '⇺' | '⇻' | '⇼' | '⇽' | '⇾' | '⇿' | '⟵' | '⟶' | '⟷' | '⟹' | '⟺' | '⟻' | '⟼' | '⟽' | '⟾' | '⟿' | '⤀' | '⤁' | '⤂' | '⤃' | '⤄' | '⤅' | '⤆' | '⤇' | '⤌' | '⤍' | '⤎' | '⤏' | '⤐' | '⤑' | '⤔' | '⤕' | '⤖' | '⤗' | '⤘' | '⤝' | '⤞' | '⤟' | '⤠' | '⥄' | '⥅' | '⥆' | '⥇' | '⥈' | '⥊' | '⥋' | '⥎' | '⥐' | '⥒' | '⥓' | '⥖' | '⥗' | '⥚' | '⥛' | '⥞' | '⥟' | '⥢' | '⥤' | '⥦' | '⥧' | '⥨' | '⥩' | '⥪' | '⥫' | '⥬' | '⥭' | '⥰' | '⧴' | '⬱' | '⬰' | '⬲' | '⬳' | '⬴' | '⬵' | '⬶' | '⬷' | '⬸' | '⬹' | '⬺' | '⬻' | '⬼' | '⬽' | '⬾' | '⬿' | '⭀' | '⭁' | '⭂' | '⭃' | '⥷' | '⭄' | '⥺' | '⭇' | '⭈' | '⭉' | '⭊' | '⭋' | '⭌' | '￩' | '￫' | '⇜' | '⇝' | '↜' | '↝' | '↩' | '↪' | '↫' | '↬' | '↼' | '↽' | '⇀' | '⇁' | '⇄' | '⇆' | '⇇' | '⇉' | '⇋' | '⇌' | '⇚' | '⇛' | '⇠' | '⇢' | '↷' | '↶' | '↺' | '↻' ) )
+
+  _lazy_or_operator ::= @( '.'? ( '||' ) )
+
+  _lazy_and_operator ::= @( '.'? ( '&&' ) )
+
+  _comparison_operator ::= @( '.'? ( '>' | '<' | '>=' | '<=' | '==' | '===' | '!=' | '!==' | '≥' | '≤' | '≡' | '≠' | '≢' | '∈' | '∉' | '∋' | '∌' | '⊆' | '⊈' | '⊂' | '⊄' | '⊊' | '∝' | '∊' | '∍' | '∥' | '∦' | '∷' | '∺' | '∻' | '∽' | '∾' | '≁' | '≃' | '≂' | '≄' | '≅' | '≆' | '≇' | '≈' | '≉' | '≊' | '≋' | '≌' | '≍' | '≎' | '≐' | '≑' | '≒' | '≓' | '≖' | '≗' | '≘' | '≙' | '≚' | '≛' | '≜' | '≝' | '≞' | '≟' | '≣' | '≦' | '≧' | '≨' | '≩' | '≪' | '≫' | '≬' | '≭' | '≮' | '≯' | '≰' | '≱' | '≲' | '≳' | '≴' | '≵' | '≶' | '≷' | '≸' | '≹' | '≺' | '≻' | '≼' | '≽' | '≾' | '≿' | '⊀' | '⊁' | '⊃' | '⊅' | '⊇' | '⊉' | '⊋' | '⊏' | '⊐' | '⊑' | '⊒' | '⊜' | '⊩' | '⊬' | '⊮' | '⊰' | '⊱' | '⊲' | '⊳' | '⊴' | '⊵' | '⊶' | '⊷' | '⋍' | '⋐' | '⋑' | '⋕' | '⋖' | '⋗' | '⋘' | '⋙' | '⋚' | '⋛' | '⋜' | '⋝' | '⋞' | '⋟' | '⋠' | '⋡' | '⋢' | '⋣' | '⋤' | '⋥' | '⋦' | '⋧' | '⋨' | '⋩' | '⋪' | '⋫' | '⋬' | '⋭' | '⋲' | '⋳' | '⋴' | '⋵' | '⋶' | '⋷' | '⋸' | '⋹' | '⋺' | '⋻' | '⋼' | '⋽' | '⋾' | '⋿' | '⟈' | '⟉' | '⟒' | '⦷' | '⧀' | '⧁' | '⧡' | '⧣' | '⧤' | '⧥' | '⩦' | '⩧' | '⩪' | '⩫' | '⩬' | '⩭' | '⩮' | '⩯' | '⩰' | '⩱' | '⩲' | '⩳' | '⩵' | '⩶' | '⩷' | '⩸' | '⩹' | '⩺' | '⩻' | '⩼' | '⩽' | '⩾' | '⩿' | '⪀' | '⪁' | '⪂' | '⪃' | '⪄' | '⪅' | '⪆' | '⪇' | '⪈' | '⪉' | '⪊' | '⪋' | '⪌' | '⪍' | '⪎' | '⪏' | '⪐' | '⪑' | '⪒' | '⪓' | '⪔' | '⪕' | '⪖' | '⪗' | '⪘' | '⪙' | '⪚' | '⪛' | '⪜' | '⪝' | '⪞' | '⪟' | '⪠' | '⪡' | '⪢' | '⪣' | '⪤' | '⪥' | '⪦' | '⪧' | '⪨' | '⪩' | '⪪' | '⪫' | '⪬' | '⪭' | '⪮' | '⪯' | '⪰' | '⪱' | '⪲' | '⪳' | '⪴' | '⪵' | '⪶' | '⪷' | '⪸' | '⪹' | '⪺' | '⪻' | '⪼' | '⪽' | '⪾' | '⪿' | '⫀' | '⫁' | '⫂' | '⫃' | '⫄' | '⫅' | '⫆' | '⫇' | '⫈' | '⫉' | '⫊' | '⫋' | '⫌' | '⫍' | '⫎' | '⫏' | '⫐' | '⫑' | '⫒' | '⫓' | '⫔' | '⫕' | '⫖' | '⫗' | '⫘' | '⫙' | '⫷' | '⫸' | '⫹' | '⫺' | '⊢' | '⊣' | '⟂' | '⫪' | '⫫' ) )
+
+  _pipe_right_operator ::= @( '.'? ( '|>' ) )
+
+  _pipe_left_operator ::= @( '.'? ( '<|' ) )
+
+  _ellipsis_operator ::= @( '..' | '.'? ( '…' | '⁝' | '⋮' | '⋱' | '⋰' | '⋯' ) )
+
+  _plus_operator ::= @( '.'? ( '++' | '|' | '−' | '¦' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' | '±' | '∓' | '∔' | '∸' | '≏' | '⊎' | '⊻' | '⊽' | '⋎' | '⋓' | '⟇' | '⧺' | '⧻' | '⨈' | '⨢' | '⨣' | '⨤' | '⨥' | '⨦' | '⨧' | '⨨' | '⨩' | '⨪' | '⨫' | '⨬' | '⨭' | '⨮' | '⨹' | '⨺' | '⩁' | '⩂' | '⩅' | '⩊' | '⩌' | '⩏' | '⩐' | '⩒' | '⩔' | '⩖' | '⩗' | '⩛' | '⩝' | '⩡' | '⩢' | '⩣' ) )
+
+  _times_operator ::= @( '.'? ( '*' | '/' | '%' | '&' | '\\'  | '⌿' | '÷' | '·' | '·' | '⋅' | '∘' | '×' | '∩' | '∧' | '⊗' | '⊘' | '⊙' | '⊚' | '⊛' | '⊠' | '⊡' | '⊓' | '∗' | '∙' | '∤' | '⅋' | '≀' | '⊼' | '⋄' | '⋆' | '⋇' | '⋉' | '⋊' | '⋋' | '⋌' | '⋏' | '⋒' | '⟑' | '⦸' | '⦼' | '⦾' | '⦿' | '⧶' | '⧷' | '⨇' | '⨰' | '⨱' | '⨲' | '⨳' | '⨴' | '⨵' | '⨶' | '⨷' | '⨸' | '⨻' | '⨼' | '⨽' | '⩀' | '⩃' | '⩄' | '⩋' | '⩍' | '⩎' | '⩑' | '⩓' | '⩕' | '⩘' | '⩚' | '⩜' | '⩞' | '⩟' | '⩠' | '⫛' | '⊍' | '▷' | '⨝' | '⟕' | '⟖' | '⟗' | '⨟' ) )
+
+  _rational_operator ::= @( '.'? ( '//' ) )
+
+  _bitshift_operator ::= @( '.'? ( '<<' | '>>' | '>>>' ) )
+
+  _power_operator ::= @( '.'? ( '^' | '↑' | '↓' | '⇵' | '⟰' | '⟱' | '⤈' | '⤉' | '⤊' | '⤋' | '⤒' | '⤓' | '⥉' | '⥌' | '⥍' | '⥏' | '⥑' | '⥔' | '⥕' | '⥘' | '⥙' | '⥜' | '⥝' | '⥠' | '⥡' | '⥣' | '⥥' | '⥮' | '⥯' | '￪' | '￬' ) )
+
+  _tilde_operator ::= @( '.'? ( '~' ) )
+
+  _type_order_operator ::= @( '.'? ( '<:' | '>:' ) )
+
+  _unary_operator ::= @( '.'? ( '!' | '¬' | '√' | '∛' | '∜' ) )
+
+  _unary_plus_operator ::= @( '.'? ( '+' | '-' | '±' | '∓' ) )
+
+  _syntactic_operator ::= @( '$' | '.' | '...' | '->' | '?' )
+
+  _terminator ::= '\n'
+	| /;+/
+
+  line_comment ::= @( '#' /.*/ )

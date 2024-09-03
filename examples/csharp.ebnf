@@ -1,0 +1,841 @@
+; From tree-sitter-c-sharp/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	_optional_semi
+	interpolation_regular_start
+	interpolation_verbatim_start
+	interpolation_raw_start
+	interpolation_start_quote
+	interpolation_end_quote
+	interpolation_open_brace
+	interpolation_close_brace
+	interpolation_string_content
+	raw_string_start
+	raw_string_end
+	raw_string_content
+	}
+
+extras ::= {
+	/[\s\u00A0\uFEFF\u3000]+/
+	comment
+	preproc_region
+	preproc_endregion
+	preproc_line
+	preproc_pragma
+	preproc_nullable
+	preproc_error
+	preproc_warning
+	preproc_define
+	preproc_undef
+	}
+
+precedences ::= {
+	{ _anonymous_object_member_declarator _simple_name }
+	{ block initializer_expression }
+	}
+
+supertypes ::= {
+	declaration
+	expression
+	non_lvalue_expression
+	lvalue_expression
+	literal
+	statement
+	type
+	type_declaration
+	pattern
+	}
+
+inline ::= {
+	_namespace_member_declaration
+	_object_creation_type
+	_nullable_base_type
+	_parameter_type_with_modifiers
+	_top_level_item_no_statement
+	}
+
+conflicts ::= {
+	{ _simple_name generic_name }
+	{ _simple_name constructor_declaration }
+	{ _simple_name type_parameter }
+	{ tuple_element type_pattern }
+	{ tuple_element using_variable_declarator }
+	{ tuple_element declaration_expression }
+	{ tuple_pattern parameter }
+	{ tuple_pattern _simple_name }
+	{ lvalue_expression _name }
+	{ parameter lvalue_expression }
+	{ type attribute }
+	{ type nullable_type }
+	{ type nullable_type array_creation_expression }
+	{ type _array_base_type }
+	{ type _array_base_type array_creation_expression }
+	{ type array_creation_expression }
+	{ type _pointer_base_type }
+	{ qualified_name member_access_expression }
+	{ qualified_name explicit_interface_specifier }
+	{ _array_base_type stackalloc_expression }
+	{ constant_pattern non_lvalue_expression }
+	{ constant_pattern _expression_statement_expression }
+	{ constant_pattern lvalue_expression }
+	{ constant_pattern _name }
+	{ constant_pattern lvalue_expression _name }
+	{ _reserved_identifier modifier }
+	{ _reserved_identifier scoped_type }
+	{ _reserved_identifier implicit_type }
+	{ _reserved_identifier from_clause }
+	{ _reserved_identifier implicit_type var_pattern }
+	{ _reserved_identifier type_parameter_constraint }
+	{ _reserved_identifier parameter scoped_type }
+	{ _reserved_identifier parameter }
+	{ _simple_name parameter }
+	{ tuple_element parameter declaration_expression }
+	{ parameter tuple_element }
+	{ event_declaration variable_declarator }
+	}
+
+word ::= _identifier_token
+
+rules:
+
+  compilation_unit ::= shebang_directive? _top_level_item*
+
+  _top_level_item ::=  2(  _top_level_item_no_statement | global_statement )
+
+  _top_level_item_no_statement ::= extern_alias_directive
+	| using_directive
+	| global_attribute
+	| preproc_if_in_top_level -> "preproc_if"
+	| _namespace_member_declaration
+	| file_scoped_namespace_declaration
+
+  global_statement ::=  1(  statement )
+
+  extern_alias_directive ::= 'extern' 'alias' ( identifier ):name ';'
+
+  using_directive ::= 'global'? 'using' ( 'unsafe'? ( identifier ):name '=' type | 'static'? 'unsafe'? _name ) ';'
+
+  global_attribute ::= '[' ( 'assembly' | 'module' ) ':' attribute ( ',' attribute )* ','? ']'
+
+  attribute ::= ( _name ):name attribute_argument_list?
+
+  attribute_argument_list ::=  -1(  '(' ( attribute_argument ( ',' attribute_argument )* )? ')' )
+
+  attribute_argument ::=  -1(  ( identifier ( ':' | '=' ) )? expression )
+
+  attribute_list ::= '[' attribute_target_specifier? attribute ( ',' attribute )* ','? ']'
+
+  attribute_target_specifier ::= ( 'field' | 'event' | 'method' | 'param' | 'property' | 'return' | 'type' ) ':'
+
+  _namespace_member_declaration ::= namespace_declaration
+	| type_declaration
+
+  namespace_declaration ::= 'namespace' ( _name ):name ( declaration_list ):body _optional_semi
+
+  file_scoped_namespace_declaration ::= 'namespace' ( _name ):name ';'
+
+  type_declaration ::= class_declaration
+	| struct_declaration
+	| enum_declaration
+	| interface_declaration
+	| delegate_declaration
+	| record_declaration
+
+  class_declaration ::= attribute_list* modifier* 'class' ( identifier ):name type_parameter_list? parameter_list? base_list? type_parameter_constraints_clause* ( declaration_list ):body _optional_semi
+
+  struct_declaration ::= attribute_list* modifier* 'ref'? 'struct' ( identifier ):name type_parameter_list? parameter_list? base_list? type_parameter_constraints_clause* ( declaration_list ):body _optional_semi
+
+  enum_declaration ::= attribute_list* modifier* 'enum' ( identifier ):name base_list? ( enum_member_declaration_list ):body _optional_semi
+
+  enum_member_declaration_list ::= '{' ( ( enum_member_declaration | preproc_if_in_enum_member_declaration -> "preproc_if" ) ( ',' ( enum_member_declaration | preproc_if_in_enum_member_declaration -> "preproc_if" ) )* )? ','? '}'
+
+  enum_member_declaration ::= attribute_list* ( identifier ):name ( '=' ( expression ):value )?
+
+  interface_declaration ::= attribute_list* modifier* 'interface' ( identifier ):name ( type_parameter_list )?:type_parameters base_list? type_parameter_constraints_clause* ( declaration_list ):body _optional_semi
+
+  delegate_declaration ::= attribute_list* modifier* 'delegate' ( type ):type ( identifier ):name ( type_parameter_list )?:type_parameters ( parameter_list ):parameters type_parameter_constraints_clause* ';'
+
+  record_declaration ::= attribute_list* modifier* 'record' ( 'class' | 'struct' )? ( identifier ):name type_parameter_list? parameter_list? record_base -> "base_list"? type_parameter_constraints_clause* ( ( declaration_list ):body | ';' ) _optional_semi
+
+  record_base ::= ':' _name ( ',' _name )*
+	| ':' primary_constructor_base_type ( ',' _name ( ',' _name )* )?
+
+  primary_constructor_base_type ::= ( _name ):type argument_list
+
+  modifier ::= 'abstract' | 'async' | 'const' | 'extern' | 'file' | 'fixed' | 'internal' | 'new' | 'override' | 'partial' | 'private' | 'protected' | 'public' | 'readonly' | 'required' | 'sealed' | 'static' | 'unsafe' | 'virtual' | 'volatile'
+
+  type_parameter_list ::= '<' type_parameter ( ',' type_parameter )* '>'
+
+  type_parameter ::= attribute_list* ( 'in' | 'out' )? ( identifier ):name
+
+  base_list ::= ':' type argument_list? ( ',' type argument_list? )*
+
+  type_parameter_constraints_clause ::= 'where' identifier ':' type_parameter_constraint ( ',' type_parameter_constraint )*
+
+  type_parameter_constraint ::= 'class' '?'?
+	| 'struct'
+	| 'notnull'
+	| 'unmanaged'
+	| constructor_constraint
+	| ( type ):type
+
+  constructor_constraint ::= 'new' '(' ')'
+
+  operator_declaration ::= attribute_list* modifier* ( type ):type explicit_interface_specifier? 'operator' 'checked'? ( '!' | '~' | '++' | '--' | 'true' | 'false' | '+' | '-' | '*' | '/' | '%' | '^' | '|' | '&' | '<<' | '>>' | '>>>' | '==' | '!=' | '>' | '<' | '>=' | '<=' ):operator ( parameter_list ):parameters _function_body
+
+  conversion_operator_declaration ::= attribute_list* modifier* ( 'implicit' | 'explicit' ) explicit_interface_specifier? 'operator' 'checked'? ( type ):type ( parameter_list ):parameters _function_body
+
+  declaration_list ::= '{' declaration* '}'
+
+  declaration ::= class_declaration
+	| struct_declaration
+	| enum_declaration
+	| delegate_declaration
+	| field_declaration
+	| method_declaration
+	| event_declaration
+	| event_field_declaration
+	| record_declaration
+	| constructor_declaration
+	| destructor_declaration
+	| indexer_declaration
+	| interface_declaration
+	| namespace_declaration
+	| operator_declaration
+	| conversion_operator_declaration
+	| property_declaration
+	| using_directive
+	| preproc_if
+
+  field_declaration ::= attribute_list* modifier* variable_declaration ';'
+
+  constructor_declaration ::= attribute_list* modifier* ( identifier ):name ( parameter_list ):parameters constructor_initializer? _function_body
+
+  destructor_declaration ::= attribute_list* 'extern'? '~' ( identifier ):name ( parameter_list ):parameters _function_body
+
+  method_declaration ::= attribute_list* modifier* ( type ):returns explicit_interface_specifier? ( identifier ):name ( type_parameter_list )?:type_parameters ( parameter_list ):parameters type_parameter_constraints_clause* _function_body
+
+  event_declaration ::= attribute_list* modifier* 'event' ( type ):type explicit_interface_specifier? ( identifier ):name ( ( accessor_list ):accessors | ';' )
+
+  event_field_declaration ::=  ~1(  attribute_list* modifier* 'event' variable_declaration ';' )
+
+  accessor_list ::= '{' accessor_declaration* '}'
+
+  accessor_declaration ::= attribute_list* modifier* ( 'get' | 'set' | 'add' | 'remove' | 'init' | identifier ):name _function_body
+
+  indexer_declaration ::= attribute_list* modifier* ( type ):type explicit_interface_specifier? 'this' ( bracketed_parameter_list ):parameters ( ( accessor_list ):accessors | ( arrow_expression_clause ):value ';' )
+
+  bracketed_parameter_list ::= '[' ( ( parameter | _parameter_array ) ( ',' ( parameter | _parameter_array ) )* )? ']'
+
+  property_declaration ::= attribute_list* modifier* ( type ):type explicit_interface_specifier? ( identifier ):name ( ( accessor_list ):accessors ( '=' ( expression ):value ';' )? | ( arrow_expression_clause ):value ';' )
+
+  explicit_interface_specifier ::=  18(  _name '.' )
+
+  parameter_list ::= '(' ( ( parameter | _parameter_array ) ( ',' ( parameter | _parameter_array ) )* )? ')'
+
+  _parameter_type_with_modifiers ::= ( 'this' | 'scoped' | 'ref' | 'out' | 'in' | 'readonly' ) -> "modifier"* ( type ):type
+
+  parameter ::= attribute_list* _parameter_type_with_modifiers? ( identifier ):name ( '=' expression )?
+
+  _parameter_array ::= attribute_list* 'params' ( array_type | nullable_type ):type ( identifier ):name
+
+  constructor_initializer ::= ':' ( 'base' | 'this' ) argument_list
+
+  argument_list ::= '(' ( argument ( ',' argument )* )? ')'
+
+  tuple_pattern ::= '(' ( ( identifier ):name | discard | tuple_pattern ) ( ',' ( ( identifier ):name | discard | tuple_pattern ) )* ')'
+
+  argument ::=  1(  ( ( identifier ):name ':' )? ( 'ref' | 'out' | 'in' )? ( expression | declaration_expression ) )
+
+  block ::= '{' statement* '}'
+
+  arrow_expression_clause ::= '=>' expression
+
+  _function_body ::= ( block ):body
+	| ( arrow_expression_clause ):body ';'
+	| ';'
+
+  variable_declaration ::= ( type ):type variable_declarator ( ',' variable_declarator )*
+
+  using_variable_declaration ::= ( type ):type using_variable_declarator -> "variable_declarator" ( ',' using_variable_declarator -> "variable_declarator" )*
+
+  variable_declarator ::= ( ( identifier ):name | tuple_pattern ) bracketed_argument_list? ( '=' expression )?
+
+  using_variable_declarator ::= ( identifier ):name ( '=' expression )?
+
+  bracketed_argument_list ::= '[' argument ( ',' argument )* ','? ']'
+
+  qualified_identifier ::= identifier ( '.' identifier )*
+
+  _name ::= alias_qualified_name
+	| qualified_name
+	| _simple_name
+
+  alias_qualified_name ::= ( identifier ):alias '::' ( _simple_name ):name
+
+  _simple_name ::= identifier
+	| generic_name
+
+  qualified_name ::=  18(  ( _name ):qualifier '.' ( _simple_name ):name )
+
+  generic_name ::= identifier type_argument_list
+
+  type_argument_list ::= '<' ( ','* | type ( ',' type )* ) '>'
+
+  type ::= implicit_type
+	| array_type
+	| _name
+	| nullable_type
+	| pointer_type
+	| function_pointer_type
+	| predefined_type
+	| tuple_type
+	| ref_type
+	| scoped_type
+
+  implicit_type ::=  ~1(  'var' )
+
+  array_type ::= ( _array_base_type ):type ( array_rank_specifier ):rank
+
+  _array_base_type ::= array_type
+	| _name
+	| nullable_type
+	| pointer_type
+	| function_pointer_type
+	| predefined_type
+	| tuple_type
+
+  array_rank_specifier ::= '[' ( expression? ( ',' expression? )* )? ']'
+
+  nullable_type ::= ( _nullable_base_type ):type '?'
+
+  _nullable_base_type ::= array_type
+	| _name
+	| predefined_type
+	| tuple_type
+
+  pointer_type ::= ( _pointer_base_type ):type '*'
+
+  _pointer_base_type ::= _name
+	| nullable_type
+	| pointer_type
+	| function_pointer_type
+	| predefined_type
+	| tuple_type
+
+  function_pointer_type ::= 'delegate' '*' calling_convention? '<' ( function_pointer_parameter ',' )* ( type ):returns '>'
+
+  calling_convention ::= 'managed'
+	| 'unmanaged' ( '[' ( 'Cdecl' | 'Stdcall' | 'Thiscall' | 'Fastcall' | identifier ) ( ',' ( 'Cdecl' | 'Stdcall' | 'Thiscall' | 'Fastcall' | identifier ) )* ']' )?
+
+  function_pointer_parameter ::= ( 'ref' | 'out' | 'in' )? ( _ref_base_type ):type
+
+  predefined_type ::= @( 'bool' | 'byte' | 'char' | 'decimal' | 'double' | 'float' | 'int' | 'long' | 'object' | 'sbyte' | 'short' | 'string' | 'uint' | 'ulong' | 'ushort' | 'nint' | 'nuint' | 'void' )
+
+  ref_type ::= 'ref' 'readonly'? ( type ):type
+
+  _ref_base_type ::= implicit_type
+	| _name
+	| nullable_type
+	| array_type
+	| pointer_type
+	| function_pointer_type
+	| predefined_type
+	| tuple_type
+
+  scoped_type ::= 'scoped' ( _scoped_base_type ):type
+
+  _scoped_base_type ::= _name
+	| ref_type
+
+  tuple_type ::= '(' tuple_element ( ',' tuple_element )+ ')'
+
+  tuple_element ::= ( type ):type ( identifier )?:name
+
+  statement ::=  1(  block | break_statement | checked_statement | continue_statement | do_statement | empty_statement | expression_statement | fixed_statement | for_statement | return_statement | lock_statement | yield_statement | switch_statement | throw_statement | try_statement | unsafe_statement | using_statement | foreach_statement | goto_statement | labeled_statement | if_statement | while_statement | local_declaration_statement | local_function_statement | preproc_if_in_top_level -> "preproc_if" )
+
+  break_statement ::= 'break' ';'
+
+  checked_statement ::= ( 'checked' | 'unchecked' ) block
+
+  continue_statement ::= 'continue' ';'
+
+  do_statement ::= 'do' ( statement ):body 'while' '(' ( expression ):condition ')' ';'
+
+  empty_statement ::= ';'
+
+  expression_statement ::= _expression_statement_expression ';'
+
+  fixed_statement ::= 'fixed' '(' variable_declaration ')' statement
+
+  for_statement ::= 'for' '(' ( variable_declaration | expression ( ',' expression )* )?:initializer ';' ( expression )?:condition ';' ( expression ( ',' expression )* )?:update ')' ( statement ):body
+
+  return_statement ::= 'return' expression? ';'
+
+  lock_statement ::= 'lock' '(' expression ')' statement
+
+  yield_statement ::= 'yield' ( 'return' expression | 'break' ) ';'
+
+  switch_statement ::= 'switch' ( '(' ( expression ):value ')' | ( tuple_expression ):value ) ( switch_body ):body
+
+  switch_body ::= '{' switch_section* '}'
+
+  switch_section ::= ( 'case' ( expression | pattern when_clause? ) | 'default' ) ':' statement*
+
+  throw_statement ::= 'throw' expression? ';'
+
+  try_statement ::= 'try' ( block ):body catch_clause* finally_clause?
+
+  catch_clause ::= 'catch' catch_declaration? catch_filter_clause? ( block ):body
+
+  catch_declaration ::= '(' ( type ):type ( identifier )?:name ')'
+
+  catch_filter_clause ::= 'when' '(' expression ')'
+
+  finally_clause ::= 'finally' block
+
+  unsafe_statement ::= 'unsafe' block
+
+  using_statement ::= 'await'? 'using' '(' ( using_variable_declaration -> "variable_declaration" | expression ) ')' ( statement ):body
+
+  foreach_statement ::= 'await'? 'foreach' '(' ( ( type ):type ( identifier | tuple_pattern ):left | ( expression ):left ) 'in' ( expression ):right ')' ( statement ):body
+
+  goto_statement ::= 'goto' ( 'case' | 'default' )? expression? ';'
+
+  labeled_statement ::= identifier ':' statement
+
+  if_statement ::= 'if' '(' ( expression ):condition ')' ( statement ):consequence ( 'else' ( statement ):alternative )?
+
+  while_statement ::= 'while' '(' ( expression ):condition ')' ( statement ):body
+
+  local_declaration_statement ::= 'await'? 'using'? modifier* variable_declaration ';'
+
+  local_function_statement ::= attribute_list* modifier* ( type ):type ( identifier ):name ( type_parameter_list )?:type_parameters ( parameter_list ):parameters type_parameter_constraints_clause* _function_body
+
+  pattern ::= constant_pattern
+	| declaration_pattern
+	| discard
+	| recursive_pattern
+	| var_pattern
+	| negated_pattern
+	| parenthesized_pattern
+	| relational_pattern
+	| or_pattern
+	| and_pattern
+	| list_pattern
+	| type_pattern
+
+  constant_pattern ::= binary_expression
+	| default_expression
+	| interpolated_string_expression
+	| parenthesized_expression
+	| postfix_unary_expression
+	| prefix_unary_expression
+	| sizeof_expression
+	| tuple_expression
+	| typeof_expression
+	| member_access_expression
+	| invocation_expression
+	| cast_expression
+	| _simple_name
+	| literal
+
+  discard ::= '_'
+
+  parenthesized_pattern ::= '(' pattern ')'
+
+  var_pattern ::= 'var' _variable_designation
+
+  type_pattern ::= ( type ):type
+
+  list_pattern ::= '[' ( ( pattern | '..' ) ( ',' ( pattern | '..' ) )* ','? )? ']'
+
+  recursive_pattern ::= ( type )?:type ( positional_pattern_clause property_pattern_clause? | property_pattern_clause ) _variable_designation?
+
+  positional_pattern_clause ::=  1(  '(' ( subpattern ( ',' subpattern )+ )? ')' )
+
+  property_pattern_clause ::=  1(  '{' ( subpattern ( ',' subpattern )* )? ','? '}' )
+
+  subpattern ::= ( expression ':' )? pattern
+
+  relational_pattern ::= '<' expression
+	| '<=' expression
+	| '>' expression
+	| '>=' expression
+
+  negated_pattern ::= 'not' pattern
+
+  and_pattern ::=  <8(  ( pattern ):left ( 'and' ):operator ( pattern ):right )
+
+  or_pattern ::=  <6(  ( pattern ):left ( 'or' ):operator ( pattern ):right )
+
+  declaration_pattern ::= ( type ):type _variable_designation
+
+  _variable_designation ::=  1(  discard | parenthesized_variable_designation | ( identifier ):name )
+
+  parenthesized_variable_designation ::= '(' ( _variable_designation ( ',' _variable_designation )* )? ')'
+
+  expression ::= non_lvalue_expression
+	| lvalue_expression
+
+  non_lvalue_expression ::= 'base'
+	| binary_expression
+	| interpolated_string_expression
+	| conditional_expression
+	| conditional_access_expression
+	| literal
+	| _expression_statement_expression
+	| is_expression
+	| is_pattern_expression
+	| as_expression
+	| cast_expression
+	| checked_expression
+	| switch_expression
+	| throw_expression
+	| default_expression
+	| lambda_expression
+	| with_expression
+	| sizeof_expression
+	| typeof_expression
+	| makeref_expression
+	| ref_expression
+	| reftype_expression
+	| refvalue_expression
+	| stackalloc_expression
+	| range_expression
+	| array_creation_expression
+	| anonymous_method_expression
+	| anonymous_object_creation_expression
+	| implicit_array_creation_expression
+	| implicit_object_creation_expression
+	| implicit_stackalloc_expression
+	| initializer_expression
+	| query_expression
+	| preproc_if_in_expression -> "preproc_if"
+
+  lvalue_expression ::= 'this'
+	| member_access_expression
+	| tuple_expression
+	| _simple_name
+	| element_access_expression
+	| bracketed_argument_list -> "element_binding_expression"
+	| _pointer_indirection_expression -> "prefix_unary_expression"
+	| _parenthesized_lvalue_expression -> "parenthesized_expression"
+
+  _expression_statement_expression ::= assignment_expression
+	| invocation_expression
+	| postfix_unary_expression
+	| prefix_unary_expression
+	| await_expression
+	| object_creation_expression
+	| parenthesized_expression
+
+  assignment_expression ::= ( lvalue_expression ):left ( '=' | '+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '^=' | '|=' | '<<=' | '>>=' | '>>>=' | '??=' ):operator ( expression ):right
+
+  binary_expression ::=  <5(  ( expression ):left ( '&&' ):operator ( expression ):right )
+	|  <4(  ( expression ):left ( '||' ):operator ( expression ):right )
+	|  <11(  ( expression ):left ( '>>' ):operator ( expression ):right )
+	|  <11(  ( expression ):left ( '>>>' ):operator ( expression ):right )
+	|  <11(  ( expression ):left ( '<<' ):operator ( expression ):right )
+	|  <8(  ( expression ):left ( '&' ):operator ( expression ):right )
+	|  <7(  ( expression ):left ( '^' ):operator ( expression ):right )
+	|  <6(  ( expression ):left ( '|' ):operator ( expression ):right )
+	|  <12(  ( expression ):left ( '+' ):operator ( expression ):right )
+	|  <12(  ( expression ):left ( '-' ):operator ( expression ):right )
+	|  <13(  ( expression ):left ( '*' ):operator ( expression ):right )
+	|  <13(  ( expression ):left ( '/' ):operator ( expression ):right )
+	|  <13(  ( expression ):left ( '%' ):operator ( expression ):right )
+	|  <10(  ( expression ):left ( '<' ):operator ( expression ):right )
+	|  <10(  ( expression ):left ( '<=' ):operator ( expression ):right )
+	|  <9(  ( expression ):left ( '==' ):operator ( expression ):right )
+	|  <9(  ( expression ):left ( '!=' ):operator ( expression ):right )
+	|  <10(  ( expression ):left ( '>=' ):operator ( expression ):right )
+	|  <10(  ( expression ):left ( '>' ):operator ( expression ):right )
+	|  >3(  ( expression ):left ( '??' ):operator ( expression ):right )
+
+  postfix_unary_expression ::=  18(  expression '++' | expression '--' | expression '!' )
+
+  prefix_unary_expression ::=  17(  ( '++' | '--' | '+' | '-' | '!' | '~' | '&' | '^' ) expression )
+
+  _pointer_indirection_expression ::=  >17(  '*' lvalue_expression )
+
+  query_expression ::= from_clause _query_body
+
+  from_clause ::= 'from' ( type )?:type ( identifier ):name 'in' expression
+
+  _query_body ::= _query_clause* _select_or_group_clause ( 'into' identifier _query_clause* _select_or_group_clause )*
+
+  _query_clause ::= from_clause
+	| join_clause
+	| let_clause
+	| order_by_clause
+	| where_clause
+
+  join_clause ::= 'join' _join_header _join_body join_into_clause?
+
+  _join_header ::= ( type )?:type identifier 'in' expression
+
+  _join_body ::= 'on' expression 'equals' expression
+
+  join_into_clause ::= 'into' identifier
+
+  let_clause ::= 'let' identifier '=' expression
+
+  order_by_clause ::= 'orderby' _ordering ( ',' _ordering )*
+
+  _ordering ::= expression ( 'ascending' | 'descending' )?
+
+  where_clause ::= 'where' expression
+
+  _select_or_group_clause ::= group_clause
+	| select_clause
+
+  group_clause ::= 'group' expression 'by' expression
+
+  select_clause ::= 'select' expression
+
+  conditional_expression ::=  >2(  ( expression ):condition '?' ( expression ):consequence ':' ( expression ):alternative )
+
+  conditional_access_expression ::=  >2(  ( expression ):condition '?' ( member_binding_expression | bracketed_argument_list -> "element_binding_expression" ) )
+
+  as_expression ::=  10(  ( expression ):left ( 'as' ):operator ( type ):right )
+
+  is_expression ::=  10(  ( expression ):left ( 'is' ):operator ( type ):right )
+
+  is_pattern_expression ::=  10(  ( expression ):expression 'is' ( pattern ):pattern )
+
+  cast_expression ::=  17(   ~1(  '(' ( type ):type ')' ( expression ):value )  )
+
+  checked_expression ::= ( 'checked' | 'unchecked' ) '(' expression ')'
+
+  invocation_expression ::=  18(  ( expression ):function ( argument_list ):arguments )
+
+  switch_expression ::=  15(  expression 'switch' '{' ( switch_expression_arm ( ',' switch_expression_arm )* )? ','? '}' )
+
+  switch_expression_arm ::= pattern when_clause? '=>' expression
+
+  when_clause ::= 'when' expression
+
+  await_expression ::=  >17(  'await' expression )
+
+  throw_expression ::= 'throw' expression
+
+  element_access_expression ::=  18(  ( expression ):expression ( bracketed_argument_list ):subscript )
+
+  interpolated_string_expression ::= interpolation_regular_start -> "interpolation_start" interpolation_start_quote -> """ _interpolated_string_content* interpolation_end_quote -> """
+	| interpolation_verbatim_start -> "interpolation_start" interpolation_start_quote -> """ _interpolated_verbatim_string_content* interpolation_end_quote -> """
+	| interpolation_raw_start -> "interpolation_start" interpolation_start_quote -> "interpolation_quote" _interpolated_raw_string_content* interpolation_end_quote -> "interpolation_quote"
+
+  _interpolated_string_content ::= interpolation_string_content -> "string_content"
+	| escape_sequence
+	| interpolation
+
+  _interpolated_verbatim_string_content ::= interpolation_string_content -> "string_content"
+	| interpolation
+
+  _interpolated_raw_string_content ::= interpolation_string_content -> "string_content"
+	| interpolation
+
+  interpolation ::= interpolation_open_brace -> "interpolation_brace" expression interpolation_alignment_clause? interpolation_format_clause? interpolation_close_brace -> "interpolation_brace"
+
+  interpolation_alignment_clause ::= ',' expression
+
+  interpolation_format_clause ::= ':' /[^}"]+/
+
+  member_access_expression ::=  18(  ( expression | predefined_type | _name ):expression ( '.' | '->' ) ( _simple_name ):name )
+
+  member_binding_expression ::= '.' ( _simple_name ):name
+
+  object_creation_expression ::= 'new' ( type ):type ( argument_list )?:arguments ( initializer_expression )?:initializer
+
+  _object_creation_type ::= _name
+	| nullable_type
+	| predefined_type
+
+  parenthesized_expression ::= '(' non_lvalue_expression ')'
+
+  _parenthesized_lvalue_expression ::= '(' lvalue_expression ')'
+
+  lambda_expression ::=  -1(  attribute_list*  -1(  ( 'static' | 'async' ) -> "modifier" ) * ( type )?:type ( _lambda_parameters ):parameters '=>' ( block | expression ):body )
+
+  _lambda_parameters ::=  -1(  parameter_list | identifier -> "implicit_parameter" )
+
+  array_creation_expression ::=  ~17(  'new' ( array_type ):type initializer_expression? )
+
+  anonymous_method_expression ::=  -1(  ( 'static' | 'async' ) -> "modifier" ) * 'delegate' ( parameter_list )?:parameters block
+
+  anonymous_object_creation_expression ::= 'new' '{' ( _anonymous_object_member_declarator ( ',' _anonymous_object_member_declarator )* )? ','? '}'
+
+  _anonymous_object_member_declarator ::= identifier '=' expression
+	| expression
+
+  implicit_array_creation_expression ::= 'new' '[' ','* ']' initializer_expression
+
+  implicit_object_creation_expression ::= 'new' argument_list initializer_expression?
+
+  implicit_stackalloc_expression ::= 'stackalloc' '[' ']' initializer_expression
+
+  initializer_expression ::= '{' ( expression ( ',' expression )* )? ','? '}'
+
+  declaration_expression ::=  ~1(  ( type ):type ( identifier ):name )
+
+  default_expression ::= 'default' ( '(' ( type ):type ')' )?
+
+  with_expression ::=  <14(  expression 'with' '{' ( with_initializer ( ',' with_initializer )* )? '}' )
+
+  with_initializer ::= identifier '=' expression
+
+  sizeof_expression ::= 'sizeof' '(' ( type ):type ')'
+
+  typeof_expression ::= 'typeof' '(' ( type ):type ')'
+
+  makeref_expression ::= '__makeref' '(' expression ')'
+
+  ref_expression ::= 'ref' expression
+
+  reftype_expression ::= '__reftype' '(' expression ')'
+
+  refvalue_expression ::= '__refvalue' '(' ( expression ):value ',' ( type ):type ')'
+
+  stackalloc_expression ::= 'stackalloc' ( array_type ):type initializer_expression?
+
+  range_expression ::=  >16(  expression? '..' expression? )
+
+  tuple_expression ::= '(' argument ( ',' argument )+ ')'
+
+  literal ::= null_literal
+	| character_literal
+	| integer_literal
+	| real_literal
+	| boolean_literal
+	| string_literal
+	| verbatim_string_literal
+	| raw_string_literal
+
+  null_literal ::= 'null'
+
+  character_literal ::= "'"  ( character_literal_content | escape_sequence ) "'"
+
+  character_literal_content ::= !( /[^'\\]/ )
+
+  integer_literal ::= @( ( /([0-9][0-9_]*[0-9]|[0-9])/ | /0[xX][0-9a-fA-F_]*[0-9a-fA-F]+/ | /0[bB][01_]*[01]+/ ) /([uU][lL]?|[lL][uU]?)/? )
+
+  real_literal ::= @( /([0-9][0-9_]*[0-9]|[0-9])/ '.' /([0-9][0-9_]*[0-9]|[0-9])/ /[eE][+-]?[0-9][0-9_]*/? /[fFdDmM]/? | '.' /([0-9][0-9_]*[0-9]|[0-9])/ /[eE][+-]?[0-9][0-9_]*/? /[fFdDmM]/? | /([0-9][0-9_]*[0-9]|[0-9])/ /[eE][+-]?[0-9][0-9_]*/ /[fFdDmM]/? | /([0-9][0-9_]*[0-9]|[0-9])/ /[fFdDmM]/ )
+
+  string_literal ::= '"'  ( string_literal_content | escape_sequence )* '"'  string_literal_encoding?
+
+  string_literal_content ::= !(  1(  /[^"\\\n]+/ )  )
+	|  2(  !( '\\'  /[^abefnrtv'\"\\\?0]/ ) )
+
+  escape_sequence ::= @( /\\x[0-9a-fA-F]{2,4}/ | /\\u[0-9a-fA-F]{4}/ | /\\U[0-9a-fA-F]{8}/ | /\\[abefnrtv'\"\\\?0]/ )
+
+  string_literal_encoding ::= !( /(u|U)8/ )
+
+  verbatim_string_literal ::= @( '@"' ( /[^"]/ | '""' )* '"'  /(u|U)8/? )
+
+  raw_string_literal ::= raw_string_start raw_string_content raw_string_end /(u|U)8/?
+
+  boolean_literal ::= 'true'
+	| 'false'
+
+  _identifier_token ::= @( '@'? /[\p{L}\p{Nl}_][\p{L}\p{Nl}\p{Nd}\p{Pc}\p{Cf}\p{Mn}\p{Mc}]*/ )
+
+  identifier ::= _identifier_token
+	| _reserved_identifier
+
+  _reserved_identifier ::= 'alias'
+	| 'ascending'
+	| 'by'
+	| 'descending'
+	| 'equals'
+	| 'file'
+	| 'from'
+	| 'global'
+	| 'group'
+	| 'into'
+	| 'join'
+	| 'let'
+	| 'notnull'
+	| 'on'
+	| 'orderby'
+	| 'scoped'
+	| 'select'
+	| 'unmanaged'
+	| 'var'
+	| 'when'
+	| 'where'
+	| 'yield'
+
+  preproc_if ::= /#[ \t]*if/ -> "#if" ( _preproc_expression ):condition /\n/ declaration* ( preproc_else | preproc_elif )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_else ::= /#[ \t]*else/ -> "#else" declaration*
+
+  preproc_elif ::= /#[ \t]*elif/ -> "#elif" ( _preproc_expression ):condition /\n/ declaration* ( preproc_else | preproc_elif )?:alternative
+
+  preproc_if_in_top_level ::= /#[ \t]*if/ -> "#if" ( _preproc_expression ):condition /\n/ ( _top_level_item_no_statement | statement )* ( preproc_else_in_top_level -> "preproc_else" | preproc_elif_in_top_level -> "preproc_elif" )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_else_in_top_level ::= /#[ \t]*else/ -> "#else" ( _top_level_item_no_statement | statement )*
+
+  preproc_elif_in_top_level ::= /#[ \t]*elif/ -> "#elif" ( _preproc_expression ):condition /\n/ ( _top_level_item_no_statement | statement )* ( preproc_else_in_top_level -> "preproc_else" | preproc_elif_in_top_level -> "preproc_elif" )?:alternative
+
+  preproc_if_in_expression ::=  -2(  /#[ \t]*if/ -> "#if" ( _preproc_expression ):condition /\n/ expression? ( preproc_else_in_expression -> "preproc_else" | preproc_elif_in_expression -> "preproc_elif" )?:alternative /#[ \t]*endif/ -> "#endif" )
+
+  preproc_else_in_expression ::=  -2(  /#[ \t]*else/ -> "#else" expression? )
+
+  preproc_elif_in_expression ::=  -2(  /#[ \t]*elif/ -> "#elif" ( _preproc_expression ):condition /\n/ expression? ( preproc_else_in_expression -> "preproc_else" | preproc_elif_in_expression -> "preproc_elif" )?:alternative )
+
+  preproc_if_in_enum_member_declaration ::= /#[ \t]*if/ -> "#if" ( _preproc_expression ):condition /\n/ enum_member_declaration? ( preproc_else_in_enum_member_declaration -> "preproc_else" | preproc_elif_in_enum_member_declaration -> "preproc_elif" )?:alternative /#[ \t]*endif/ -> "#endif"
+
+  preproc_else_in_enum_member_declaration ::= /#[ \t]*else/ -> "#else" enum_member_declaration?
+
+  preproc_elif_in_enum_member_declaration ::= /#[ \t]*elif/ -> "#elif" ( _preproc_expression ):condition /\n/ enum_member_declaration? ( preproc_else_in_enum_member_declaration -> "preproc_else" | preproc_elif_in_enum_member_declaration -> "preproc_elif" )?:alternative
+
+  preproc_arg ::= @(  -1(  /\S([^/\n]|\/[^*]|\\\r?\n)*/ )  )
+
+  preproc_directive ::= /#[ \t]*[a-zA-Z0-9]\w*/
+
+  _preproc_expression ::= identifier
+	| boolean_literal
+	| integer_literal
+	| character_literal
+	| preproc_unary_expression -> "unary_expression"
+	| preproc_binary_expression -> "binary_expression"
+	| preproc_parenthesized_expression -> "parenthesized_expression"
+
+  preproc_parenthesized_expression ::= '(' _preproc_expression ')'
+
+  preproc_unary_expression ::=  <17(  ( '!' ):operator ( _preproc_expression ):argument )
+
+  preproc_binary_expression ::=  <4(  ( _preproc_expression ):left ( '||' ):operator ( _preproc_expression ):right )
+	|  <5(  ( _preproc_expression ):left ( '&&' ):operator ( _preproc_expression ):right )
+	|  <9(  ( _preproc_expression ):left ( '==' ):operator ( _preproc_expression ):right )
+	|  <9(  ( _preproc_expression ):left ( '!=' ):operator ( _preproc_expression ):right )
+
+  preproc_region ::= /#[ \t]*region/ -> "#region" ( preproc_arg )?:content /\n/
+
+  preproc_endregion ::= /#[ \t]*endregion/ -> "#endregion" ( preproc_arg )?:content /\n/
+
+  preproc_line ::= /#[ \t]*line/ -> "#line" ( 'default' | 'hidden' | integer_literal string_literal? | '(' integer_literal ',' integer_literal ')' '-' '(' integer_literal ',' integer_literal ')' integer_literal? string_literal ) /\n/
+
+  preproc_pragma ::= /#[ \t]*pragma/ -> "#pragma" ( 'warning' ( 'disable' | 'restore' ) ( ( identifier | integer_literal ) ( ',' ( identifier | integer_literal ) )* )? | 'checksum' string_literal string_literal string_literal ) /\n/
+
+  preproc_nullable ::= /#[ \t]*nullable/ -> "#nullable" ( 'enable' | 'disable' | 'restore' ) ( 'annotations' | 'warnings' )? /\n/
+
+  preproc_error ::= /#[ \t]*error/ -> "#error" preproc_arg /\n/
+
+  preproc_warning ::= /#[ \t]*warning/ -> "#warning" preproc_arg /\n/
+
+  preproc_define ::= /#[ \t]*define/ -> "#define" preproc_arg /\n/
+
+  preproc_undef ::= /#[ \t]*undef/ -> "#undef" preproc_arg /\n/
+
+  shebang_directive ::= @( '#!' /.*/ )
+
+  comment ::= @( '//' /[^\n\r]*/ | '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/' )

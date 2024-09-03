@@ -1,0 +1,201 @@
+; From tree-sitter-commonlisp/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	}
+
+extras ::= {
+	block_comment
+	}
+
+supertypes ::= {
+	}
+
+inline ::= {
+	}
+
+conflicts ::= {
+	{ for_clause_word package_lit }
+	{ with_clause package_lit }
+	{ with_clause }
+	{ for_clause }
+	{ accumulation_clause }
+	}
+
+rules:
+
+  source ::= ( _form | _gap )*
+
+  _gap ::= _ws
+	| comment
+	| dis_expr
+
+  _ws ::= @( /[\f\n\r\t \u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]/+ )
+
+  comment ::= @( /(;|#!).*\n?/ )
+
+  dis_expr ::= ( '#_' ):marker _gap* ( _form ):value
+
+  _form ::= '#'? ( num_lit | fancy_literal | vec_lit | kwd_lit | ( ( '#' ):open /\d+[aA]/? list_lit ) -> "vec_lit" | str_lit | self_referential_reader_macro | char_lit | nil_lit | path_lit | sym_lit | package_lit | list_lit | set_lit | read_cond_lit | splicing_read_cond_lit | var_quoting_lit | quoting_lit | syn_quoting_lit | unquote_splicing_lit | unquoting_lit | include_reader_macro | complex_num_lit | '.' )
+
+  num_lit ::= @( /[+-]/? ( ( '#x' | '#X' ) /[+-]/? /[0-9a-fA-F]/+ | ( '#o' | '#O' ) /[+-]/? /[0-7]/+ | '#' /[0-9]/+ /[rR]/ /[0-9a-zA-Z]/+ | ( '#b' | '#B' ) /[+-]/? /[0-1]/+ | /[0-9]/+ '/' /[0-9]/+ | /[0-9]/+ ( '.' /[0-9]/* )? ( /[eEsSfFdDlL]/ /[+-]/? /[0-9]/+ )? | /[0-9]/+ /[MN]/? ) ) /[sSfFdDlL]/?
+
+  kwd_lit ::=  4(  ( ':' | '::' ) kwd_symbol )
+
+  str_lit ::= '"'  ( !(  1(  /[^\\~"]+/ )  ) | !( /\\./ ) | format_specifier )* '~'? '"'
+
+  char_lit ::= '#' /\\([^\f\n\r\t ()]+|[()])/
+
+  nil_lit ::= @( 'nil' )
+
+  bool_lit ::= @( 'false' | 'true' )
+
+  sym_lit ::= @( /[^:\f\n\r\t ()\[\]{}"^;`\\,#'\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]/ ( /[^:\f\n\r\t ()\[\]{}"^;`\\,#'\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]/ | /[#']/ )* )
+
+  _metadata_lit ::= ( ( meta_lit ):meta | ( old_meta_lit ):old_meta ) _gap*?
+
+  meta_lit ::= ( '^' ):marker _gap* ( read_cond_lit | map_lit | str_lit | kwd_lit | sym_lit ):value
+
+  old_meta_lit ::= ( '#^' ):marker _gap* ( read_cond_lit | map_lit | str_lit | kwd_lit | sym_lit ):value
+
+  list_lit ::= _metadata_lit* _bare_list_lit
+
+  _bare_list_lit ::=  5(  defun )
+	|  5(  loop_macro )
+	| ( '(' ):open ( ( _form ):value | _gap )* ( ')' ):close
+
+  map_lit ::= _metadata_lit* _bare_map_lit
+
+  _bare_map_lit ::= ( '{' ):open ( ( _form ):value | _gap )* ( '}' ):close
+
+  vec_lit ::=  5(  ( '#0A' | '#0a' ):open ( num_lit | complex_num_lit ) | ( '#' ):open array_dimension? list_lit )
+
+  _bare_vec_lit ::= ( '[' ):open ( ( _form ):value | _gap )* ( ']' ):close
+
+  set_lit ::= _metadata_lit* _bare_set_lit
+
+  _bare_set_lit ::= ( '#' ):marker ( '{' ):open ( ( _form ):value | _gap )* ( '}' ):close
+
+  anon_fn_lit ::= _metadata_lit* ( '#' ):marker _bare_list_lit
+
+  regex_lit ::= ( '#' ):marker @( '"'  /[^"\\]/* ( '\\'  /./ /[^"\\]/* )* '"'  )
+
+  read_cond_lit ::= _metadata_lit* ( '#?' ):marker _ws* _bare_list_lit
+
+  splicing_read_cond_lit ::= _metadata_lit* ( '#?@' ):marker _ws* _bare_list_lit
+
+  auto_res_mark ::= @( '::' )
+
+  ns_map_lit ::= _metadata_lit* ( '#' ):marker ( auto_res_mark | kwd_lit ):prefix _gap* _bare_map_lit
+
+  var_quoting_lit ::= _metadata_lit* ( "#'" ):marker _gap* ( _form ):value
+
+  sym_val_lit ::= ( '##' ):marker _gap* ( sym_lit ):value
+
+  evaling_lit ::= _metadata_lit* ( '#=' ):marker _gap* ( list_lit | read_cond_lit | sym_lit ):value
+
+  tagged_or_ctor_lit ::= _metadata_lit* ( '#' ):marker _gap* ( sym_lit ):tag _gap* ( _form ):value
+
+  derefing_lit ::= _metadata_lit* ( '@' ):marker _gap* ( _form ):value
+
+  quoting_lit ::= _metadata_lit* ( "'"  ):marker _gap* ( _form ):value
+
+  syn_quoting_lit ::= ( '`' ):marker _gap* ( _form ):value
+
+  unquote_splicing_lit ::= _metadata_lit* ( ',@' ):marker _gap* ( _form ):value
+
+  unquoting_lit ::= ( ',' ):marker _gap* ( _form ):value
+
+  block_comment ::= @( '#|' ( /[^|]/ | /\|[^#]/ )* '|#' )
+
+  fancy_literal ::= @( '|' /[^|]/* '|' )
+
+  defun ::=  5(  ( '(' ):open _gap? defun_header _gap? ( ( _form ):value | _gap )* ( ')' ):close )
+
+  _format_token ::= @( /[+-]/? ( ( '#x' | '#X' ) /[+-]/? /[0-9a-fA-F]/+ | ( '#o' | '#O' ) /[+-]/? /[0-7]/+ | '#' /[0-9]/+ /[rR]/ /[0-9a-zA-Z]/+ | ( '#b' | '#B' ) /[+-]/? /[0-1]/+ | /[0-9]/+ '/' /[0-9]/+ | /[0-9]/+ ( '.' /[0-9]/* )? ( /[eEsSfFdDlL]/ /[+-]/? /[0-9]/+ )? | /[0-9]/+ /[MN]/? ) ) -> "num_lit"
+	| "'"  /./ -> "char_lit"
+
+  format_prefix_parameters ::= 'v'
+	| 'V'
+	| '#'
+
+  format_modifiers ::= ( _format_token | ',' )* ( '@' | '@:' | ':' | ':@' )
+
+  format_directive_type ::= ( _format_token )?:repetitions ( '~' | '%' | '&' | '|' )
+	| /[cC]/
+	| /\^/
+	| '\n'
+	| '\r'
+	| /[pP]/
+	| /[iI]/
+	| /[wW]/
+	| /[aA]/
+	| '_'
+	| /[()]/
+	| /[{}]/
+	| /[\[\]]/
+	| /[<>]/
+	| ';'
+	| ( _format_token ):numberOfArgs '*'
+	| '/' ( _package_lit_without_slash -> "package_lit" | _sym_lit_without_slash ) '/'
+	| '?'
+	| 'Newline'
+	;| ( _format_token | ',' )* /[$rRbBdDgGxXeEoOsStTfF]/ FIXME
+	| ( _format_token | ',' )* /[rRbBdDgGxXeEoOsStTfF]/
+
+  format_specifier ::= '~' format_prefix_parameters? format_modifiers?  5(  format_directive_type )
+
+  for_clause_word ::= ( 'cl'? ':' )? ( 'in' | 'across' | 'being' | 'using' | /being (the|each) (hash-key[s]?|hash-value[s]?|present-symbol[s]?) (in|of)/ | 'below' | 'above' | 'from' | 'to' | 'upto' | 'upfrom' | 'downto' | 'downfrom' | 'on' | 'by' | 'then' | '=' )
+
+  _for_part ::= _gap* for_clause_word _gap* _form
+
+  accumulation_verb ::= ( 'cl'? ':' )? /(maximize|minimize|(collect|append|nconc|count)(ing)?|sum(ming)?|maximizing|minimizing)/
+
+  for_clause ::= ( ( 'cl'? ':' )? 'for' | ( 'cl'? ':' )? 'and' | ( 'cl'? ':' )? 'as' ) _gap* ( _form ):variable ( _gap* _form )?:type _for_part+
+	| ( 'cl'? ':' )? 'and'
+
+  with_clause ::= ( 'cl'? ':' )? 'with' _gap* ( _form | _form _gap* ( _form ):type ) _gap* ( ( 'cl'? ':' )? '=' _gap* )? ( _form _gap* )?
+
+  do_clause ::= ( 'cl'? ':' )? 'do' _gap* _form _gap*+
+
+  while_clause ::= ( ( 'cl'? ':' )? 'while' | ( 'cl'? ':' )? 'until' ) _gap* _form
+
+  repeat_clause ::= ( 'cl'? ':' )? 'repeat' _gap* _form
+
+  condition_clause ::= ( ( 'cl'? ':' )? 'when' | ( 'cl'? ':' )? 'if' | ( 'cl'? ':' )? 'unless' | ( 'cl'? ':' )? 'always' | ( 'cl'? ':' )? 'thereis' | ( 'cl'? ':' )? 'never' ) _gap* _form | ( 'cl'? ':' )? 'else'
+
+  accumulation_clause ::= accumulation_verb _gap* _form ( _gap* ( 'cl'? ':' )? 'into' _gap* _form )?
+
+  termination_clause ::= ( ( 'cl'? ':' )? 'finally' | ( 'cl'? ':' )? 'return' | ( 'cl'? ':' )? 'initially' ) _gap* _form
+
+  loop_clause ::= ( for_clause | do_clause | list_lit | while_clause | repeat_clause | accumulation_clause | condition_clause | with_clause | termination_clause | while_clause )
+
+  loop_macro ::=  5(  ( '(' ):open _gap? ( 'cl' ':' )? 'loop' ( loop_clause | _gap )* ( ')' ):close )
+
+  defun_keyword ::=  10(  ( 'cl' ':' )? ( 'defun' | 'defmacro' | 'defgeneric' | 'defmethod' ) )
+
+  defun_header ::=  5(  ( defun_keyword ):keyword _gap* ( unquoting_lit | unquote_splicing_lit ) | ( defun_keyword ):keyword _gap* ( _form ):function_name ( _gap* ( kwd_lit | sym_lit ) )?:specifier _gap* ( list_lit | unquoting_lit ):lambda_list | ( 'lambda' -> "defun_keyword" ):keyword _gap* ( list_lit | unquoting_lit ):lambda_list )
+
+  array_dimension ::=  100(  /\d+[aA]/ )
+
+  path_lit ::=  5(  ( '#P' | '#p' ):open @( '"'  /[^"\\]/* ( '\\'  /./ /[^"\\]/* )* '"'  ) -> "str_lit" )
+
+  package_lit ::=  2(  ( sym_lit | 'cl' ):package ( ':' | '::' ) ( sym_lit ):symbol |  1(  'cl' )  )
+
+  _package_lit_without_slash ::= ( _sym_lit_without_slash | 'cl' ):package ( ':' | '::' ) ( _sym_lit_without_slash ):symbol
+
+  _sym_lit_without_slash ::= /[^:\f\n\r\t ()\[\]{}"^;/`\\,#'\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]/+ -> "sym_lit"
+
+  kwd_symbol ::= @( /[^:\f\n\r\t ()\[\]{}"^;`\\,#'\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]/ ( /[^:\f\n\r\t ()\[\]{}"^;`\\,#'\u000B\u001C\u001D\u001E\u001F\u2028\u2029\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2008\u2009\u200a\u205f\u3000]/ | /[#']/ )* )
+
+  self_referential_reader_macro ::= /#\d+[=#]/
+
+  include_reader_macro ::= _metadata_lit* ( '#+' | '#-' ):marker _gap* ( _form ):condition _gap* ( _form ):target
+
+  complex_num_lit ::= _metadata_lit* ( '#C' | '#c' ):marker _gap* '(' _gap* ( num_lit ):real _gap* ( num_lit ):imaginary _gap* ')'

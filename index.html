@@ -4,7 +4,7 @@
 <title>Lua Playground</title>
 <link rel="stylesheet" href="style.css" media="all">
 </head>
-<body>
+<body onload="doFinalSettings()">
 <div id="main">
   <div class="editor-container">
     <ul class="editor-header">
@@ -15,23 +15,6 @@
           <li class="option"><label>Examples </label>
             <select id="opt-samples" onchange="loadLua_sample(this)">
               <option>choose</option>
-              <option>Simple</option>
-              <option>Lua parser</option>
-              <option>C11 parser</option>
-              <option>Json parser**</option>
-              <option>Tree-sitter-ebnf-generator-Scala</option>
-              <option>Tree-sitter-ebnf-generator-Javascript</option>
-              <option>Tree-sitter-ebnf-generator-Java</option>
-              <option>Tree-sitter-ebnf-generator-Kotlin</option>
-              <option>Tree-sitter-ebnf-generator-C</option>
-              <option>Tree-sitter-ebnf-generator-CPP</option>
-              <option>Tree-sitter-ebnf-generator-Haxe</option>
-              <option>Tree-sitter-ebnf-generator-Rust</option>
-              <option>Tree-sitter-ebnf-generator-CSS</option>
-              <option>Tree-sitter-ebnf-generator-HTML</option>
-              <option>Tree-sitter-ebnf-generator-PHP</option>
-              <option>Tree-sitter-ebnf-generator-RUBY</option>
-              <option>Tree-sitter-ebnf-generator-PYTHON</option>
             </select>
           </li>
         </ul>

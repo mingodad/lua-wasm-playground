@@ -1,0 +1,520 @@
+; From tree-sitter-lean/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	_newline
+	}
+
+extras ::= {
+	comment
+	/\s/
+	}
+
+supertypes ::= {
+	}
+
+inline ::= {
+	}
+
+conflicts ::= {
+	{ _binder_ident _term }
+	{ _binder_ident named_argument }
+	{ _binder_ident subtype }
+	{ _binder_ident }
+	{ _have_id_decl _expression }
+	{ _have_id_lhs _term }
+	{ _have_id_lhs }
+	{ _let_id_lhs _term }
+	{ _let_id_lhs }
+	{ _simple_binder }
+	{ _user_tactic quoted_tactic }
+	{ assign _term }
+	{ identifier }
+	{ instance_binder _term }
+	{ instance_binder list }
+	{ proj _expression }
+	}
+
+word ::= _identifier
+
+rules:
+
+  module ::= prelude? import* _command*
+
+  prelude ::= 'prelude'
+
+  import ::= 'import' ( identifier ):module
+
+  parameters ::= ( ( identifier ):name | hole | _bracketed_binder | anonymous_constructor )+
+
+  _expression ::= apply
+	| comparison
+	| let
+	| tactics
+	| binary_expression
+	| neg
+	| quoted_tactic
+	| fun
+	| _term
+	| do
+	| unless
+
+  let ::= 'let' ( identifier ):name ( parameters )?:parameters ( ':' ( _expression ):type )? ':=' ( _expression ):value ( _newline | ';' ) ( _expression )?:body
+
+  _do_seq ::= _do_element ( _newline _do_element )* _newline?
+
+  do ::= 'do' _do_seq
+
+  conditional_when ::= 'if' _expression 'then' _do_element
+
+  for_in ::= 'for' ( identifier | anonymous_constructor ) 'in' ( _expression ):iterable ( do ):body
+
+  assign ::= ( identifier ):name ':=' ( _expression ):value
+
+  let_mut ::= 'let' 'mut' parameters ( _left_arrow | ':=' ) ( _expression ):value
+
+  let_bind ::= 'let' ( identifier ):name _left_arrow ( _expression ):value
+
+  unless ::= 'unless' _expression do
+
+  try ::=  <1(  'try' _do_element ( _newline _do_element )* _newline? ( catch finally? | finally ) )
+
+  catch ::= 'catch' _expression '=>' _do_element ( _newline _do_element )* _newline?
+
+  finally ::= 'finally' _do_element ( _newline _do_element )* _newline?
+
+  fun ::= ( 'fun' | 'λ' ) ( parameters '=>' _expression | ( '|' ( _expression ( ',' _expression )* ):lhs '=>' _expression )* )
+
+  apply ::= _apply
+	| _dollar
+
+  _apply ::=  -1(  ( identifier | number | float | string | char | hole | synthetic_hole | sorry | cdot | parenthesized | anonymous_constructor | structure_instance | explicit | forall | true | false | borrowed | quoted_name | double_quoted_name | have | proj | arrow | _do_term | _command_term | _notation_term | _notation_extra_term | array | subarray | range | interpolated_string ):name ( _argument+ ):arguments )
+
+  _dollar ::=  >-5(  ( _expression ):name '$' ( _expression ):argument )
+
+  neg ::=  1000(  '-' _expression )
+
+  binary_expression ::=  >20(  _expression '^' _expression )
+	|  <18(  _expression '*' _expression )
+	|  <18(  _expression '/' _expression )
+	|  <18(  _expression '%' _expression )
+	|  <17(  _expression '+' _expression )
+	|  <17(  _expression '-' _expression )
+	|  >17(  _expression '∘' _expression )
+	|  <13(  _expression '∧' _expression )
+	|  <13(  _expression '∨' _expression )
+	|  <13(  _expression '/\' _expression )
+	|  <13(  _expression '\/' _expression )
+	|  <13(  _expression '↔' _expression )
+	|  <14(  _expression '||' _expression )
+	|  <15(  _expression '&&' _expression )
+	|  <16(  _expression '==' _expression )
+	|  <13(  _expression '++' _expression )
+	|  <13(  _expression '::' _expression )
+	|  <13(  _expression '|>' _expression )
+	|  <13(  _expression '|>.' _expression )
+	|  >-5(  _expression '<|' _expression )
+	|  <13(  _expression '<|>' _expression )
+	|  <13(  _expression '>>' _expression )
+	|  <13(  _expression '>>=' _expression )
+	|  <13(  _expression '<*>' _expression )
+	|  <13(  _expression '<*' _expression )
+	|  <13(  _expression '*>' _expression )
+	|  <13(  _expression '<$>' _expression )
+	|  <-3(  _expression '=' _expression )
+	|  <-3(  _expression '≠' _expression )
+
+  comparison ::=  <-2(  _expression ( '<' | '>' | '≤' | '≥' | '<=' | '>=' ) _expression )
+
+  comment ::= @( '--' /.*/ | '/-' ( /[^-]/ | /-[^/]/ )* '-/' )
+
+  _identifier ::= /[_a-zA-ZͰ-ϿĀ-ſ\U0001D400-\U0001D7FF][_`'`a-zA-Z0-9Ͱ-ϿĀ-ſ∇!?\u2070-\u209F\U0001D400-\U0001D7FF]*/
+
+  _escaped_identifier ::= /«[^»]*»/
+
+  _attribute ::= _simple_attribute
+	| _extern_attribute
+
+  _simple_attribute ::= ( identifier identifier? ):name
+
+  _extern_entry ::= identifier? 'inline'? ( string ):extern
+
+  _extern_attribute ::= 'extern' number? _extern_entry*
+
+  _visibility ::= 'private'
+	| 'protected'
+
+  _decl_modifiers ::= ( attributes ( 'noncomputable' | 'partial' | _visibility | 'unsafe' )+? | attributes? ( 'noncomputable' | 'partial' | _visibility | 'unsafe' )+ )
+
+  _decl_id ::= (  2(  identifier )  ):name
+
+  _decl_sig ::= _simple_binder_without_type | _bracketed_binder* -> "binders" _type_spec
+
+  _opt_decl_sig ::= _simple_binder_without_type | _bracketed_binder+ -> "binders" _type_spec? | _simple_binder_without_type | _bracketed_binder+ -> "binders"? _type_spec
+
+  _decl_val_simple ::= ':=' _expression
+
+  _decl_val_equations ::= _match_alts_where_decls
+
+  _decl_val ::= ( _decl_val_simple | _decl_val_equations | _where_decls ):body
+
+  abbrev ::= 'abbrev' _decl_id _opt_decl_sig? _decl_val
+
+  def ::= 'def' _decl_id _opt_decl_sig? _decl_val
+
+  theorem ::= 'theorem' _decl_id _decl_sig _decl_val
+
+  constant ::= 'constant' _decl_id _decl_sig _decl_val_simple?
+
+  instance ::= 'instance' _decl_id? _decl_sig _decl_val
+
+  axiom ::= 'axiom' _decl_id _decl_sig
+
+  example ::= 'example' _decl_sig _decl_val
+
+  constructor ::= '|' ( identifier ):name _opt_decl_sig?
+
+  _deriving ::= ( 'deriving' identifier ( ',' identifier )* ):deriving
+
+  inductive ::= 'inductive' _decl_id _opt_decl_sig? ( ':=' | 'where' )? ( constructor+ )?:constructors _deriving?
+
+  class_inductive ::= 'class' 'inductive' _decl_id _opt_decl_sig? ( ':=' | 'where' )? ( constructor+ )?:constructors _deriving?
+
+  _struct_explicit_binder ::= '(' ( identifier+ ):name ( _opt_decl_sig )?:type _binder_default? ')'
+
+  _struct_implicit_binder ::= '{' ( identifier+ ):name ( _decl_sig ):type '}'
+
+  _struct_instance_binder ::= '[' ( identifier+ ):name ( _decl_sig ):type ']'
+
+  _struct_simple_binder ::= ( identifier ):name ( _opt_decl_sig )?:type _binder_default?
+
+  _struct_field ::= ( _struct_explicit_binder -> "explicit_binder" | _struct_implicit_binder -> "implicit_binder" | _struct_instance_binder -> "instance_binder" | _struct_simple_binder ) -> "field"
+
+  _struct_constructor ::= identifier '::'
+
+  _extends ::= ( 'extends' _expression ( ',' _expression )* ):extends
+
+  structure ::= ( 'structure' | 'class' ) _decl_id _bracketed_binder* -> "binders" _extends? _type_spec? ( ( ':=' | 'where' ) _struct_constructor? ( _struct_field* ):fields )? _deriving?
+
+  declaration ::= _decl_modifiers? ( abbrev | def | theorem | constant | instance | axiom | example | inductive | class_inductive | structure )
+
+  section ::= 'section' ( identifier )?:name ( _command* ):body 'end' identifier?
+
+  namespace ::= 'namespace' ( identifier ):name ( _command* ):body 'end' identifier
+
+  variable ::= 'variable' _bracketed_binder+
+
+  universe ::= 'universe' identifier+
+
+  hash_command ::= ( '#check' | '#check_failure' | '#eval' | '#print' | '#reduce' ) _expression
+
+  attribute ::= 'attribute' '[' ( _attribute | '-' _attribute ) ( ',' ( _attribute | '-' _attribute ) )* ']' ( identifier ):term
+
+  export ::= 'export' ( identifier ):class '(' identifier+ ')'
+
+  open ::= 'open' ( identifier )+:namespace ( 'in' _command )?
+
+  quoted ::= '`(' ( _term | _command+ ) ')'
+
+  _command_term ::= quoted
+
+  builtin_initialize ::= _visibility? 'builtin_initialize' ( identifier _type_spec _left_arrow )? _do_seq
+
+  _command ::= declaration
+	| section
+	| namespace
+	| variable
+	| universe
+	| hash_command
+	| attribute
+	| export
+	| open
+	| builtin_initialize
+	| mixfix
+	| notation
+	| macro_rules
+	| syntax
+	| macro
+	| elab
+
+  _precedence ::= !( ':' ) ( number | 'max' | 'arg' | 'lead' | 'min' | 'min1' )
+
+  _syntax_cat ::= identifier
+
+  _syntax_atom ::= string
+
+  _syntax ::= _syntax_cat
+	| _syntax_atom
+
+  mixfix ::= _attr_kind? ( 'prefix' | 'infix' | 'infixl' | 'infixr' | 'postfix' ) _precedence string '=>' _term
+
+  notation ::= _attr_kind? 'notation' _expression '=>' _expression
+
+  macro_rules ::= _attr_kind? 'macro_rules' _match_alts
+
+  syntax ::= _attr_kind? 'syntax' _syntax+ ':' identifier
+
+  _macro_arg ::= ( identifier !( ':' ) )? _syntax
+
+  _macro_tail_tactic ::= ' : ' 'tactic' '=>' '`(' _tactic+ ')'
+
+  _macro_tail_command ::= ' : ' 'command' '=>' '`(' _command+ ')'
+
+  _macro_tail_default ::= ' : ' identifier '=>' '`(' ( _tactic | _command )+ ')'
+
+  _macro_tail ::= _macro_tail_tactic
+	| _macro_tail_command
+
+  macro ::= _attr_kind? 'macro' _precedence? _macro_arg+ _macro_tail
+
+  _elab_arg ::= _macro_arg
+
+  _elab_tail ::= ':' identifier ( '<=' identifier )? '=>' _expression
+
+  elab ::= _attr_kind? 'elab' _precedence? _elab_arg+ _elab_tail
+
+  tactics ::= 'by' _tactic ( ';'? _newline _tactic )* ( ';'? _newline )?
+
+  apply_tactic ::= 'apply' _expression
+
+  rewrite ::= ( 'rewrite' | 'rw' ) _expression
+
+  term ::= 'exact' _expression
+
+  simp ::= 'simp' ( list )?:extra
+
+  trivial ::= 'trivial'
+
+  intro ::= 'intro' _expression*
+
+  rfl ::= 'rfl'
+
+  _user_tactic ::= _expression
+
+  _tactic ::= apply_tactic
+	| rewrite
+	| simp
+	| term
+	| trivial
+	| intro
+	| rfl
+	| _user_tactic
+
+  quoted_char ::= @( '\\'  ( /u[a-fA-F\d]{4}/ | /x[a-fA-F\d]{2}/ | /[\\"'rnt]/ ) )
+
+  _left_arrow ::= '<-'
+	| '←'
+
+  do_return ::=  <1022(  'return' ( _expression )?:value )
+
+  _do_expression ::= _expression
+
+  _do_element ::= _do_expression
+	| assign
+	| for_in
+	| let_bind
+	| let_mut
+	| do_return
+
+  identifier ::= _identifier ( !( '.' ) _identifier )*
+	| _identifier
+	| _escaped_identifier
+
+  number ::= /\d+/
+
+  float ::= /\d+\.\d*/
+
+  string ::= '"'  ( quoted_char | !(  1(  /[^"\n\\]+/ )  ) )* '"'
+
+  char ::= "'"  ( quoted_char | /[^']/ ) "'"
+
+  hole ::= '_'
+
+  synthetic_hole ::= '?' ( identifier | hole )
+
+  sorry ::= 'sorry'
+
+  cdot ::= '.'
+	| '·'
+
+  type_ascription ::= ':' ( _expression ):type
+
+  tuple_tail ::= ',' _expression ( ',' _expression )*
+
+  parenthesized ::= '(' ( _expression ( tuple_tail | type_ascription )? )? ')'
+
+  anonymous_constructor ::= '⟨' ( _expression ( ',' _expression )* )? '⟩'
+
+  _structure_instance_field ::= ( identifier ):name ':=' ( _expression ):value
+
+  structure_instance ::= '{' ( _expression 'with' )?:extends ( _structure_instance_field ( ',' _structure_instance_field )* ','? )? ( _type_spec )?:type '}'
+
+  _type_spec ::= ( ':' _expression ):type
+
+  explicit ::= '@'  1024(  _term )
+
+  _binder_ident ::= identifier
+	| hole
+
+  _binder_default ::= ( ':=' _expression ):default
+
+  explicit_binder ::= '(' ( _binder_ident+ ):name ( _type_spec )?:type ( _binder_default )? ')'
+
+  implicit_binder ::= '{' ( _binder_ident+ ):name ( _type_spec )?:type '}'
+
+  instance_binder ::= '[' ( ( identifier ):name ':' )? ( _expression ):type ']'
+
+  _bracketed_binder ::= explicit_binder
+	| implicit_binder
+	| instance_binder
+
+  proj ::= (  1022(  _term )  ):term !( '.' ) ( identifier | number ):name
+
+  arrow ::=  >25(  _term ( '->' | '→' ) _expression )
+
+  forall ::=  -4(  '∀' ( ( _simple_binder | _bracketed_binder )+ -> "binders" ):binders ',' ( _expression ):body )
+
+  _simple_binder ::= ( _binder_ident+ ):name _type_spec?
+
+  match_alt ::= '|' ( _expression ( ',' _expression )* ):lhs '=>' _expression
+
+  _match_alts ::= match_alt+
+
+  _match_discr ::= ( identifier !( ':' ) )? _expression
+
+  true ::= 'true'
+
+  false ::= 'false'
+
+  match ::= 'match' ( _match_discr ( ', ' _match_discr )* ):value ( _type_spec )?:type 'with' ( _match_alts ):patterns
+
+  borrowed ::= '@&'  1022(  _term )
+
+  quoted_name ::= '`' identifier
+
+  double_quoted_name ::= '``' identifier
+
+  _simple_binder_without_type ::= _binder_ident+
+
+  _let_id_lhs ::= ( identifier ):name ( ( _simple_binder_without_type | _bracketed_binder )* ):binders ( _type_spec )?:type
+
+  _let_id_decl ::= _let_id_lhs ':=' ( _expression ):body
+
+  _let_pattern_decl ::= _term _type_spec? ':=' _expression
+
+  _let_equations_decl ::= _let_id_lhs ( _match_alts ):body
+
+  _let_decl ::= _let_id_decl
+	| _let_pattern_decl
+	| _let_equations_decl
+
+  _have_id_lhs ::= ( identifier ):name ( ( _simple_binder_without_type | _bracketed_binder )* ):binders ( _type_spec )?:type
+	| ( ( identifier ):name ( ( _simple_binder_without_type | _bracketed_binder )* ):binders )? ( _type_spec ):type
+
+  _have_id_decl ::= _have_id_lhs? ':=' _term
+
+  _have_eqns_decl ::= _have_id_lhs? _match_alts
+
+  _have_decl ::= _have_id_decl
+	| _let_pattern_decl
+	| _have_eqns_decl
+
+  have ::=  1022(  'have' _have_decl ';'? _term )
+
+  _attr_kind ::= 'scoped'
+	| 'local'
+
+  _attr_instance ::= _attr_kind? _attribute
+
+  attributes ::= '@[' _attr_instance ( ',' _attr_instance )* ']'
+
+  _let_rec_decl ::= _let_decl
+
+  _where_decls ::= 'where' ( _let_rec_decl -> "where_decl" )+
+
+  _match_alts_where_decls ::= _match_alts _where_decls?
+
+  named_argument ::= '(' identifier ':=' _expression ')'
+
+  ellipsis ::= '..'
+
+  _argument ::= named_argument
+	| ellipsis
+	|  1023(  _expression )
+
+  quoted_tactic ::= '`(tactic|' _tactic ')'
+
+  _term ::= identifier
+	| number
+	| float
+	| string
+	| char
+	| hole
+	| synthetic_hole
+	| sorry
+	| cdot
+	| parenthesized
+	| anonymous_constructor
+	| structure_instance
+	| explicit
+	| forall
+	| true
+	| false
+	| match
+	| borrowed
+	| quoted_name
+	| double_quoted_name
+	| have
+	| proj
+	| arrow
+	| _do_term
+	| _command_term
+	| _notation_term
+	| _notation_extra_term
+	| array
+	| subarray
+	| range
+	| interpolated_string
+
+  lift_method ::=  10(  _left_arrow _term )
+
+  _do_term ::= lift_method
+
+  product ::=  >35(  _term '×' _term )
+
+  unary_expression ::=  1024(  ( '¬' | '!' )  40(  _term )  )
+
+  subtype ::= '{' identifier ( ':' _term )? '//' _expression '}'
+
+  list ::= '[' ( _expression ( ',' _expression )* )? ']'
+
+  assumption_literal ::= '‹' _term '›'
+
+  if_then_else ::= 'if' _expression 'then' _expression 'else' _expression
+
+  _notation_term ::= product
+	| unary_expression
+	| subtype
+	| if_then_else
+	| list
+	| assumption_literal
+
+  exists ::=  -4(  '∃' ( ( _simple_binder | _bracketed_binder )+ -> "binders" ):binders ',' ( _expression ):body )
+
+  _notation_extra_term ::= exists
+
+  array ::= '#[' ( _expression ( ',' _expression )* )? ']'
+
+  subarray ::=  1024(  ( _expression ):term !( '[' ) ( ( _expression ):value | ( _expression )?:start ':' ( _expression ):stop | ( _expression ):start ':' ( _expression )?:stop ) ']' )
+
+  range ::= '[' ( _expression )?:start ':' ( _expression ):stop ( ':' ( _expression ):step )? ']'
+
+  interpolated_string ::= 's!"' ( /[^"]/ | quoted_char | interpolation )* '"'
+
+  interpolation ::= '{' _expression '}'

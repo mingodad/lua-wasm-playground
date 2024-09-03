@@ -1,4 +1,4 @@
-; From tree-sitter-javascript/src/grammar.json
+; From tree-sitter-typescript/typescript/src/grammar.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
@@ -16,6 +16,8 @@ externals ::= {
 	escape_sequence
 	regex_pattern
 	jsx_text
+	_function_signature_automatic_semicolon
+	__error_recovery
 	}
 
 extras ::= {
@@ -34,6 +36,41 @@ precedences ::= {
 	{ import_statement import }
 	{ export_statement primary_expression }
 	{ lexical_declaration primary_expression }
+	{ 'call' 'instantiation' 'unary' 'binary' await_expression arrow_function }
+	{ 'extends' 'instantiation' }
+	{ intersection_type union_type conditional_type function_type 'binary' type_predicate readonly_type }
+	{ mapped_type_clause primary_expression }
+	{ accessibility_modifier primary_expression }
+	{ 'unary_void' expression }
+	{ extends_clause primary_expression }
+	{ 'unary' 'assign' }
+	{ 'declaration' expression }
+	{ predefined_type unary_expression }
+	{ type flow_maybe_type }
+	{ tuple_type array_type pattern type }
+	{ readonly_type pattern }
+	{ readonly_type primary_expression }
+	{ type_query subscript_expression expression }
+	{ type_query _type_query_subscript_expression }
+	{ nested_type_identifier generic_type primary_type lookup_type index_type_query type }
+	{ as_expression satisfies_expression primary_type }
+	{ _type_query_member_expression member_expression }
+	{ member_expression _type_query_member_expression_in_type_annotation }
+	{ _type_query_member_expression primary_expression }
+	{ _type_query_subscript_expression subscript_expression }
+	{ _type_query_subscript_expression primary_expression }
+	{ _type_query_call_expression primary_expression }
+	{ _type_query_instantiation_expression primary_expression }
+	{ type_query primary_expression }
+	{ override_modifier primary_expression }
+	{ decorator_call_expression decorator }
+	{ literal_type pattern }
+	{ predefined_type pattern }
+	{ call_expression _type_query_call_expression }
+	{ call_expression _type_query_call_expression_in_type_annotation }
+	{ new_expression primary_expression }
+	{ meta_property primary_expression }
+	{ construct_signature _property_name }
 	}
 
 supertypes ::= {
@@ -42,11 +79,11 @@ supertypes ::= {
 	expression
 	primary_expression
 	pattern
+	type
+	primary_type
 	}
 
 inline ::= {
-	_call_signature
-	_formal_parameter
 	_expressions
 	_semicolon
 	_identifier
@@ -59,6 +96,8 @@ inline ::= {
 	_jsx_attribute_value
 	_jsx_identifier
 	_lhs_expression
+	_type_identifier
+	_jsx_start_opening_element
 	}
 
 conflicts ::= {
@@ -78,6 +117,38 @@ conflicts ::= {
 	{ computed_property_name array }
 	{ binary_expression _initializer }
 	{ class_static_block _property_name }
+	{ call_expression instantiation_expression binary_expression }
+	{ call_expression instantiation_expression binary_expression unary_expression }
+	{ call_expression instantiation_expression binary_expression update_expression }
+	{ call_expression instantiation_expression binary_expression await_expression }
+	{ class }
+	{ nested_identifier nested_type_identifier primary_expression }
+	{ nested_identifier nested_type_identifier }
+	{ _call_signature function_type }
+	{ _call_signature constructor_type }
+	{ primary_expression _parameter_name }
+	{ primary_expression _parameter_name primary_type }
+	{ primary_expression literal_type }
+	{ primary_expression literal_type rest_pattern }
+	{ primary_expression predefined_type rest_pattern }
+	{ primary_expression primary_type }
+	{ primary_expression generic_type }
+	{ primary_expression predefined_type }
+	{ primary_expression pattern primary_type }
+	{ _parameter_name primary_type }
+	{ pattern primary_type }
+	{ optional_tuple_parameter primary_type }
+	{ rest_pattern primary_type primary_expression }
+	{ object object_type }
+	{ object object_pattern object_type }
+	{ object object_pattern _property_name }
+	{ object_pattern object_type }
+	{ object_pattern object_type }
+	{ array tuple_type }
+	{ array array_pattern tuple_type }
+	{ array_pattern tuple_type }
+	{ template_literal_type template_string }
+	{ primary_type type_parameter }
 	}
 
 word ::= identifier
@@ -90,12 +161,15 @@ rules:
 
   export_statement ::= 'export' ( '*' _from_clause | namespace_export _from_clause | export_clause _from_clause | export_clause ) _semicolon
 	| ( decorator )*:decorator 'export' ( ( declaration ):declaration | 'default' ( ( declaration ):declaration | ( expression ):value _semicolon ) )
+	| 'export' 'type' export_clause _from_clause? _semicolon
+	| 'export' '=' expression _semicolon
+	| 'export' 'as' 'namespace' identifier _semicolon
 
   namespace_export ::= '*' 'as' _module_export_name
 
   export_clause ::= '{' ( export_specifier ( ',' export_specifier )* )? ','? '}'
 
-  export_specifier ::= ( _module_export_name ):name ( 'as' ( _module_export_name ):alias )?
+  export_specifier ::= ( 'type' | 'typeof' )? ( _module_export_name ):name ( 'as' ( _module_export_name ):alias )?
 
   _module_export_name ::= identifier
 	| string
@@ -105,14 +179,23 @@ rules:
 	| class_declaration
 	| lexical_declaration
 	| variable_declaration
+	| function_signature
+	| abstract_class_declaration
+	| module
+	|  declaration(  internal_module )
+	| type_alias_declaration
+	| enum_declaration
+	| interface_declaration
+	| import_alias
+	| ambient_declaration
 
   import ::= @( 'import' )
 
-  import_statement ::= 'import' ( import_clause _from_clause | ( string ):source ) import_attribute? _semicolon
+  import_statement ::= 'import' ( 'type' | 'typeof' )? ( import_clause _from_clause | import_require_clause | ( string ):source ) import_attribute? _semicolon
 
   import_clause ::= namespace_import
 	| named_imports
-	| identifier ( ',' ( namespace_import | named_imports ) )?
+	| _import_identifier ( ',' ( namespace_import | named_imports ) )?
 
   _from_clause ::= 'from' ( string ):source
 
@@ -120,10 +203,9 @@ rules:
 
   named_imports ::= '{' ( import_specifier ( ',' import_specifier )* )? ','? '}'
 
-  import_specifier ::= ( identifier ):name
-	| ( _module_export_name ):name 'as' ( identifier ):alias
+  import_specifier ::= ( 'type' | 'typeof' )? ( ( _import_identifier ):name | ( _module_export_name | 'type' -> "identifier" ):name 'as' ( _import_identifier ):alias )
 
-  import_attribute ::= 'with' object
+  import_attribute ::= ( 'with' | 'assert' ) object
 
   statement ::= export_statement
 	| import_statement
@@ -152,7 +234,8 @@ rules:
 
   lexical_declaration ::= ( 'let' | 'const' ):kind variable_declarator ( ',' variable_declarator )* _semicolon
 
-  variable_declarator ::= ( identifier | _destructuring_pattern ):name _initializer?
+  variable_declarator ::= ( identifier | _destructuring_pattern ):name ( type_annotation )?:type _initializer?
+	|  declaration(  ( identifier ):name '!' ( type_annotation ):type )
 
   statement_block ::= '{' statement* '}' _automatic_semicolon?
 
@@ -196,18 +279,22 @@ rules:
 
   switch_default ::= 'default' ':' ( statement* ):body
 
-  catch_clause ::= 'catch' ( '(' ( identifier | _destructuring_pattern ):parameter ')' )? ( statement_block ):body
+  catch_clause ::= 'catch' ( '(' ( identifier | _destructuring_pattern ):parameter ( type_annotation )?:type ')' )? ( statement_block ):body
 
   finally_clause ::= 'finally' ( statement_block ):body
 
-  parenthesized_expression ::= '(' _expressions ')'
+  parenthesized_expression ::= '(' ( expression ( type_annotation )?:type | sequence_expression ) ')'
 
   _expressions ::= expression
 	| sequence_expression
 
-  expression ::= primary_expression
+  expression ::= as_expression
+	| satisfies_expression
+	| instantiation_expression
+	| internal_module
+	| type_assertion
+	| primary_expression
 	| glimmer_template
-	| _jsx_element
 	| assignment_expression
 	| augmented_assignment_expression
 	| await_expression
@@ -240,6 +327,7 @@ rules:
 	| class
 	| meta_property
 	| call_expression
+	| non_null_expression
 
   yield_expression ::= 'yield' ( '*' expression | expression )
 
@@ -278,7 +366,7 @@ rules:
 	| _jsx_element
 	| jsx_expression
 
-  jsx_opening_element ::=  ~-1(  '<' ( ( _jsx_element_name ):name ( _jsx_attribute )*:attribute )? '>' )
+  jsx_opening_element ::=  ~-1(  _jsx_start_opening_element '>' )
 
   jsx_identifier ::= /[a-zA-Z_$][a-zA-Z\d_$]*-[a-zA-Z\d_$\-]*/
 
@@ -295,7 +383,7 @@ rules:
 
   jsx_closing_element ::= '</' ( _jsx_element_name )?:name '>'
 
-  jsx_self_closing_element ::= '<' ( _jsx_element_name ):name ( _jsx_attribute )*:attribute '/>'
+  jsx_self_closing_element ::=  ~-1(  _jsx_start_opening_element '/>' )
 
   _jsx_attribute ::= jsx_attribute
 	| jsx_expression
@@ -316,11 +404,12 @@ rules:
 	| jsx_expression
 	| _jsx_element
 
-  class ::=  literal(  ( decorator )*:decorator 'class' ( identifier )?:name class_heritage? ( class_body ):body )
+  class ::=  literal(  ( decorator )*:decorator 'class' ( _type_identifier )?:name ( type_parameters )?:type_parameters class_heritage? ( class_body ):body )
 
-  class_declaration ::=  declaration(  ( decorator )*:decorator 'class' ( identifier ):name class_heritage? ( class_body ):body _automatic_semicolon? )
+  class_declaration ::=  <declaration(  ( decorator )*:decorator 'class' ( _type_identifier ):name ( type_parameters )?:type_parameters class_heritage? ( class_body ):body _automatic_semicolon? )
 
-  class_heritage ::= 'extends' expression
+  class_heritage ::= extends_clause implements_clause?
+	| implements_clause
 
   function_expression ::=  literal(  'async'? 'function' ( identifier )?:name _call_signature ( statement_block ):body )
 
@@ -332,18 +421,18 @@ rules:
 
   arrow_function ::= 'async'? ( ( _reserved_identifier -> "identifier" | identifier ):parameter | _call_signature ) '=>' ( expression | statement_block ):body
 
-  _call_signature ::= ( formal_parameters ):parameters
+  _call_signature ::= ( type_parameters )?:type_parameters ( formal_parameters ):parameters ( type_annotation | asserts_annotation | type_predicate_annotation )?:return_type
 
-  _formal_parameter ::= pattern
-	| assignment_pattern
+  _formal_parameter ::= required_parameter
+	| optional_parameter
 
   optional_chain ::= '?.'
 
-  call_expression ::=  call(  ( expression | import ):function ( arguments ):arguments )
+  call_expression ::=  call(  ( expression | import ):function ( type_arguments )?:type_arguments ( arguments ):arguments )
 	|  template_call(  ( primary_expression | new_expression ):function ( template_string ):arguments )
-	|  member(  ( primary_expression ):function ( optional_chain ):optional_chain ( arguments ):arguments )
+	|  member(  ( primary_expression ):function '?.' ( type_arguments )?:type_arguments ( arguments ):arguments )
 
-  new_expression ::=  >new(  'new' ( primary_expression | new_expression ):constructor (  ~1(  arguments )  )?:arguments )
+  new_expression ::=  >new(  'new' ( primary_expression ):constructor ( type_arguments )?:type_arguments ( arguments )?:arguments )
 
   await_expression ::=  unary_void(  'await' expression )
 
@@ -356,14 +445,16 @@ rules:
 	| _identifier
 	| _reserved_identifier -> "identifier"
 	| _destructuring_pattern
+	| non_null_expression
 
-  assignment_expression ::=  >assign(  ( parenthesized_expression | _lhs_expression ):left '=' ( expression ):right )
+  assignment_expression ::=  >assign(  'using'? ( parenthesized_expression | _lhs_expression ):left '=' ( expression ):right )
 
   _augmented_assignment_lhs ::= member_expression
 	| subscript_expression
 	| _reserved_identifier -> "identifier"
 	| identifier
 	| parenthesized_expression
+	| non_null_expression
 
   augmented_assignment_expression ::=  >assign(  ( _augmented_assignment_lhs ):left ( '+=' | '-=' | '*=' | '/=' | '%=' | '^=' | '&=' | '|=' | '>>=' | '>>>=' | '<<=' | '**=' | '&&=' | '||=' | '??=' ):operator ( expression ):right )
 
@@ -455,13 +546,13 @@ rules:
 
   arguments ::= '(' ( ( expression | spread_element )? ( ',' ( expression | spread_element )? )* )? ')'
 
-  decorator ::= '@' ( identifier | decorator_member_expression -> "member_expression" | decorator_call_expression -> "call_expression" )
+  decorator ::= '@' ( identifier | decorator_member_expression -> "member_expression" | decorator_call_expression -> "call_expression" | decorator_parenthesized_expression -> "parenthesized_expression" )
 
   decorator_member_expression ::=  member(  ( identifier | decorator_member_expression -> "member_expression" ):object '.' ( identifier -> "property_identifier" ):property )
 
-  decorator_call_expression ::=  call(  ( identifier | decorator_member_expression -> "member_expression" ):function ( arguments ):arguments )
+  decorator_call_expression ::=  call(  ( identifier | decorator_member_expression -> "member_expression" ):function ( type_arguments )?:type_arguments ( arguments ):arguments )
 
-  class_body ::= '{' ( ( method_definition ):member ';'? | ( field_definition ):member _semicolon | ( class_static_block ):member | ( glimmer_template ):template | ';' )* '}'
+  class_body ::= '{' ( ( decorator )*:decorator method_definition _semicolon? | method_signature ( _function_signature_automatic_semicolon | ',' ) | class_static_block | ( abstract_method_signature | index_signature | method_signature | public_field_definition ) ( _semicolon | ',' ) | ';' )* '}'
 
   field_definition ::= ( decorator )*:decorator 'static'? ( _property_name ):property _initializer?
 
@@ -473,7 +564,7 @@ rules:
 
   rest_pattern ::= '...' _lhs_expression
 
-  method_definition ::= ( decorator )*:decorator ( 'static' | @( 'static' /\s+/ 'get' /\s*\n/ ) -> "static get" )? 'async'? ( 'get' | 'set' | '*' )? ( _property_name ):name ( formal_parameters ):parameters ( statement_block ):body
+  method_definition ::= accessibility_modifier? 'static'? override_modifier? 'readonly'? 'async'? ( 'get' | 'set' | '*' )? ( _property_name ):name '?'? _call_signature ( statement_block ):body
 
   pair ::= ( _property_name ):key ':' ( expression ):value
 
@@ -487,7 +578,25 @@ rules:
 
   computed_property_name ::= '[' expression ']'
 
-  _reserved_identifier ::= 'get'
+  _reserved_identifier ::= 'declare'
+	| 'namespace'
+	| 'type'
+	| 'public'
+	| 'private'
+	| 'protected'
+	| 'override'
+	| 'readonly'
+	| 'module'
+	| 'any'
+	| 'number'
+	| 'boolean'
+	| 'string'
+	| 'symbol'
+	| 'export'
+	| 'object'
+	| 'new'
+	| 'readonly'
+	| 'get'
 	| 'set'
 	| 'async'
 	| 'static'
@@ -496,3 +605,227 @@ rules:
 
   _semicolon ::= _automatic_semicolon
 	| ';'
+
+  public_field_definition ::= ( decorator )*:decorator ( 'declare' accessibility_modifier? | accessibility_modifier 'declare'? )? ( 'static'? override_modifier? 'readonly'? | 'abstract'? 'readonly'? | 'readonly'? 'abstract'? | 'accessor' ) ( _property_name ):name ( '?' | '!' )? ( type_annotation )?:type _initializer?
+
+  _jsx_start_opening_element ::= '<' ( ( ( _jsx_identifier | jsx_namespace_name ):name | ( identifier | nested_identifier -> "member_expression" ):name ( type_arguments )?:type_arguments ) ( _jsx_attribute )*:attribute )?
+
+  _import_identifier ::= identifier
+	| 'type' -> "identifier"
+
+  non_null_expression ::=  <unary(  expression '!' )
+
+  method_signature ::= accessibility_modifier? 'static'? override_modifier? 'readonly'? 'async'? ( 'get' | 'set' | '*' )? ( _property_name ):name '?'? _call_signature
+
+  abstract_method_signature ::= accessibility_modifier? 'abstract' override_modifier? ( 'get' | 'set' | '*' )? ( _property_name ):name '?'? _call_signature
+
+  function_signature ::= 'async'? 'function' ( identifier ):name _call_signature ( _semicolon | _function_signature_automatic_semicolon )
+
+  decorator_parenthesized_expression ::= '(' ( identifier | decorator_member_expression -> "member_expression" | decorator_call_expression -> "call_expression" ) ')'
+
+  type_assertion ::=  <unary(  type_arguments expression )
+
+  as_expression ::=  <binary(  expression 'as' ( 'const' | type ) )
+
+  satisfies_expression ::=  <binary(  expression 'satisfies' type )
+
+  instantiation_expression ::=  instantiation(  expression ( type_arguments ):type_arguments )
+
+  import_require_clause ::= identifier '=' 'require' '(' ( string ):source ')'
+
+  extends_clause ::= 'extends' _extends_clause_single ( ',' _extends_clause_single )*
+
+  _extends_clause_single ::=  extends(  ( expression ):value ( type_arguments )?:type_arguments )
+
+  implements_clause ::= 'implements' type ( ',' type )*
+
+  ambient_declaration ::= 'declare' ( declaration | 'global' statement_block | 'module' '.' identifier -> "property_identifier" ':' type _semicolon )
+
+  abstract_class_declaration ::=  declaration(  ( decorator )*:decorator 'abstract' 'class' ( _type_identifier ):name ( type_parameters )?:type_parameters class_heritage? ( class_body ):body )
+
+  module ::= 'module' _module
+
+  internal_module ::= 'namespace' _module
+
+  _module ::= ( string | identifier | nested_identifier ):name ( statement_block )?:body
+
+  import_alias ::= 'import' identifier '=' ( identifier | nested_identifier ) _semicolon
+
+  nested_type_identifier ::=  member(  ( identifier | nested_identifier ):module '.' ( _type_identifier ):name )
+
+  interface_declaration ::= 'interface' ( _type_identifier ):name ( type_parameters )?:type_parameters extends_type_clause? ( object_type -> "interface_body" ):body
+
+  extends_type_clause ::= 'extends' ( _type_identifier | nested_type_identifier | generic_type ):type ( ',' ( _type_identifier | nested_type_identifier | generic_type ):type )*
+
+  enum_declaration ::= 'const'? 'enum' ( identifier ):name ( enum_body ):body
+
+  enum_body ::= '{' ( ( ( _property_name ):name | enum_assignment ) ( ',' ( ( _property_name ):name | enum_assignment ) )* ','? )? '}'
+
+  enum_assignment ::= ( _property_name ):name _initializer
+
+  type_alias_declaration ::= 'type' ( _type_identifier ):name ( type_parameters )?:type_parameters '=' ( type ):value _semicolon
+
+  accessibility_modifier ::= 'public'
+	| 'private'
+	| 'protected'
+
+  override_modifier ::= 'override'
+
+  required_parameter ::= _parameter_name ( type_annotation )?:type _initializer?
+
+  optional_parameter ::= _parameter_name '?' ( type_annotation )?:type _initializer?
+
+  _parameter_name ::= ( decorator )*:decorator accessibility_modifier? override_modifier? 'readonly'? ( pattern | this ):pattern
+
+  omitting_type_annotation ::= '-?:' type
+
+  adding_type_annotation ::= '+?:' type
+
+  opting_type_annotation ::= '?:' type
+
+  type_annotation ::= ':' type
+
+  _type_query_member_expression_in_type_annotation ::= ( import | _type_query_member_expression_in_type_annotation -> "member_expression" | _type_query_call_expression_in_type_annotation -> "call_expression" ):object '.' ( private_property_identifier | identifier -> "property_identifier" ):property
+
+  _type_query_call_expression_in_type_annotation ::= ( import | _type_query_member_expression_in_type_annotation -> "member_expression" ):function ( arguments ):arguments
+
+  asserts ::= 'asserts' ( type_predicate | identifier | this )
+
+  asserts_annotation ::= ':' asserts
+
+  type ::= primary_type
+	| function_type
+	| readonly_type
+	| constructor_type
+	| infer_type
+	|  -1(  _type_query_member_expression_in_type_annotation -> "member_expression" )
+	|  -1(  _type_query_call_expression_in_type_annotation -> "call_expression" )
+
+  tuple_parameter ::= ( identifier | rest_pattern ):name ( type_annotation ):type
+
+  optional_tuple_parameter ::= ( identifier ):name '?' ( type_annotation ):type
+
+  optional_type ::= type '?'
+
+  rest_type ::= '...' type
+
+  _tuple_type_member ::= tuple_parameter -> "required_parameter"
+	| optional_tuple_parameter -> "optional_parameter"
+	| optional_type
+	| rest_type
+	| type
+
+  constructor_type ::= 'abstract'? 'new' ( type_parameters )?:type_parameters ( formal_parameters ):parameters '=>' ( type ):type
+
+  primary_type ::= parenthesized_type
+	| predefined_type
+	| _type_identifier
+	| nested_type_identifier
+	| generic_type
+	| object_type
+	| array_type
+	| tuple_type
+	| flow_maybe_type
+	| type_query
+	| index_type_query
+	| this -> "this_type"
+	| existential_type
+	| literal_type
+	| lookup_type
+	| conditional_type
+	| template_literal_type
+	| intersection_type
+	| union_type
+	| 'const'
+
+  template_type ::= '${' ( primary_type | infer_type ) '}'
+
+  template_literal_type ::= '`' ( _template_chars -> "string_fragment" | template_type )* '`'
+
+  infer_type ::= 'infer' _type_identifier ( 'extends' type )?
+
+  conditional_type ::= ( type ):left 'extends' ( type ):right '?' ( type ):consequence ':' ( type ):alternative
+
+  generic_type ::=  call(  ( _type_identifier | nested_type_identifier ):name ( type_arguments ):type_arguments )
+
+  type_predicate ::= ( identifier | this | predefined_type -> "identifier" ):name 'is' ( type ):type
+
+  type_predicate_annotation ::= ':' type_predicate
+
+  _type_query_member_expression ::= ( identifier | this | _type_query_subscript_expression -> "subscript_expression" | _type_query_member_expression -> "member_expression" | _type_query_call_expression -> "call_expression" ):object ( '.' | '?.' ) ( private_property_identifier | identifier -> "property_identifier" ):property
+
+  _type_query_subscript_expression ::= ( identifier | this | _type_query_subscript_expression -> "subscript_expression" | _type_query_member_expression -> "member_expression" | _type_query_call_expression -> "call_expression" ):object '?.'? '[' ( predefined_type | string | number ):index ']'
+
+  _type_query_call_expression ::= ( import | identifier | _type_query_member_expression -> "member_expression" | _type_query_subscript_expression -> "subscript_expression" ):function ( arguments ):arguments
+
+  _type_query_instantiation_expression ::= ( import | identifier | _type_query_member_expression -> "member_expression" | _type_query_subscript_expression -> "subscript_expression" ):function ( type_arguments ):type_arguments
+
+  type_query ::= 'typeof' ( _type_query_subscript_expression -> "subscript_expression" | _type_query_member_expression -> "member_expression" | _type_query_call_expression -> "call_expression" | _type_query_instantiation_expression -> "instantiation_expression" | identifier | this )
+
+  index_type_query ::= 'keyof' primary_type
+
+  lookup_type ::= primary_type '[' type ']'
+
+  mapped_type_clause ::= ( _type_identifier ):name 'in' ( type ):type ( 'as' ( type ):alias )?
+
+  literal_type ::= _number -> "unary_expression"
+	| number
+	| string
+	| true
+	| false
+	| null
+	| undefined
+
+  _number ::=  <1(  ( '-' | '+' ):operator ( number ):argument )
+
+  existential_type ::= '*'
+
+  flow_maybe_type ::= '?' primary_type
+
+  parenthesized_type ::= '(' type ')'
+
+  predefined_type ::= 'any'
+	| 'number'
+	| 'boolean'
+	| 'string'
+	| 'symbol'
+	| ( 'unique' 'symbol' ) -> "unique symbol"
+	| 'void'
+	| 'unknown'
+	| 'string'
+	| 'never'
+	| 'object'
+
+  type_arguments ::= '<' type ( ',' type )* ','? '>'
+
+  object_type ::= ( '{' | '{|' ) ( ( ',' | ';' )? ( export_statement | property_signature | call_signature | construct_signature | index_signature | method_signature ) ( ( ',' | _semicolon ) ( export_statement | property_signature | call_signature | construct_signature | index_signature | method_signature ) )* ( ',' | _semicolon )? )? ( '}' | '|}' )
+
+  call_signature ::= _call_signature
+
+  property_signature ::= accessibility_modifier? 'static'? override_modifier? 'readonly'? ( _property_name ):name '?'? ( type_annotation )?:type
+
+  type_parameters ::= '<' type_parameter ( ',' type_parameter )* ','? '>'
+
+  type_parameter ::= 'const'? ( _type_identifier ):name ( constraint )?:constraint ( default_type )?:value
+
+  default_type ::= '=' type
+
+  constraint ::= ( 'extends' | ':' ) type
+
+  construct_signature ::= 'abstract'? 'new' ( type_parameters )?:type_parameters ( formal_parameters ):parameters ( type_annotation )?:type
+
+  index_signature ::= ( ( '-' | '+' )?:sign 'readonly' )? '[' ( ( identifier | _reserved_identifier -> "identifier" ):name ':' ( type ):index_type | mapped_type_clause ) ']' ( type_annotation | omitting_type_annotation | adding_type_annotation | opting_type_annotation ):type
+
+  array_type ::= primary_type '[' ']'
+
+  tuple_type ::= '[' ( _tuple_type_member ( ',' _tuple_type_member )* )? ','? ']'
+
+  readonly_type ::= 'readonly' type
+
+  union_type ::= type? '|' type
+
+  intersection_type ::= type? '&' type
+
+  function_type ::= ( type_parameters )?:type_parameters ( formal_parameters ):parameters '=>' ( type | asserts | type_predicate ):return_type
+
+  _type_identifier ::= identifier -> "type_identifier"

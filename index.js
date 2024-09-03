@@ -52,19 +52,44 @@ const sampleList = [
 	["Lua parser", "lua-ast-playground.lua", "fact.lua", "ace/mode/lua"],
 	["C11 parser", "c11-ast-playground.lua", "fact.c", "ace/mode/c_cpp"],
 	["Json parser**", "json-ast-playground.lua", "sample.json.txt", "ace/mode/json"],
-	["Tree-sitter-ebnf-generator-Scala", "tree-sitter-ebnf-generator.lua", "scala.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Ada", "tree-sitter-ebnf-generator.lua", "ada.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Bash", "tree-sitter-ebnf-generator.lua", "bash.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-cmake", "tree-sitter-ebnf-generator.lua", "cmake.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-ComonLisp", "tree-sitter-ebnf-generator.lua", "commonlisp.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-CPP", "tree-sitter-ebnf-generator.lua", "cpp.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-CSS", "tree-sitter-ebnf-generator.lua", "css.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-C", "tree-sitter-ebnf-generator.lua", "c.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-D", "tree-sitter-ebnf-generator.lua", "d.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Dart", "tree-sitter-ebnf-generator.lua", "dart.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Docker", "tree-sitter-ebnf-generator.lua", "docker.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Elixir", "tree-sitter-ebnf-generator.lua", "elixir.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Elm", "tree-sitter-ebnf-generator.lua", "elm.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Erlang", "tree-sitter-ebnf-generator.lua", "erlang.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Fortran", "tree-sitter-ebnf-generator.lua", "fortran.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Go", "tree-sitter-ebnf-generator.lua", "go.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Haskell", "tree-sitter-ebnf-generator.lua", "haskell.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Haxe", "tree-sitter-ebnf-generator.lua", "haxe.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-HTML", "tree-sitter-ebnf-generator.lua", "html.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Javascript", "tree-sitter-ebnf-generator.lua", "javascript.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Java", "tree-sitter-ebnf-generator.lua", "java.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Julia", "tree-sitter-ebnf-generator.lua", "julia.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Kotlin", "tree-sitter-ebnf-generator.lua", "kotlin.ebnf", "ace/mode/text"],
-	["Tree-sitter-ebnf-generator-C", "tree-sitter-ebnf-generator.lua", "c.ebnf", "ace/mode/text"],
-	["Tree-sitter-ebnf-generator-CPP", "tree-sitter-ebnf-generator.lua", "cpp.ebnf", "ace/mode/text"],
-	["Tree-sitter-ebnf-generator-Haxe", "tree-sitter-ebnf-generator.lua", "haxe.ebnf", "ace/mode/text"],
-	["Tree-sitter-ebnf-generator-Rust", "tree-sitter-ebnf-generator.lua", "rust.ebnf", "ace/mode/text"],
-	["Tree-sitter-ebnf-generator-CSS", "tree-sitter-ebnf-generator.lua", "css.ebnf", "ace/mode/text"],
-	["Tree-sitter-ebnf-generator-HTML", "tree-sitter-ebnf-generator.lua", "html.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-ld", "tree-sitter-ebnf-generator.lua", "ld.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Lean", "tree-sitter-ebnf-generator.lua", "lean.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Lua", "tree-sitter-ebnf-generator.lua", "lua.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Make", "tree-sitter-ebnf-generator.lua", "make.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Markdown", "tree-sitter-ebnf-generator.lua", "markdown.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Minizinc", "tree-sitter-ebnf-generator.lua", "minizinc.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Nim", "tree-sitter-ebnf-generator.lua", "nim2.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Ocaml", "tree-sitter-ebnf-generator.lua", "ocaml.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-PHP", "tree-sitter-ebnf-generator.lua", "php.ebnf", "ace/mode/text"],
-	["Tree-sitter-ebnf-generator-Ruby", "tree-sitter-ebnf-generator.lua", "ruby.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Python", "tree-sitter-ebnf-generator.lua", "python.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Ruby", "tree-sitter-ebnf-generator.lua", "ruby.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Rust", "tree-sitter-ebnf-generator.lua", "rust.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Scala", "tree-sitter-ebnf-generator.lua", "scala.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Typescript", "tree-sitter-ebnf-generator.lua", "typescript.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-V", "tree-sitter-ebnf-generator.lua", "v-analyzer.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Zig", "tree-sitter-ebnf-generator.lua", "zig.ebnf", "ace/mode/text"],
 ];
 
 function loadLua_sample(self) {
@@ -321,5 +346,15 @@ var Module = {
     }
   },
 };
+
+function doFinalSettings() {
+	let select_samples = document.getElementById('opt-samples');
+	sampleList.map( (lang, i) => {
+           let opt = document.createElement("option");
+           opt.value = i; // the index
+           opt.innerHTML = lang[0];
+           select_samples.append(opt);
+        });
+}
 
 // vim: sw=2:sts=2

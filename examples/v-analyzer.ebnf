@@ -1,0 +1,519 @@
+; From v-analyzer/tree_sitter_v/src/grammar.json
+; EBNF to generate grammar.js at
+;      https://mingodad.github.io/lua-wasm-playground/
+;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
+;      see also https://mingodad.github.io/plgh/json2ebnf.html
+
+;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
+
+
+externals ::= {
+	}
+
+extras ::= {
+	/\s/
+	line_comment
+	block_comment
+	}
+
+supertypes ::= {
+	_expression
+	_statement
+	_top_level_declaration
+	_expression_with_blocks
+	}
+
+inline ::= {
+	_string_literal
+	_top_level_declaration
+	_array
+	}
+
+conflicts ::= {
+	{ fixed_array_type _expression_without_blocks }
+	{ qualified_type _expression_without_blocks }
+	{ fixed_array_type literal }
+	{ reference_expression type_reference_expression }
+	{ is_expression }
+	{ _expression_without_blocks element_list }
+	}
+
+word ::= identifier
+
+rules:
+
+  source_file ::= shebang? module_clause? import_list? ( _top_level_declaration ( '\n'  | '\r'  | '\r\n' )? | _statement ( '\n'  | '\r'  | '\r\n' )? )*
+
+  shebang ::= '#!' /.*/
+
+  line_comment ::= '//' /.*/
+
+  block_comment ::= '/*' ( /\*/ | /[^*]|[/][^*]|[^*][/]/ )* '*/'
+
+  comment ::= line_comment
+	| block_comment
+
+  module_clause ::= attributes? 'module' identifier
+
+  import_list ::= import_declaration+
+
+  import_declaration ::= 'import' import_spec ( '\n'  | '\r'  | '\r\n' | ';' )
+
+  import_spec ::= import_path import_alias? selective_import_list?
+
+  import_path ::= import_name ( '.' import_name )*
+
+  import_name ::= identifier
+
+  import_alias ::= 'as' import_name
+
+  selective_import_list ::= '{' reference_expression ( ( ',' | '\n'  | '\r'  | '\r\n' ) reference_expression? )* '}'
+
+  _top_level_declaration ::= const_declaration
+	| global_var_declaration
+	| type_declaration
+	| function_declaration
+	| static_method_declaration
+	| struct_declaration
+	| enum_declaration
+	| interface_declaration
+
+  const_declaration ::= ( attributes )?:attributes visibility_modifiers? 'const' ( const_definition | '(' ( const_definition ( '\n'  | '\r'  | '\r\n' | ';' ) )* ')' )
+
+  const_definition ::= ( identifier ):name '=' ( _expression ):value
+
+  global_var_declaration ::= ( attributes )?:attributes '__global' ( global_var_definition | '(' ( global_var_definition ( '\n'  | '\r'  | '\r\n' | ';' ) )* ')' )
+
+  global_var_definition ::= ( identifier ):name ( plain_type | _global_var_value )
+
+  _global_var_value ::= '=' ( _expression ):value
+
+  type_declaration ::=  >1(  visibility_modifiers? 'type' ( identifier ):name ( generic_parameters )?:generic_parameters '=' ( sum_type | plain_type ):type )
+
+  function_declaration ::=  >1(  ( attributes )?:attributes visibility_modifiers? 'fn' ( receiver )?:receiver ( _function_name ):name ( generic_parameters )?:generic_parameters ( signature ):signature ( block )?:body )
+
+  static_method_declaration ::=  >1(  ( attributes )?:attributes visibility_modifiers? 'fn' ( static_receiver ):static_receiver '.' ( _function_name ):name ( generic_parameters )?:generic_parameters ( signature ):signature ( block )?:body )
+
+  static_receiver ::= reference_expression
+
+  _function_name ::= identifier
+	| overridable_operator
+
+  overridable_operator ::= @( '+' )
+	| @( '-' )
+	| @( '*' )
+	| @( '/' )
+	| @( '%' )
+	| @( '<' )
+	| @( '>' )
+	| @( '==' )
+	| @( '!=' )
+	| @( '<=' )
+	| @( '>=' )
+
+  receiver ::=  7(  '(' ( mutability_modifiers )?:mutability ( identifier ):name ( _plain_type_without_special -> "plain_type" ):type ')' )
+
+  signature ::= ( parameter_list | type_parameter_list ):parameters ( plain_type )?:result
+
+  parameter_list ::=  1(  '(' ( parameter_declaration ( ',' parameter_declaration )* )? ')' )
+
+  parameter_declaration ::= ( mutability_modifiers )?:mutability ( identifier ):name ( '...' )?:variadic ( plain_type ):type
+
+  type_parameter_list ::= '(' type_parameter_declaration ( ',' type_parameter_declaration )* ')'
+
+  type_parameter_declaration ::=  7(  mutability_modifiers? ( '...' )?:variadic ( plain_type ):type )
+
+  generic_parameters ::=  1(  ( !( '[' ) | !( '<' ) ) generic_parameter ( ',' generic_parameter )* ','? ( ']' | '>' ) )
+
+  generic_parameter ::= identifier
+
+  struct_declaration ::= ( attributes )?:attributes visibility_modifiers? ( 'struct' | 'union' ) ( identifier ):name ( generic_parameters )?:generic_parameters _struct_body
+
+  _struct_body ::= '{' ( struct_field_scope ( '\n'  | '\r'  | '\r\n' )? | struct_field_declaration ( '\n'  | '\r'  | '\r\n' )? )* '}'
+
+  struct_field_scope ::= ( 'pub' | 'mut' | 'pub' 'mut' | '__global' ) ':'
+
+  struct_field_declaration ::= _struct_field_definition
+	| embedded_definition
+
+  _struct_field_definition ::=  >8(  ( identifier ):name ( plain_type ):type ( '=' ( _expression ):default_value )? ( attribute )?:attributes )
+
+  embedded_definition ::= type_reference_expression
+	| qualified_type
+	| generic_type
+
+  enum_declaration ::= ( attributes )?:attributes visibility_modifiers? 'enum' ( identifier ):name enum_backed_type? _enum_body
+
+  enum_backed_type ::= 'as' plain_type
+
+  _enum_body ::= '{' ( enum_field_definition ( '\n'  | '\r'  | '\r\n' )? )* '}'
+
+  enum_field_definition ::= ( identifier ):name ( '=' ( _expression ):value )? ( attribute )?:attributes
+
+  interface_declaration ::= ( attributes )?:attributes visibility_modifiers? 'interface' ( identifier ):name ( generic_parameters )?:generic_parameters _interface_body
+
+  _interface_body ::= '{' ( struct_field_scope ( '\n'  | '\r'  | '\r\n' )? | struct_field_declaration ( '\n'  | '\r'  | '\r\n' )? | interface_method_definition ( '\n'  | '\r'  | '\r\n' )? )* '}'
+
+  interface_method_definition ::= ( identifier ):name ( generic_parameters )?:generic_parameters ( signature ):signature ( attribute )?:attributes
+
+  _expression ::= _expression_without_blocks
+	| _expression_with_blocks
+
+  _expression_without_blocks ::= parenthesized_expression
+	| go_expression
+	| spawn_expression
+	| call_expression
+	| function_literal
+	| reference_expression
+	| _max_group
+	| array_creation
+	| fixed_array_creation
+	| unary_expression
+	| receive_expression
+	| binary_expression
+	| is_expression
+	| in_expression
+	| index_expression
+	| slice_expression
+	| as_type_cast_expression
+	| selector_expression
+	| enum_fetch
+	| inc_expression
+	| dec_expression
+	| or_block_expression
+	| option_propagation_expression
+	| result_propagation_expression
+
+  _expression_with_blocks ::= type_initializer
+	| anon_struct_value_expression
+	| if_expression
+	| match_expression
+	| select_expression
+	| sql_expression
+	| lock_expression
+	| unsafe_expression
+	| compile_time_if_expression
+	| map_init_expression
+
+  strictly_expression_list ::=  -2(  ( _expression | mutable_expression ) ',' ( _expression | mutable_expression ) ( ',' ( _expression | mutable_expression ) )* )
+
+  inc_expression ::= _expression '++'
+
+  dec_expression ::= _expression '--'
+
+  or_block_expression ::= _expression or_block
+
+  option_propagation_expression ::=  9(  _expression '?' )
+
+  result_propagation_expression ::=  9(  _expression '!' )
+
+  anon_struct_value_expression ::= 'struct' '{' ( ( element_list ):element_list | ( short_element_list ):short_element_list ) '}'
+
+  go_expression ::=  <-1(  'go' _expression )
+
+  spawn_expression ::=  <-1(  'spawn' _expression )
+
+  parenthesized_expression ::= '(' ( _expression ):expression ')'
+
+  call_expression ::=  >7(  ( @( 'json.decode' ) ):function ( special_argument_list ):arguments | ( _expression ):name ( type_parameters )?:type_parameters ( argument_list ):arguments )
+
+  type_parameters ::=  ~2(  !( '[' ) plain_type ( ',' plain_type )* ']' )
+
+  argument_list ::= '(' ( ( argument ( '\n'  | '\r'  | '\r\n' | ';' | ',' )? )* | short_lambda ) ')'
+
+  short_lambda ::= '|' ( reference_expression ( ',' reference_expression )* )? '|' _expression_without_blocks
+
+  argument ::= _expression
+	| mutable_expression
+	| keyed_element
+	| spread_expression
+
+  special_argument_list ::= '(' _plain_type_without_special -> "plain_type" ( ',' _expression )? ')'
+
+  type_initializer ::=  >8(  ( plain_type ):type ( type_initializer_body ):body )
+
+  type_initializer_body ::= '{' ( ( element_list ):element_list | ( short_element_list ):short_element_list )? '}'
+
+  element_list ::= ( ( spread_expression | keyed_element | reference_expression ) ( '\n'  | '\r'  | '\r\n' | ';' | ',' )? )+
+
+  short_element_list ::= ( _expression -> "element" ( '\n'  | '\r'  | '\r\n' | ';' | ',' )? )+
+
+  keyed_element ::= ( reference_expression -> "field_name" ):key ':' ( _expression ):value
+
+  function_literal ::= 'fn' ( capture_list )?:capture_list ( generic_parameters )?:generic_parameters ( signature ):signature ( block ):body
+
+  capture_list ::= '[' capture ( ',' capture )* ','? ']'
+
+  capture ::= mutability_modifiers? reference_expression
+
+  reference_expression ::= identifier
+
+  type_reference_expression ::= identifier
+
+  unary_expression ::=  6(  ( '+' | '-' | '!' | '~' | '^' | '*' | '&' ):operator ( _expression ):operand )
+
+  receive_expression ::=  >6(  ( '<-' ):operator ( _expression ):operand )
+
+  binary_expression ::=  <5(  ( _expression ):left ( '*' | '/' | '%' | '<<' | '>>' | '>>>' | '&' | '&^' ):operator ( _expression ):right )
+	|  <4(  ( _expression ):left ( '+' | '-' | '|' | '^' ):operator ( _expression ):right )
+	|  <3(  ( _expression ):left ( '==' | '!=' | '<' | '<=' | '>' | '>=' ):operator ( _expression ):right )
+	|  <2(  ( _expression ):left ( '&&' ):operator ( _expression ):right )
+	|  <1(  ( _expression ):left ( '||' ):operator ( _expression ):right )
+
+  as_type_cast_expression ::= _expression 'as' plain_type
+
+  or_block ::= 'or' ( block ):block
+
+  _max_group ::=  <1(  pseudo_compile_time_identifier | literal )
+
+  escape_sequence ::= @(  1(  '\\'  ( /u[a-fA-F\d]{4}/ | /U[a-fA-F\d]{8}/ | /x[a-fA-F\d]{2}/ | /\d{3}/ | /\r?\n/ | /['"abfrntv$\\]/ | /\S/ ) )  )
+
+  literal ::= int_literal
+	| float_literal
+	| _string_literal
+	| rune_literal
+	| none
+	| true
+	| false
+	| nil
+
+  none ::= 'none'
+
+  true ::= 'true'
+
+  false ::= 'false'
+
+  nil ::= 'nil'
+
+  spread_expression ::=  >6(  '...' _expression )
+
+  map_init_expression ::=  -1(  '{' ( map_keyed_element ( '\n'  | '\r'  | '\r\n' | ';' | ',' )? )* '}' )
+
+  map_keyed_element ::= ( _expression ):key ':' ( _expression ):value
+
+  array_creation ::=  >5(  _array )
+
+  fixed_array_creation ::=  >5(  _array '!' )
+
+  _array ::= '[' ( _expression ','? )* ']'
+
+  selector_expression ::=  ~-1(   7(  ( _expression ):operand ( '.' | '?.' ) ( reference_expression | compile_time_selector_expression ):field )  )
+
+  compile_time_selector_expression ::= !( '$(' ) ( reference_expression | selector_expression ):field ')'
+
+  index_expression ::=  ~-1(   >7(  ( _expression ):operand ( '[' | !( '[' ) | @( '#[' ) ) ( _expression ):index ']' )  )
+
+  slice_expression ::=  7(  ( _expression ):operand ( '[' | !( '[' ) | @( '#[' ) ) range ']' )
+
+  if_expression ::= 'if' ( ( _expression ):condition | ( var_declaration ):guard ) ( block ):block else_branch?
+
+  else_branch ::= 'else' ( ( block ):block | if_expression ):else_branch
+
+  compile_time_if_expression ::= '_if' ( _expression '?'? ):condition ( block ):block ( '_else' ( block | compile_time_if_expression ):else_branch )?
+
+  is_expression ::=  ~2(  ( mutability_modifiers? _expression ):left ( 'is' | '!is' ) ( plain_type ):right )
+
+  in_expression ::=  <3(  ( _expression ):left ( 'in' | '!in' ) ( _expression ):right )
+
+  enum_fetch ::=  ~-1(  '.' reference_expression )
+
+  match_expression ::= 'match' ( _expression | mutable_expression ):condition '{' match_arms? '}'
+
+  match_arms ::= ( match_arm | match_else_arm_clause )+
+
+  match_arm ::= ( match_expression_list ):value ( block ):block
+
+  match_expression_list ::= ( _expression_without_blocks | match_arm_type | _definite_range -> "range" ) ( ',' ( _expression_without_blocks | match_arm_type | _definite_range -> "range" ) )*
+
+  match_arm_type ::=  9(  plain_type )
+
+  match_else_arm_clause ::= 'else' ( block ):block
+
+  select_expression ::= 'select' ( expression_list )?:selected_variables '{' select_arm* select_else_arn_clause? '}'
+
+  select_arm ::= select_arm_statement block
+
+  select_arm_statement ::= select_var_declaration -> "var_declaration" | send_statement | expression_without_blocks_list -> "expression_list" _select_arm_assignment_statement?
+
+  _select_arm_assignment_statement ::= ( '*=' | '/=' | '%=' | '<<=' | '>>=' | '>>>=' | '&=' | '&^=' | '+=' | '-=' | '|=' | '^=' | '=' ) expression_without_blocks_list -> "expression_list"
+
+  select_var_declaration ::= ( identifier_list ):var_list ':=' ( expression_without_blocks_list -> "expression_list" ):expression_list
+
+  select_else_arn_clause ::= 'else' block
+
+  lock_expression ::= ( 'lock' | 'rlock' ) ( expression_list )?:locked_variables ( block ):body
+
+  unsafe_expression ::= 'unsafe' block
+
+  sql_expression ::=  1(  'sql' identifier? _content_block )
+
+  int_literal ::= @( '0' ( 'b' | 'B' ) '_'? /[01]/ ( '_'? /[01]/ )* | '0' | /[1-9]/ ( '_'? /[0-9]/ ( '_'? /[0-9]/ )* )? | '0' ( 'o' | 'O' )? '_'? /[0-7]/ ( '_'? /[0-7]/ )* | '0' ( 'x' | 'X' ) '_'? /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* )
+
+  float_literal ::= @( /[0-9]/ ( '_'? /[0-9]/ )* '.' /[0-9]/ ( '_'? /[0-9]/ )* ( ( 'e' | 'E' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* )? | /[0-9]/ ( '_'? /[0-9]/ )* ( 'e' | 'E' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* | '.' /[0-9]/ ( '_'? /[0-9]/ )* ( ( 'e' | 'E' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* )? | '0' ( 'x' | 'X' ) ( '_'? /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* '.' ( /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* )? | '_'? /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* | '.' /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* ) ( 'p' | 'P' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* )
+
+  rune_literal ::= @( '`' ( /[^'\\]/ | "'"  | '"'  | '\\'  ( '0' | '`' | 'x' /[0-9a-fA-F]/ /[0-9a-fA-F]/ | /[0-7]/ /[0-7]/ /[0-7]/ | 'u' /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ | 'U' /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ | ( 'a' | 'b' | 'e' | 'f' | 'n' | 'r' | 't' | 'v' | '\\'  | "'"  | '"'  ) ) ) '`' )
+
+  _string_literal ::= interpreted_string_literal
+	| c_string_literal
+	| raw_string_literal
+
+  interpreted_string_literal ::= "'"  ( !(  >1(  /[^'\\$]+/ )  ) | '$' | escape_sequence | string_interpolation )* "'"
+	| '"'  ( !(  >1(  /[^"\\$]+/ )  ) | '$' | escape_sequence | string_interpolation )* '"'
+
+  c_string_literal ::= "c'" ( !(  >1(  /[^'\\$]+/ )  ) | '$' | escape_sequence | string_interpolation )* "'"
+	| 'c"' ( !(  >1(  /[^"\\$]+/ )  ) | '$' | escape_sequence | string_interpolation )* '"'
+
+  raw_string_literal ::= "r'" !(  >1(  /[^']+/ )  )* "'"
+	| 'r"' !(  >1(  /[^"]+/ )  )* '"'
+
+  string_interpolation ::= '${' -> "interpolation_opening" ( _expression -> "interpolation_expression"* | _expression -> "interpolation_expression" format_specifier ) '}' -> "interpolation_closing"
+
+  format_specifier ::= @( ':' ) ( @( /[bgGeEfFcdoxXpsS]/ ) | ( @( /[+\-]/ ) | @( '0' ) )? int_literal? ( '.' int_literal )? @( /[bgGeEfFcdoxXpsS]/ )? )
+
+  pseudo_compile_time_identifier ::= @( '@' !( /[A-Z][A-Z0-9_]+/ ) -> "identifier" )
+
+  identifier ::= @( '@'? '$'? 'C.'? 'JS.'? ( /[a-zA-Zα-ωΑ-Ωµ]/ | '_' ) ( /[a-zA-Zα-ωΑ-Ωµ]/ | '_' | /[0-9]/ )* )
+
+  visibility_modifiers ::= 'pub' | '__global'
+
+  mutability_modifiers ::=  <1(  'mut' 'static'? 'volatile'? | 'shared' )
+
+  mutable_identifier ::=  1(  mutability_modifiers identifier )
+
+  mutable_expression ::=  1(  mutability_modifiers _expression )
+
+  identifier_list ::=  2(  ( mutable_identifier | identifier ) ( ',' ( mutable_identifier | identifier ) )* )
+
+  expression_list ::=  1(  ( _expression | mutable_expression ) ( ',' ( _expression | mutable_expression ) )* )
+
+  expression_without_blocks_list ::=  1(  _expression_without_blocks ( ',' _expression_without_blocks )* )
+
+  sum_type ::= plain_type ( /\s+/? !( '|' ) plain_type )+
+
+  plain_type ::=  >7(  _plain_type_without_special | option_type | result_type | multi_return_type )
+
+  _plain_type_without_special ::=  >7(  type_reference_expression | qualified_type | pointer_type | wrong_pointer_type | array_type | fixed_array_type | function_type | generic_type | map_type | channel_type | shared_type | thread_type | atomic_type | anon_struct_type )
+
+  anon_struct_type ::= 'struct' _struct_body
+
+  multi_return_type ::= '(' plain_type ( ',' plain_type )* ','? ')'
+
+  result_type ::= '!' plain_type?
+
+  option_type ::= '?' plain_type?
+
+  qualified_type ::= ( reference_expression ):module '.' ( type_reference_expression ):name
+
+  fixed_array_type ::= '[' ( int_literal | reference_expression | selector_expression ):size ']' ( plain_type ):element
+
+  array_type ::=  >7(  '[' ']' ( plain_type ):element )
+
+  pointer_type ::=  9(  '&' plain_type )
+
+  wrong_pointer_type ::=  9(  '*' plain_type )
+
+  map_type ::= 'map[' ( plain_type ):key ']' ( plain_type ):value
+
+  channel_type ::=  >7(  'chan' plain_type )
+
+  shared_type ::= 'shared' plain_type
+
+  thread_type ::= 'thread' plain_type
+
+  atomic_type ::= 'atomic' plain_type
+
+  generic_type ::= ( qualified_type | type_reference_expression ) type_parameters
+
+  function_type ::= 'fn' ( signature ):signature
+
+  _statement ::= simple_statement
+	| assert_statement
+	| continue_statement
+	| break_statement
+	| return_statement
+	| asm_statement
+	| goto_statement
+	| labeled_statement
+	| defer_statement
+	| for_statement
+	| compile_time_for_statement
+	| send_statement
+	| block
+	| hash_statement
+	| append_statement
+
+  simple_statement ::= var_declaration
+	| _expression
+	| assignment_statement
+	| strictly_expression_list -> "expression_list"
+
+  assert_statement ::= 'assert' _expression ( ',' _expression )?
+
+  append_statement ::=  6(  ( _expression ):left '<<' ( _expression ):right )
+
+  send_statement ::=  >7(  ( _expression ):channel '<-' ( _expression ):value )
+
+  var_declaration ::= ( expression_list ):var_list ':=' ( expression_list ):expression_list
+
+  var_definition_list ::= var_definition ( ',' var_definition )*
+
+  var_definition ::=  8(  ( 'mut' )?:modifiers ( identifier ):name )
+
+  assignment_statement ::= ( expression_list ):left ( '*=' | '/=' | '%=' | '<<=' | '>>=' | '>>>=' | '&=' | '&^=' | '+=' | '-=' | '|=' | '^=' | '=' ):operator ( expression_list ):right
+
+  block ::= '{' ( _statement ( '\n'  | '\r'  | '\r\n' | ';' )? )* '}'
+
+  defer_statement ::= 'defer' block
+
+  label_reference ::= identifier
+
+  goto_statement ::= 'goto' label_reference
+
+  break_statement ::= 'break' label_reference?
+
+  continue_statement ::= 'continue' label_reference?
+
+  return_statement ::= 'return' ( expression_list )?:expression_list
+
+  label_definition ::= identifier ':'
+
+  labeled_statement ::= label_definition _statement?
+
+  compile_time_for_statement ::= '_for' range_clause ( block ):body
+
+  for_statement ::= 'for' ( range_clause | for_clause | is_clause | _expression )? ( block ):body
+
+  is_clause ::=  7(  'mut' -> "mutability_modifiers"? is_expression )
+
+  range_clause ::=  <7(  ( var_definition_list ):left 'in' ( _definite_range -> "range" | _expression ):right )
+
+  for_clause ::= ( simple_statement )?:initializer ';' ( _expression )?:condition ';' ( simple_statement )?:update
+
+  _definite_range ::=  5(  ( _expression ):start ( '..' | '...' ):operator ( _expression ):end )
+
+  range ::=  5(  ( _expression )?:start ( '..' ):operator ( _expression )?:end )
+
+  hash_statement ::= '#' !( /[^\\\r\n]/+ )
+
+  asm_statement ::= 'asm' identifier _content_block
+
+  _content_block ::= '{' !(  1(  /[^{}]+/ )  ) '}'
+
+  attributes ::= ( attribute ( '\n'  | '\r'  | '\r\n' )? )+
+
+  attribute ::= ( '[' | '@[' ) attribute_expression ( ';' attribute_expression )* ']'
+
+  attribute_expression ::=  10(  if_attribute | _plain_attribute )
+
+  if_attribute ::=  10(  'if' reference_expression '?'? )
+
+  _plain_attribute ::= literal_attribute
+	| value_attribute
+	| key_value_attribute
+
+  literal_attribute ::=  10(  literal )
+
+  value_attribute ::=  10(  ( 'unsafe' -> "reference_expression" | reference_expression ):name )
+
+  key_value_attribute ::=  10(  value_attribute ':' ( literal | identifier ):value )
+
