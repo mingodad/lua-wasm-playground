@@ -573,7 +573,7 @@ local function print_node(n, offset, max_width)
       return write_function_with_args("token", { kind = SEQUENCE, children = n.children })
     elseif n.kind == PRECEDENCE then
       local modifier, next_node = unpack(n.children)
-      local prec = modifier:match("^(-?[0-9]+)")
+      local prec = modifier:match("^[<>]?(-?[0-9]+)")
       if prec then
         prec = tonumber(prec)
       elseif #modifier > 1 then
