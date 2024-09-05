@@ -836,7 +836,7 @@ local function parse_body(id, string)
         prev_state = table.remove(state_stack)
         table.remove(node_stack)
       end
-    elseif b == LEFT_BRACKET and (state < _IN_CHAR_GROUPING or state == IN_REGEX) and last_byte ~= BACK_SLASH then
+    elseif b == LEFT_BRACKET and (state < _IN_CHAR_GROUPING or state == IN_REGEX) and (last_byte ~= BACK_SLASH or last_byte == prev_last_byte) then
       table.insert(state_stack, IN_MINI_REGEX)
       if state ~= IN_REGEX then
         current_word = { "/[" }
