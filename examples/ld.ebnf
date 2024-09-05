@@ -1,10 +1,11 @@
-; From tree-sitter-ld/src/grammar.json
+; repository: https://github.com/mtoohey31/tree-sitter-ld
+; commit: 0e9695ae0ede47b8744a8e2ad44d4d40c5d4e4c9
+; json from: tree-sitter-ld/src/grammar.json
+; From /tmp/tslua/ld0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 extras ::= {
@@ -170,7 +171,7 @@ rules:
 
   mustbe_exp ::= exp
 
-  exp ::=  <0(  ( '-' | '!' | '+' | '~' ) exp | '(' exp ')' | ( 'NEXT' | 'ABSOLUTE' | 'DATA_SEGMENT_END' | 'BLOCK' | 'LOG2CEIL' ) '(' exp ')' | exp ( '*' | '/' | '%' | '+' | '-' | '<<' | '>>' | '==' | '!=' | '<=' | '>=' | '<' | '>' | '&' | '^' | '|' | '&&' | '||' ) exp | exp '?' exp ':' exp | ( 'DEFINED' | 'CONSTANT' ) '(' SYMBOLNAME ')' | INT | 'SIZEOF_HEADERS' | ( 'ALIGNOF' | 'SIZEOF' | 'ADDR' | 'LOADADDR' | 'ORIGIN' | 'LENGTH' ) paren_script_name | 'ALIGN' '(' exp ( ',' exp )? ')' | ( 'DATA_SEGMENT_ALIGN' | 'DATA_SEGMENT_RELRO_END' | 'MAX' | 'MIN' ) '(' exp ',' exp ')' | 'SEGMENT_START' '(' SYMBOLNAME ',' exp ')' | SYMBOLNAME | 'ASSERT' '(' exp ',' SYMBOLNAME ')' )
+  exp ::=  <0(  ( '-' | '!' | '+' | '~' ) exp | '(' exp ')' | ( 'NEXT' | 'ABSOLUTE' | 'DATA_SEGMENT_END' | 'BLOCK' | 'LOG2CEIL' ) '(' exp ')' | exp ( '*' | '/' | '%' | '+' | '-' | '<<' | '>>' | '==' | '!=' | '<=' | '>=' | '<' | '>' | '&' | '^' | '|' | '&&' | '||' ) exp | exp '?' exp ':' exp | ( 'DEFINED' | 'CONSTANT' ) '(' SYMBOLNAME ')' | INT | 'SIZEOF_HEADERS' | ( 'ALIGNOF' | 'SIZEOF' | 'ADDR' | 'LOADADDR' | 'ORIGIN' | 'LENGTH' ) paren_script_name | 'ALIGN' '(' exp ( ',' exp )? ')' | ( 'DATA_SEGMENT_ALIGN' | 'DATA_SEGMENT_RELRO_END' | 'MAX' | 'MIN' ) '(' exp ',' exp ')' | 'SEGMENT_START' '(' SYMBOLNAME ',' exp ')' | SYMBOLNAME | 'ASSERT' '(' exp ',' SYMBOLNAME ')' ) 
 
   memspec_at ::= 'AT' '>' NAME
 

@@ -1,10 +1,11 @@
-; From tree-sitter-make/src/grammar.json
+; repository: https://github.com/alemuller/tree-sitter-make
+; commit: a4b9187417d6be349ee5fd4b6e77b4172c6827dd
+; json from: tree-sitter-make/src/grammar.json
+; From /tmp/tslua/make0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 extras ::= {
@@ -39,30 +40,30 @@ rules:
   rule ::= _ordinary_rule
 	| _static_pattern_rule
 
-  _ordinary_rule ::=  >0(  _targets ( ':' | '&:' | '::' ) !( /[\t ]+/ )? _prerequisites? ( recipe | !( /[\r\n]+/ ) ) )
+  _ordinary_rule ::=  >0(  _targets ( ':' | '&:' | '::' ) !( /[\t ]+/ )? _prerequisites? ( recipe | !( /[\r\n]+/ ) ) ) 
 
-  _static_pattern_rule ::=  >0(  _targets ':' !( /[\t ]+/ )? _target_pattern ':' !( /[\t ]+/ )? _prerequisites_pattern? ( recipe | !( /[\r\n]+/ ) ) )
+  _static_pattern_rule ::=  >0(  _targets ':' !( /[\t ]+/ )? _target_pattern ':' !( /[\t ]+/ )? _prerequisites_pattern? ( recipe | !( /[\r\n]+/ ) ) ) 
 
-  _targets ::= list -> "targets"
+  _targets ::= list -> targets
 
-  _target_pattern ::= ( list -> "pattern_list" ):target
+  _target_pattern ::= ( list -> pattern_list ):target
 
   _prerequisites ::= _normal_prerequisites
 	| _normal_prerequisites? '|' _order_only_prerequisites
 
-  _normal_prerequisites ::= ( list -> "prerequisites" ):normal
+  _normal_prerequisites ::= ( list -> prerequisites ):normal
 
-  _order_only_prerequisites ::= ( list -> "prerequisites" ):order_only
+  _order_only_prerequisites ::= ( list -> prerequisites ):order_only
 
-  _prerequisites_pattern ::= ( list -> "pattern_list" ):prerequisite
+  _prerequisites_pattern ::= ( list -> pattern_list ):prerequisite
 
-  recipe ::=  >0(  _attached_recipe_line !( /[\r\n]+/ ) ( conditional | _prefixed_recipe_line )* | !( /[\r\n]+/ ) ( conditional | _prefixed_recipe_line )+ )
+  recipe ::=  >0(  _attached_recipe_line !( /[\r\n]+/ ) ( conditional | _prefixed_recipe_line )* | !( /[\r\n]+/ ) ( conditional | _prefixed_recipe_line )+ ) 
 
   _attached_recipe_line ::= ';' recipe_line?
 
   _prefixed_recipe_line ::= _recipeprefix recipe_line? !( /[\r\n]+/ )
 
-  recipe_line ::= ( @(  1(  '@' )  ) | @(  1(  '-' )  ) | @(  1(  '+' )  ) )? ( shell_text_with_split -> "shell_text" ( _recipeprefix? shell_text_with_split -> "shell_text" )* _recipeprefix? )? _shell_text_without_split -> "shell_text"
+  recipe_line ::= ( @(  1(  '@' )  ) | @(  1(  '-' )  ) | @(  1(  '+' )  ) )? ( shell_text_with_split -> shell_text ( _recipeprefix? shell_text_with_split -> shell_text )* _recipeprefix? )? _shell_text_without_split -> shell_text
 
   _variable_definition ::= VPATH_assignment
 	| RECIPEPREFIX_assignment
@@ -70,17 +71,17 @@ rules:
 	| shell_assignment
 	| define_directive
 
-  VPATH_assignment ::= ( 'VPATH' ):name !( /[\t ]+/ )? ( '=' | ':=' | '::=' | '?=' | '+=' ):operator ( paths ):value !( /[\r\n]+/ )
+  VPATH_assignment ::= 'VPATH':name !( /[\t ]+/ )? ( '=' | ':=' | '::=' | '?=' | '+=' ):operator paths:value !( /[\r\n]+/ )
 
-  RECIPEPREFIX_assignment ::= ( '.RECIPEPREFIX' ):name !( /[\t ]+/ )? ( '=' | ':=' | '::=' | '?=' | '+=' ):operator ( text ):value !( /[\r\n]+/ )
+  RECIPEPREFIX_assignment ::= '.RECIPEPREFIX':name !( /[\t ]+/ )? ( '=' | ':=' | '::=' | '?=' | '+=' ):operator text:value !( /[\r\n]+/ )
 
-  variable_assignment ::= _target_or_pattern_assignment? _name !( /[\t ]+/ )? ( '=' | ':=' | '::=' | '?=' | '+=' ):operator !( /[\t ]+/ )? ( text )?:value !( /[\r\n]+/ )
+  variable_assignment ::= _target_or_pattern_assignment? _name !( /[\t ]+/ )? ( '=' | ':=' | '::=' | '?=' | '+=' ):operator !( /[\t ]+/ )? ( text:value )? !( /[\r\n]+/ )
 
-  _target_or_pattern_assignment ::= ( list ):target_or_pattern ':' !( /[\t ]+/ )?
+  _target_or_pattern_assignment ::= list:target_or_pattern ':' !( /[\t ]+/ )?
 
-  shell_assignment ::= ( word ):name !( /[\t ]+/ )? ( '!=' ):operator !( /[\t ]+/ )? ( _shell_command ):value !( /[\r\n]+/ )
+  shell_assignment ::= word:name !( /[\t ]+/ )? '!=':operator !( /[\t ]+/ )? _shell_command:value !( /[\r\n]+/ )
 
-  define_directive ::= 'define' ( word ):name !( /[\t ]+/ )? ( '=' | ':=' | '::=' | '?=' | '+=' )?:operator !( /[\t ]+/ )? !( /[\r\n]+/ ) ( _rawline+ -> "raw_text" )?:value @(  1(  'endef' )  ) !( /[\r\n]+/ )
+  define_directive ::= 'define' word:name !( /[\t ]+/ )? ( ( '=' | ':=' | '::=' | '?=' | '+=' ):operator )? !( /[\t ]+/ )? !( /[\r\n]+/ ) ( ( _rawline+ -> raw_text ):value )? @(  1(  'endef' )  ) !( /[\r\n]+/ )
 
   _directive ::= include_directive
 	| vpath_directive
@@ -91,34 +92,34 @@ rules:
 	| private_directive
 	| conditional
 
-  include_directive ::= 'include' ( list ):filenames !( /[\r\n]+/ )
-	| 'sinclude' ( list ):filenames !( /[\r\n]+/ )
-	| '-include' ( list ):filenames !( /[\r\n]+/ )
+  include_directive ::= 'include' list:filenames !( /[\r\n]+/ )
+	| 'sinclude' list:filenames !( /[\r\n]+/ )
+	| '-include' list:filenames !( /[\r\n]+/ )
 
   vpath_directive ::= 'vpath' !( /[\r\n]+/ )
-	| 'vpath' ( word ):pattern !( /[\r\n]+/ )
-	| 'vpath' ( word ):pattern ( paths ):directories !( /[\r\n]+/ )
+	| 'vpath' word:pattern !( /[\r\n]+/ )
+	| 'vpath' word:pattern paths:directories !( /[\r\n]+/ )
 
   export_directive ::= 'export' !( /[\r\n]+/ )
-	| 'export' ( list ):variables !( /[\r\n]+/ )
+	| 'export' list:variables !( /[\r\n]+/ )
 	| 'export' variable_assignment
 
   unexport_directive ::= 'unexport' !( /[\r\n]+/ )
-	| 'unexport' ( list ):variables !( /[\r\n]+/ )
+	| 'unexport' list:variables !( /[\r\n]+/ )
 
   override_directive ::= 'override' define_directive
 	| 'override' variable_assignment
 	| 'override' undefine_directive
 
-  undefine_directive ::= 'undefine' ( word ):variable !( /[\r\n]+/ )
+  undefine_directive ::= 'undefine' word:variable !( /[\r\n]+/ )
 
   private_directive ::= 'private' variable_assignment
 
-  conditional ::= ( _conditional_directives ):condition ( _conditional_consequence )?:consequence elsif_directive* else_directive? 'endif' !( /[\r\n]+/ )
+  conditional ::= _conditional_directives:condition ( _conditional_consequence:consequence )? elsif_directive* else_directive? 'endif' !( /[\r\n]+/ )
 
-  elsif_directive ::= 'else' ( _conditional_directives ):condition ( _conditional_consequence )?:consequence
+  elsif_directive ::= 'else' _conditional_directives:condition ( _conditional_consequence:consequence )?
 
-  else_directive ::= 'else' !( /[\r\n]+/ ) ( _conditional_consequence )?:consequence
+  else_directive ::= 'else' !( /[\r\n]+/ ) ( _conditional_consequence:consequence )?
 
   _conditional_directives ::= ifeq_directive
 	| ifneq_directive
@@ -131,20 +132,20 @@ rules:
 
   ifneq_directive ::= 'ifneq' _conditional_args_cmp !( /[\r\n]+/ )
 
-  ifdef_directive ::= 'ifdef' ( _primary ):variable !( /[\r\n]+/ )
+  ifdef_directive ::= 'ifdef' _primary:variable !( /[\r\n]+/ )
 
-  ifndef_directive ::= 'ifndef' ( _primary ):variable !( /[\r\n]+/ )
+  ifndef_directive ::= 'ifndef' _primary:variable !( /[\r\n]+/ )
 
-  _conditional_args_cmp ::= '(' ( _primary )?:arg0 ',' ( _primary )?:arg1 ')'
-	| ( _primary ):arg0 ( _primary ):arg1
+  _conditional_args_cmp ::= '(' ( _primary:arg0 )? ',' ( _primary:arg1 )? ')'
+	| _primary:arg0 _primary:arg1
 
   _variable ::= variable_reference
 	| substitution_reference
 	| automatic_variable
 
-  variable_reference ::= ( '$' | '$$' ) ( !( '(' ) _primary ')' | !( '{' ) _primary '}' | !( /./ ) -> "word" )
+  variable_reference ::= ( '$' | '$$' ) ( !( '(' ) _primary ')' | !( '{' ) _primary '}' | !( /./ ) -> word )
 
-  substitution_reference ::= ( '$' | '$$' ) ( !( '(' ) ( _primary ):text ':' ( _primary ):pattern '=' ( _primary ):replacement ')' | !( '{' ) ( _primary ):text ':' ( _primary ):pattern '=' ( _primary ):replacement '}' )
+  substitution_reference ::= ( '$' | '$$' ) ( !( '(' ) _primary:text ':' _primary:pattern '=' _primary:replacement ')' | !( '{' ) _primary:text ':' _primary:pattern '=' _primary:replacement '}' )
 
   automatic_variable ::= ( '$' | '$$' ) ( !(  1(  '@' )  ) | !(  1(  '%' )  ) | !(  1(  '<' )  ) | !(  1(  '?' )  ) | !(  1(  '^' )  ) | !(  1(  '+' )  ) | !(  1(  '/' )  ) | !(  1(  '*' )  ) | !( '(' ) ( @(  1(  '@' )  ) | @(  1(  '%' )  ) | @(  1(  '<' )  ) | @(  1(  '?' )  ) | @(  1(  '^' )  ) | @(  1(  '+' )  ) | @(  1(  '/' )  ) | @(  1(  '*' )  ) ) ( !( 'D' ) | !( 'F' ) )? ')' | !( '{' ) ( @(  1(  '@' )  ) | @(  1(  '%' )  ) | @(  1(  '<' )  ) | @(  1(  '?' )  ) | @(  1(  '^' )  ) | @(  1(  '+' )  ) | @(  1(  '/' )  ) | @(  1(  '*' )  ) ) ( !( 'D' ) | !( 'F' ) )? '}' )
 
@@ -153,11 +154,11 @@ rules:
 
   function_call ::= ( '$' | '$$' ) !( '(' ) ( !( 'subst' ) | !( 'patsubst' ) | !( 'strip' ) | !( 'findstring' ) | !( 'filter' ) | !( 'filter-out' ) | !( 'sort' ) | !( 'word' ) | !( 'words' ) | !( 'wordlist' ) | !( 'firstword' ) | !( 'lastword' ) | !( 'dir' ) | !( 'notdir' ) | !( 'suffix' ) | !( 'basename' ) | !( 'addsuffix' ) | !( 'addprefix' ) | !( 'join' ) | !( 'wildcard' ) | !( 'realpath' ) | !( 'abspath' ) | !( 'error' ) | !( 'warning' ) | !( 'info' ) | !( 'origin' ) | !( 'flavor' ) | !( 'foreach' ) | !( 'if' ) | !( 'or' ) | !( 'and' ) | !( 'call' ) | !( 'eval' ) | !( 'file' ) | !( 'value' ) ):function !( /[\t ]+/ )? arguments ')'
 
-  arguments ::= ( text ):argument ( ',' ( text ):argument )*
+  arguments ::= text:argument ( ',' text:argument )*
 
-  shell_function ::= ( '$' | '$$' ) !( '(' ) ( 'shell' ):function !( /[\t ]+/ )? _shell_command ')'
+  shell_function ::= ( '$' | '$$' ) !( '(' ) 'shell':function !( /[\t ]+/ )? _shell_command ')'
 
-  list ::=  1(  _primary ( ( !( /[\t ]+/ ) | !( '\\'  /\r?\n|\r/ ) -> "\" ) _primary )* !( /[\t ]+/ )? )
+  list ::=  1(  _primary ( ( !( /[\t ]+/ ) | !( '\\' /\r?\n|\r/ ) -> "\\" ) _primary )* !( /[\t ]+/ )? ) 
 
   paths ::= _primary ( ( !( ':' ) | !( ';' ) ) _primary )*
 
@@ -168,31 +169,31 @@ rules:
 	| concatenation
 	| string
 
-  concatenation ::=  >0(  _primary  <0(  _primary ) + )
+  concatenation ::=  >0(  _primary  <0(  _primary ) + ) 
 
-  _name ::= ( word ):name
+  _name ::= word:name
 
-  string ::= ( '"'  _string? '"'  | "'"  _string? "'"  ):string
+  string ::= ( '"' _string? '"' | "'" _string? "'" ):string
 
   _string ::= ( _variable | _function | @(  -1(  /([^'"$\r\n\\]|\\\\|\\[^\r\n])+/ )  ) )+
 
   word ::= @( ( /[a-zA-Z0-9%\+\-\.@_\*\?\/]/ | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ )+ )
 
-  archive ::= ( word ):archive !( '(' ) ( list ):members !( ')' )
+  archive ::= word:archive !( '(' ) list:members !( ')' )
 
   _recipeprefix ::= '\t'
 
   _rawline ::= @( /.*[\r\n]+/ )
 
-  _shell_text_without_split ::= @( ( /[^\$\r\n\\]/ | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ ) ( ( _variable | _function | '$$' -> "escape" | '//' -> "escape" ) @( ( /[^\$\r\n\\]/ | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ )? )*
-	| ( _variable | _function | '$$' -> "escape" | '//' -> "escape" ) ( @( ( /[^\$\r\n\\]/ | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ )? ( _variable | _function | '$$' -> "escape" | '//' -> "escape" ) )* @( ( /[^\$\r\n\\]/ | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ )?
+  _shell_text_without_split ::= @( ( /[^\$\r\n\\]/ | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ ) ( ( _variable | _function | '$$' -> escape | '//' -> escape ) @( ( /[^\$\r\n\\]/ | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ )? )*
+	| ( _variable | _function | '$$' -> escape | '//' -> escape ) ( @( ( /[^\$\r\n\\]/ | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ )? ( _variable | _function | '$$' -> escape | '//' -> escape ) )* @( ( /[^\$\r\n\\]/ | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ )?
 
-  shell_text_with_split ::= _shell_text_without_split !( '\\'  /\r?\n|\r/ ) -> "\"
+  shell_text_with_split ::= _shell_text_without_split !( '\\' /\r?\n|\r/ ) -> "\\"
 
-  _shell_command ::= text -> "shell_command"
+  _shell_command ::= text -> shell_command
 
-  text ::= @( ( /[^\$\(\)\n\r\\]/ | !( '\\'  /\r?\n|\r/ ) -> "\" | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ ) ( ( _variable | _function | '$$' -> "escape" | '//' -> "escape" ) @( ( /[^\$\(\)\n\r\\]/ | !( '\\'  /\r?\n|\r/ ) -> "\" | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ )? )*
-	| ( _variable | _function | '$$' -> "escape" | '//' -> "escape" ) ( @( ( /[^\$\(\)\n\r\\]/ | !( '\\'  /\r?\n|\r/ ) -> "\" | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ )? ( _variable | _function | '$$' -> "escape" | '//' -> "escape" ) )* @( ( /[^\$\(\)\n\r\\]/ | !( '\\'  /\r?\n|\r/ ) -> "\" | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ )?
+  text ::= @( ( /[^\$\(\)\n\r\\]/ | !( '\\' /\r?\n|\r/ ) -> "\\" | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ ) ( ( _variable | _function | '$$' -> escape | '//' -> escape ) @( ( /[^\$\(\)\n\r\\]/ | !( '\\' /\r?\n|\r/ ) -> "\\" | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ )? )*
+	| ( _variable | _function | '$$' -> escape | '//' -> escape ) ( @( ( /[^\$\(\)\n\r\\]/ | !( '\\' /\r?\n|\r/ ) -> "\\" | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ )? ( _variable | _function | '$$' -> escape | '//' -> escape ) )* @( ( /[^\$\(\)\n\r\\]/ | !( '\\' /\r?\n|\r/ ) -> "\\" | /\\[abtnvfrE!"#\$&'\(\)\*,;<>\?\[\\\]^`{\|}~]/ | /\\[0-9]{3}/ | /\\[^\n\r]/ )+ )?
 
   comment ::= @(  -1(  /#.*/ )  )
 

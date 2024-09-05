@@ -1,10 +1,11 @@
-; From tree-sitter-haskell/src/grammar.json
+; repository: https://github.com/tree-sitter/tree-sitter-haskell.git
+; commit: 558b997049fddcb07fc513528189c57d6129a260
+; json from: tree-sitter-haskell/src/grammar.json
+; From /tmp/tslua/haskell0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -56,7 +57,7 @@ externals ::= {
 	_cond_assoc_tyinst
 	_varsym
 	_consym
-	undefined
+	/\n/
 	}
 
 extras ::= {
@@ -168,21 +169,21 @@ rules:
 
   haskell ::= header? _body?
 
-  generator ::= ( _pat ):pattern ( _larrow ):arrow ( _exp ):expression
+  generator ::= _pat:pattern _larrow:arrow _exp:expression
 
-  _let_binds ::= ( _cmd_layout_start_let | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? ( decl ):decl ( ( ';'+ | _cond_layout_semicolon ) ( decl ):decl )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
+  _let_binds ::= ( _cmd_layout_start_let | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? decl:decl ( ( ';'+ | _cond_layout_semicolon ) decl:decl )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
 
-  _let ::= 'let' ( _let_binds -> "local_binds" )?:binds
+  _let ::= 'let' ( ( _let_binds -> local_binds ):binds )?
 
   let ::= _let
 
-  guard ::= generator -> "pattern_guard"
+  guard ::= generator -> pattern_guard
 	| let
-	| _exp -> "boolean"
+	| _exp -> boolean
 
-  guards ::= ( guard ):guard ( ',' ( guard ):guard )*
+  guards ::= guard:guard ( ',' guard:guard )*
 
-  _guards ::= _bar _cmd_texp_start ( guards ):guards
+  _guards ::= _bar _cmd_texp_start guards:guards
 
   _universal ::= splice
 	| quasiquote
@@ -196,206 +197,206 @@ rules:
 
   _type_param_wildcard ::= '_'
 
-  _type_param_annotated ::=  annotated(  type_param _kind_annotation )
+  _type_param_annotated ::=  annotated(  type_param _kind_annotation ) 
 
-  _type_param_invisible ::=  prefix(  _prefix_at ( type_param ):bind )
+  _type_param_invisible ::=  prefix(  _prefix_at type_param:bind ) 
 
-  type_param ::= _type_param_wildcard -> "wildcard"
-	| _type_param_invisible -> "invisible"
-	| _type_param_parens -> "parens"
-	| ( variable ):bind
+  type_param ::= _type_param_wildcard -> wildcard
+	| _type_param_invisible -> invisible
+	| _type_param_parens -> parens
+	| variable:bind
 
   _ktype_param ::= type_param
-	| _type_param_annotated -> "annotated"
+	| _type_param_annotated -> annotated
 
   type_params ::=  patterns(  type_param ) +
 
-  quantified_variables ::= ( type_param | _inferred_tyvar -> "inferred" )+
+  quantified_variables ::= ( type_param | _inferred_tyvar -> inferred )+
 
-  _type_parens ::= _paren_open ( _ktype ):type _paren_close
+  _type_parens ::= _paren_open _ktype:type _paren_close
 
-  _type_tuple_elems ::= ( _ktype ):element ( ',' ( _ktype ):element )+
+  _type_tuple_elems ::= _ktype:element ( ',' _ktype:element )+
 
   _type_tuple ::= _paren_open _type_tuple_elems _paren_close
 
-  _type_unboxed_tuple ::= _unboxed_open ( _ktype ):element ( ',' ( _ktype ):element )* _unboxed_close
+  _type_unboxed_tuple ::= _unboxed_open _ktype:element ( ',' _ktype:element )* _unboxed_close
 
-  _type_unboxed_sum ::= _unboxed_open ( _ktype ):element ( _unboxed_bar ( _ktype ):element )+ _unboxed_close
+  _type_unboxed_sum ::= _unboxed_open _ktype:element ( _unboxed_bar _ktype:element )+ _unboxed_close
 
-  _type_list ::= _bracket_open ( _ktype ):element ( ',' ( _ktype ):element )* _bracket_close
+  _type_list ::= _bracket_open _ktype:element ( ',' _ktype:element )* _bracket_close
 
-  _type_promoted ::= "'"  ( _plist -> "empty_list" | _type_tuple -> "tuple" | _type_list -> "list" | prefix_tuple | unit )
+  _type_promoted ::= "'" ( _plist -> empty_list | _type_tuple -> tuple | _type_list -> list | prefix_tuple | unit )
 
   _type_name ::= variable
 	| _promoted_tycons
-	|  type-name(  _tycons )
+	|  type-name(  _tycons ) 
 
   _type_star ::= '*'
 	| '★'
 
   _type_wildcard ::= '_'
 
-  _at_type ::=  prefix(  _prefix_at ( type ):type )
+  _at_type ::=  prefix(  _prefix_at type:type ) 
 
   _type_apply_arg ::= type
-	| _at_type -> "kind_application"
+	| _at_type -> kind_application
 
-  _type_apply ::=  <apply(  ( type ):constructor ( _type_apply_arg ):argument )
+  _type_apply ::=  <apply(  type:constructor _type_apply_arg:argument ) 
 
-  _type_infix ::=  >infix(  ( type ):left_operand ( _tyops ):operator ( type ):right_operand )
+  _type_infix ::=  >infix(  type:left_operand _tyops:operator type:right_operand ) 
 
   type ::= _type_name
-	| _type_star -> "star"
-	| _type_wildcard -> "wildcard"
-	| _type_parens -> "parens"
-	| _type_promoted -> "promoted"
-	| _type_list -> "list"
-	| _plist -> "prefix_list"
-	| _type_unboxed_tuple -> "unboxed_tuple"
-	| _type_unboxed_sum -> "unboxed_sum"
-	| _type_tuple -> "tuple"
-	| _type_infix -> "infix"
-	| _type_apply -> "apply"
+	| _type_star -> star
+	| _type_wildcard -> wildcard
+	| _type_parens -> parens
+	| _type_promoted -> promoted
+	| _type_list -> list
+	| _plist -> prefix_list
+	| _type_unboxed_tuple -> unboxed_tuple
+	| _type_unboxed_sum -> unboxed_sum
+	| _type_tuple -> tuple
+	| _type_infix -> infix
+	| _type_apply -> apply
 	| _universal
 
   _forall_keyword ::= 'forall'
 	| '∀'
 
-  _forall_body ::= ( _forall_keyword ):quantifier ( quantified_variables )?:variables
+  _forall_body ::= _forall_keyword:quantifier ( quantified_variables:variables )?
 
-  forall ::=  qtype-single(  _forall_body '.' )
+  forall ::=  qtype-single(  _forall_body '.' ) 
 
-  forall_required ::=  qtype-single(  _forall_body _arrow )
+  forall_required ::=  qtype-single(  _forall_body _arrow ) 
 
   _forall ::= forall
 	| forall_required
 
-  _qtype_forall ::=  >qtype-curried(  _forall_body '.' ( quantified_type ):type )
+  _qtype_forall ::=  >qtype-curried(  _forall_body '.' quantified_type:type ) 
 
-  _qtype_forall_required ::=  >qtype-curried(  _forall_body _arrow ( quantified_type ):type )
+  _qtype_forall_required ::=  >qtype-curried(  _forall_body _arrow quantified_type:type ) 
 
-  _fun_arrow ::= _phantom_arrow? ( _arrow ):arrow
+  _fun_arrow ::= _phantom_arrow? _arrow:arrow
 
-  modifier ::=  prefix(  _prefix_percent type )
+  modifier ::=  prefix(  _prefix_percent type ) 
 
-  _linear_fun_arrow ::= ( modifier ):multiplicity _fun_arrow
-	| _phantom_arrow? ( _linear_arrow ):arrow
+  _linear_fun_arrow ::= modifier:multiplicity _fun_arrow
+	| _phantom_arrow? _linear_arrow:arrow
 
-  strict_field ::=  prefix(  _any_prefix_bang ( type ):type )
+  strict_field ::=  prefix(  _any_prefix_bang type:type ) 
 
-  lazy_field ::=  prefix(  _any_prefix_tilde ( type ):type )
+  lazy_field ::=  prefix(  _any_prefix_tilde type:type ) 
 
   _parameter_type ::= ( strict_field | lazy_field | quantified_type ):parameter
 
-  _qtype_function ::=  >0(  _parameter_type _fun_arrow ( quantified_type ):result )
+  _qtype_function ::=  >0(  _parameter_type _fun_arrow quantified_type:result ) 
 
-  _qtype_linear_function ::=  >0(  _parameter_type _linear_fun_arrow ( quantified_type ):result )
+  _qtype_linear_function ::=  >0(  _parameter_type _linear_fun_arrow quantified_type:result ) 
 
-  _qtype_context ::=  >qtype-curried(  _context_inline ( quantified_type ):type )
+  _qtype_context ::=  >qtype-curried(  _context_inline quantified_type:type ) 
 
-  quantified_type ::= _qtype_function -> "function"
-	| _qtype_linear_function -> "linear_function"
-	| _qtype_forall -> "forall"
-	| _qtype_forall_required -> "forall_required"
-	| _qtype_context -> "context"
+  quantified_type ::= _qtype_function -> function
+	| _qtype_linear_function -> linear_function
+	| _qtype_forall -> forall
+	| _qtype_forall_required -> forall_required
+	| _qtype_context -> context
 	| implicit_parameter
-	|  >0(  type )
+	|  >0(  type ) 
 
-  _type_annotation ::= _colon2 ( quantified_type ):type
+  _type_annotation ::= _colon2 quantified_type:type
 
-  _kind_annotation ::= _colon2 ( quantified_type ):kind
+  _kind_annotation ::= _colon2 quantified_type:kind
 
-  _type_signature ::=  >annotated(  ( quantified_type ):type _kind_annotation )
+  _type_signature ::=  >annotated(  quantified_type:type _kind_annotation ) 
 
-  _ktype ::= _type_signature -> "signature"
+  _ktype ::= _type_signature -> signature
 	| quantified_type
 
-  _type_head_name ::= ( _tycon | unit | _plist -> "prefix_list" ):name
+  _type_head_name ::= ( _tycon | unit | _plist -> prefix_list ):name
 
   _type_head_parens ::= _paren_open ( _type_head | _type_head_params ) _paren_close
 
   _type_head_params ::= _type_head_name
-	| _type_head_parens -> "parens"
+	| _type_head_parens -> parens
 
-  _type_head_infix ::=  infix(  ( type_param ):left_operand ( _tyconops ):operator ( type_param ):right_operand )
+  _type_head_infix ::=  infix(  type_param:left_operand _tyconops:operator type_param:right_operand ) 
 
-  _type_head ::= _type_head_params ( type_params )?:patterns
-	| _type_head_infix -> "infix"
+  _type_head ::= _type_head_params ( type_params:patterns )?
+	| _type_head_infix -> infix
 
   _type_instance_head_parens ::= _paren_open ( _type_instance_head | _type_instance_head_params ) _kind_annotation? _paren_close
 
-  _type_instance_head_params ::= ( _tycons ):name
-	| _type_instance_head_parens -> "parens"
+  _type_instance_head_params ::= _tycons:name
+	| _type_instance_head_parens -> parens
 
   type_patterns ::=  patterns(  _type_apply_arg ) +
 
-  _type_instance_head ::= _type_instance_head_params ( type_patterns )?:patterns
-	| _cond_infix _type_infix -> "infix"
+  _type_instance_head ::= _type_instance_head_params ( type_patterns:patterns )?
+	| _cond_infix _type_infix -> infix
 
-  type_synomym ::= 'type' _type_head '=' ( _ktype ):type
+  type_synomym ::= 'type' _type_head '=' _ktype:type
 
   kind_signature ::= 'type' _type_head _kind_annotation
 
   _type_instance_common ::= _type_instance_head '=' quantified_type
 
-  _type_instance ::= ( _forall )?:forall _type_instance_common
+  _type_instance ::= ( _forall:forall )? _type_instance_common
 
   type_instance ::= 'type' 'instance' _type_instance
 
-  type_family_result ::= '=' ( quantified_type ):result
+  type_family_result ::= '=' quantified_type:result
 
-  type_family_injectivity ::= _bar ( variable ):result _arrow ( variable+ ):determined
+  type_family_injectivity ::= _bar variable:result _arrow variable+:determined
 
   _tyfam_inj ::= type_family_result type_family_injectivity?
 
   _tyfam ::= _type_head ( _kind_annotation | _tyfam_inj )?
 
-  _tyfam_equations ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? ( _type_instance -> "equation" ):equation ( ( ';'+ | _cond_layout_semicolon ) ( _type_instance -> "equation" ):equation )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
+  _tyfam_equations ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? ( _type_instance -> equation ):equation ( ( ';'+ | _cond_layout_semicolon ) ( _type_instance -> equation ):equation )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
 
   abstract_family ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) '..' _layout_end
 
-  type_family ::= 'type' 'family' _tyfam ( _where ( _tyfam_equations -> "equations" | abstract_family )?:closed_family )?
+  type_family ::= 'type' 'family' _tyfam ( _where ( ( _tyfam_equations -> equations | abstract_family ):closed_family )? )?
 
   type_role ::= 'representational'
 	| 'nominal'
 	| 'phantom'
 	| '_'
 
-  role_annotation ::= 'type' 'role' ( _tycons ):type ( type_role )+:role
+  role_annotation ::= 'type' 'role' _tycons:type ( type_role:role )+
 
-  _class_apply ::=  <apply(  ( constraint ):constructor ( _type_apply_arg ):argument )
+  _class_apply ::=  <apply(  constraint:constructor _type_apply_arg:argument ) 
 
-  _class_infix ::=  >infix(  _cond_infix ( type ):left_operand ( _tyops ):operator ( type ):right_operand )
+  _class_infix ::=  >infix(  _cond_infix type:left_operand _tyops:operator type:right_operand ) 
 
   _ctr_parens ::= _paren_open constraints _paren_close
 
   _ctr_tuple ::= _paren_open constraints ( ',' constraints )+ _paren_close
 
-  implicit_parameter ::=  <0(  ( implicit_variable ):name _type_annotation )
+  implicit_parameter ::=  <0(  implicit_variable:name _type_annotation ) 
 
   constraint ::= _type_name
-	| _class_infix -> "infix"
-	| _class_apply -> "apply"
-	| _ctr_parens -> "parens"
-	| _ctr_tuple -> "tuple"
-	| _type_wildcard -> "wildcard"
+	| _class_infix -> infix
+	| _class_apply -> apply
+	| _ctr_parens -> parens
+	| _ctr_tuple -> tuple
+	| _type_wildcard -> wildcard
 	| _universal
 
-  _ctr_forall ::=  fun(  _forall_body '.' ( constraints ):constraint )
+  _ctr_forall ::=  fun(  _forall_body '.' constraints:constraint ) 
 
-  _ctr_context ::=  fun(  _context_inline ( constraints ):constraint )
+  _ctr_context ::=  fun(  _context_inline constraints:constraint ) 
 
-  _ctr_signature ::=  annotated(  ( constraints ):constraint _kind_annotation )
+  _ctr_signature ::=  annotated(  constraints:constraint _kind_annotation ) 
 
   constraints ::= constraint
-	| _ctr_context -> "context"
-	| _ctr_forall -> "forall"
+	| _ctr_context -> context
+	| _ctr_forall -> forall
 	| implicit_parameter
-	| _ctr_signature -> "signature"
+	| _ctr_signature -> signature
 
-  _context_inline ::= _cond_context ( constraint ):context ( _carrow ):arrow
+  _context_inline ::= _cond_context constraint:context _carrow:arrow
 
-  context ::=  qtype-single(  _context_inline )
+  context ::=  qtype-single(  _context_inline ) 
 
   _exp_name ::= _cons
 	| _vars
@@ -403,218 +404,218 @@ rules:
 	| implicit_variable
 	| label
 
-  _exp_th_quoted_name ::= "'"  ( _vars | _cons ):name
-	|  prefix(  "''" ( type ):type )
+  _exp_th_quoted_name ::= "'" ( _vars | _cons ):name
+	|  prefix(  "''" type:type ) 
 
-  _exp_parens ::= _paren_open ( _exp ):expression _paren_close
+  _exp_parens ::= _paren_open _exp:expression _paren_close
 
-  _exp_tuple_elems ::= ( ','+ ( _exp ):element | ( _exp ):element ',' ( _exp )?:element ) ( ',' ( _exp )?:element )*
+  _exp_tuple_elems ::= ( ','+ _exp:element | _exp:element ',' ( _exp:element )? ) ( ',' ( _exp:element )? )*
 
   _exp_tuple ::= _paren_open _exp_tuple_elems _paren_close
 
-  _exp_unboxed_tuple ::= _unboxed_open ','* ( _exp ):element ( ',' ( _exp )?:element )* _unboxed_close
+  _exp_unboxed_tuple ::= _unboxed_open ','* _exp:element ( ',' ( _exp:element )? )* _unboxed_close
 
-  _exp_unboxed_sum ::= _unboxed_open ( _unboxed_bar+ ( _exp ):element | ( _exp ):element _unboxed_bar ) _unboxed_bar* _unboxed_close
+  _exp_unboxed_sum ::= _unboxed_open ( _unboxed_bar+ _exp:element | _exp:element _unboxed_bar ) _unboxed_bar* _unboxed_close
 
-  _exp_list ::= _bracket_open ( _exp ):element ( ',' ( _exp ):element )* ','? _bracket_close
+  _exp_list ::= _bracket_open _exp:element ( ',' _exp:element )* ','? _bracket_close
 
-  _exp_arithmetic_sequence ::= _bracket_open ( _exp ):from ( ',' ( _exp ):step )? _dotdot ( _exp )?:to _bracket_close
+  _exp_arithmetic_sequence ::= _bracket_open _exp:from ( ',' _exp:step )? _dotdot ( _exp:to )? _bracket_close
 
-  group ::= 'then' 'group' ( 'by' ( _exp_signature -> "signature" | expression ):key )? 'using' ( _exp ):classifier
+  group ::= 'then' 'group' ( 'by' ( _exp_signature -> signature | expression ):key )? 'using' _exp:classifier
 
-  transform ::= 'then' ( _exp ):transformation ( 'by' ( _exp ):key )?
+  transform ::= 'then' _exp:transformation ( 'by' _exp:key )?
 
   qualifier ::= generator
 	| let
 	| transform
 	| group
-	| _exp -> "boolean"
+	| _exp -> boolean
 
-  qualifiers ::= ( qualifier ):qualifier ( ',' ( qualifier ):qualifier )*
+  qualifiers ::= qualifier:qualifier ( ',' qualifier:qualifier )*
 
-  _exp_list_comprehension ::= _bracket_open ( _exp ):expression ( '|' ( qualifiers ):qualifiers )+ _bracket_close
+  _exp_list_comprehension ::= _bracket_open _exp:expression ( '|' qualifiers:qualifiers )+ _bracket_close
 
-  _exp_lambda ::= '\\'  ( patterns ):patterns _arrow ( _exp ):expression
+  _exp_lambda ::= '\\' patterns:patterns _arrow _exp:expression
 
-  _exp_let_in ::= _let _phantom_in? 'in' ( _exp ):expression
+  _exp_let_in ::= _let _phantom_in? 'in' _exp:expression
 
-  _exp_conditional ::= 'if' ( _exp ):if ';'* 'then' ( _exp ):then ';'* 'else' ( _exp ):else
+  _exp_conditional ::= 'if' _exp:if ';'* 'then' _exp:then ';'* 'else' _exp:else
 
-  _exp_greedy ::= _exp_lambda -> "lambda"
-	| _exp_let_in -> "let_in"
-	| _exp_conditional -> "conditional"
+  _exp_greedy ::= _exp_lambda -> lambda
+	| _exp_let_in -> let_in
+	| _exp_conditional -> conditional
 
   _exp_statement ::= _exp
 
-  statement ::= _exp_statement -> "exp"
-	| generator -> "bind"
+  statement ::= _exp_statement -> exp
+	| generator -> bind
 	| let
 	| rec
 
-  _statements ::= ( _cmd_layout_start_do | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? ( statement ):statement ( ( ';'+ | _cond_layout_semicolon ) ( statement ):statement )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
+  _statements ::= ( _cmd_layout_start_do | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? statement:statement ( ( ';'+ | _cond_layout_semicolon ) statement:statement )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
 
   rec ::= 'rec' _statements
 
   _do_keyword ::= 'mdo'
 	| 'do'
 
-  do_module ::= (  qualified-id(  ( _qualifying_module -> "module" ):module ( _do_keyword ):id )  ):qualified_do
+  do_module ::=  qualified-id(  ( _qualifying_module -> module ):module _do_keyword:id ) :qualified_do
 
   _do ::= do_module
 	| _do_keyword
 
   _exp_do ::= _do _statements
 
-  match ::= _guards _phantom_arrow? _arrow _cmd_texp_end ( _exp ):expression
+  match ::= _guards _phantom_arrow? _arrow _cmd_texp_end _exp:expression
 
-  _simple_match ::= _arrow ( _exp ):expression
+  _simple_match ::= _arrow _exp:expression
 
-  _matches ::= ( _simple_match -> "match" | match+ ):match
+  _matches ::= ( _simple_match -> match | match+ ):match
 
-  alternative ::= ( _pat ):pattern _matches _where_binds?
+  alternative ::= _pat:pattern _matches _where_binds?
 
-  _nalt ::= ( patterns ):patterns _matches _where_binds?
+  _nalt ::= patterns:patterns _matches _where_binds?
 
-  alternatives ::= ( _cmd_layout_start_case | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? ( alternative ):alternative ( ( ';'+ | _cond_layout_semicolon ) ( alternative ):alternative )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
+  alternatives ::= ( _cmd_layout_start_case | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? alternative:alternative ( ( ';'+ | _cond_layout_semicolon ) alternative:alternative )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
 
-  _nalts ::= ( _cmd_layout_start_case | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? ( _nalt -> "alternative" ):alternative ( ( ';'+ | _cond_layout_semicolon ) ( _nalt -> "alternative" ):alternative )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
+  _nalts ::= ( _cmd_layout_start_case | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? ( _nalt -> alternative ):alternative ( ( ';'+ | _cond_layout_semicolon ) ( _nalt -> alternative ):alternative )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
 
-  _exp_case ::= 'case' _exp 'of' ( alternatives )?:alternatives
+  _exp_case ::= 'case' _exp 'of' ( alternatives:alternatives )?
 
-  _exp_lambda_case ::= '\\'  'case' ( alternatives )?:alternatives
+  _exp_lambda_case ::= '\\' 'case' ( alternatives:alternatives )?
 
-  _exp_lambda_cases ::= '\\'  'cases' ( _nalts -> "alternatives" )?:alternatives
+  _exp_lambda_cases ::= '\\' 'cases' ( ( _nalts -> alternatives ):alternatives )?
 
-  _exp_multi_way_if ::= 'if' _cmd_layout_start_if ( match )*:match _cond_layout_end
+  _exp_multi_way_if ::= 'if' _cmd_layout_start_if ( match:match )* _cond_layout_end
 
-  field_update ::= '..' -> "wildcard"
-	| ( _field_spec ):field ( '=' ( _exp ):expression )?
+  field_update ::= '..' -> wildcard
+	| _field_spec:field ( '=' _exp:expression )?
 
-  _exp_record ::=  record(  ( expression ):expression '{' _cmd_brace_open ( ( field_update ):field ( ',' ( field_update ):field )* )? '}' _cmd_brace_close )
+  _exp_record ::=  record(  expression:expression '{' _cmd_brace_open ( field_update:field ( ',' field_update:field )* )? '}' _cmd_brace_close ) 
 
-  _exp_projection_selector ::= _paren_open _any_prefix_dot ( variable ):field ( _tight_dot ( variable ):field )* _paren_close
+  _exp_projection_selector ::= _paren_open _any_prefix_dot variable:field ( _tight_dot variable:field )* _paren_close
 
-  _exp_projection ::=  projection(  ( expression ):expression _tight_dot )  ( field_name ):field
+  _exp_projection ::=  projection(  expression:expression _tight_dot )  field_name:field
 
-  explicit_type ::= _paren_open 'type' ( type ):type _paren_close
+  explicit_type ::= _paren_open 'type' type:type _paren_close
 
-  _exp_apply ::=  <apply(  ( expression ):function ( expression | _at_type -> "type_application" | explicit_type ):argument )
+  _exp_apply ::=  <apply(  expression:function ( expression | _at_type -> type_application | explicit_type ):argument ) 
 
   _exp_op ::= _sym
 	| _op_ticked
-	| _prefix_dot -> "operator"
+	| _prefix_dot -> operator
 
-  _exp_section_left ::= _paren_open ( expression ):left_operand _cond_left_section_op ( _exp_op | _operator_minus | _qsym ):operator _paren_close
+  _exp_section_left ::= _paren_open expression:left_operand _cond_left_section_op ( _exp_op | _operator_minus | _qsym ):operator _paren_close
 
-  _exp_section_right ::= _paren_open ( _operator_qual_dot_head -> "operator" | _ops ) ( expression ):right_operand _paren_close
+  _exp_section_right ::= _paren_open ( _operator_qual_dot_head -> operator | _ops ) expression:right_operand _paren_close
 
-  _exp_negation ::= ( '-' ):minus  negation(  ( expression ):expression )
+  _exp_negation ::= '-':minus  negation(  expression:expression ) 
 
-  _exp_infix ::=  >infix(  ( expression ):left_operand _cond_no_section_op? ( _cond_minus _operator_minus | _exp_op | _cond_qualified_op _qsym ):operator ( expression ):right_operand )
+  _exp_infix ::=  >infix(  expression:left_operand _cond_no_section_op? ( _cond_minus _operator_minus | _exp_op | _cond_qualified_op _qsym ):operator expression:right_operand ) 
 
-  expression ::= _exp_infix -> "infix"
-	| _exp_negation -> "negation"
-	| _exp_apply -> "apply"
-	| _exp_record -> "record"
-	| _exp_projection -> "projection"
-	| _exp_arithmetic_sequence -> "arithmetic_sequence"
-	| _exp_list_comprehension -> "list_comprehension"
-	| _exp_unboxed_tuple -> "unboxed_tuple"
-	| _exp_unboxed_sum -> "unboxed_sum"
-	| _exp_projection_selector -> "projection_selector"
-	| _exp_quote -> "quote"
-	| _exp_typed_quote -> "typed_quote"
-	| _exp_th_quoted_name -> "th_quoted_name"
-	| _exp_lambda_case -> "lambda_case"
-	| _exp_lambda_cases -> "lambda_cases"
-	| _exp_do -> "do"
-	| _exp_parens -> "parens"
-	| _exp_tuple -> "tuple"
-	| _exp_list -> "list"
-	| _plist -> "list"
-	| _exp_section_left -> "left_section"
-	| _exp_section_right -> "right_section"
+  expression ::= _exp_infix -> infix
+	| _exp_negation -> negation
+	| _exp_apply -> apply
+	| _exp_record -> record
+	| _exp_projection -> projection
+	| _exp_arithmetic_sequence -> arithmetic_sequence
+	| _exp_list_comprehension -> list_comprehension
+	| _exp_unboxed_tuple -> unboxed_tuple
+	| _exp_unboxed_sum -> unboxed_sum
+	| _exp_projection_selector -> projection_selector
+	| _exp_quote -> quote
+	| _exp_typed_quote -> typed_quote
+	| _exp_th_quoted_name -> th_quoted_name
+	| _exp_lambda_case -> lambda_case
+	| _exp_lambda_cases -> lambda_cases
+	| _exp_do -> do
+	| _exp_parens -> parens
+	| _exp_tuple -> tuple
+	| _exp_list -> list
+	| _plist -> list
+	| _exp_section_left -> left_section
+	| _exp_section_right -> right_section
 	| _exp_greedy
-	| _exp_case -> "case"
-	| _exp_multi_way_if -> "multi_way_if"
+	| _exp_case -> case
+	| _exp_multi_way_if -> multi_way_if
 	| _exp_name
 	| _universal
 
-  _exp_signature ::=  >annotated(  ( expression ):expression _type_annotation )
+  _exp_signature ::=  >annotated(  expression:expression _type_annotation ) 
 
-  _exp ::= _exp_signature -> "signature"
-	|  >0(  expression )
+  _exp ::= _exp_signature -> signature
+	|  >0(  expression ) 
 
-  _pat_parens ::= _paren_open ( _pat_texp ):pattern _paren_close
+  _pat_parens ::= _paren_open _pat_texp:pattern _paren_close
 
-  _pat_tuple_elems ::= ( _pat_texp ):element ( ',' ( _pat_texp ):element )+
+  _pat_tuple_elems ::= _pat_texp:element ( ',' _pat_texp:element )+
 
   _pat_tuple ::= _paren_open _pat_tuple_elems _paren_close
 
-  _pat_unboxed_tuple ::= _unboxed_open ( _pat_texp ):element ( ',' ( _pat_texp ):element )* _unboxed_close
+  _pat_unboxed_tuple ::= _unboxed_open _pat_texp:element ( ',' _pat_texp:element )* _unboxed_close
 
-  _pat_unboxed_sum ::= _unboxed_open ( _unboxed_bar+ ( _pat_texp ):element | ( _pat_texp ):element _unboxed_bar ) _unboxed_bar* _unboxed_close
+  _pat_unboxed_sum ::= _unboxed_open ( _unboxed_bar+ _pat_texp:element | _pat_texp:element _unboxed_bar ) _unboxed_bar* _unboxed_close
 
-  _pat_list ::= _bracket_open ( _pat_texp ):element ( ',' ( _pat_texp ):element )* ','? _bracket_close
+  _pat_list ::= _bracket_open _pat_texp:element ( ',' _pat_texp:element )* ','? _bracket_close
 
-  field_pattern ::= '..' -> "wildcard"
-	| ( _field_names ):field ( '=' ( _pat_texp ):pattern )?
+  field_pattern ::= '..' -> wildcard
+	| _field_names:field ( '=' _pat_texp:pattern )?
 
-  _pat_record ::=  record(  ( pattern ):constructor '{' _cmd_brace_open ( ( field_pattern ):field ( ',' ( field_pattern ):field )* )? '}' _cmd_brace_close )
+  _pat_record ::=  record(  pattern:constructor '{' _cmd_brace_open ( field_pattern:field ( ',' field_pattern:field )* )? '}' _cmd_brace_close ) 
 
-  _pat_name ::=  pat-name(   ~-1000(  _var )  )
+  _pat_name ::=  pat-name(   ~-1000(  _var )  ) 
 	| _cons
 
-  _pat_as ::=  prefix(  ( variable ):bind _tight_at ( pattern ):pattern )
+  _pat_as ::=  prefix(  variable:bind _tight_at pattern:pattern ) 
 
   _pat_wildcard ::= '_'
 
-  _pat_strict ::=  prefix(  _any_prefix_bang ( pattern ):pattern )
+  _pat_strict ::=  prefix(  _any_prefix_bang pattern:pattern ) 
 
-  _pat_irrefutable ::=  prefix(  _any_prefix_tilde ( pattern ):pattern )
+  _pat_irrefutable ::=  prefix(  _any_prefix_tilde pattern:pattern ) 
 
   _pat_apply_arg ::= pattern
-	| _at_type -> "type_binder"
+	| _at_type -> type_binder
 	| explicit_type
 
-  _pat_apply ::=  <apply(  ( pattern ):function ( _pat_apply_arg ):argument )
+  _pat_apply ::=  <apply(  pattern:function _pat_apply_arg:argument ) 
 
-  _pat_negation ::= '-' ( _number ):number
+  _pat_negation ::= '-' _number:number
 
-  _pat_infix ::=  >infix(  ( pattern ):left_operand _cond_no_section_op? ( constructor_operator | _conids_ticked | _cond_qualified_op _qconsym ):operator ( pattern ):right_operand )
+  _pat_infix ::=  >infix(  pattern:left_operand _cond_no_section_op? ( constructor_operator | _conids_ticked | _cond_qualified_op _qconsym ):operator pattern:right_operand ) 
 
-  pattern ::= _pat_infix -> "infix"
-	| _pat_negation -> "negation"
-	| _pat_apply -> "apply"
+  pattern ::= _pat_infix -> infix
+	| _pat_negation -> negation
+	| _pat_apply -> apply
 	| _pat_name
-	| _pat_as -> "as"
-	| _pat_record -> "record"
-	| _pat_wildcard -> "wildcard"
-	| _pat_parens -> "parens"
-	| _pat_tuple -> "tuple"
-	| _pat_unboxed_tuple -> "unboxed_tuple"
-	| _pat_unboxed_sum -> "unboxed_sum"
-	| _pat_list -> "list"
-	| _plist -> "list"
-	| _pat_strict -> "strict"
-	| _pat_irrefutable -> "irrefutable"
+	| _pat_as -> as
+	| _pat_record -> record
+	| _pat_wildcard -> wildcard
+	| _pat_parens -> parens
+	| _pat_tuple -> tuple
+	| _pat_unboxed_tuple -> unboxed_tuple
+	| _pat_unboxed_sum -> unboxed_sum
+	| _pat_list -> list
+	| _plist -> list
+	| _pat_strict -> strict
+	| _pat_irrefutable -> irrefutable
 	| _universal
 
   patterns ::=  patterns(  _pat_apply_arg ) +
 
-  _pat_signature ::=  >annotated(  ( pattern ):pattern _type_annotation )
+  _pat_signature ::=  >annotated(  pattern:pattern _type_annotation ) 
 
-  _pat ::= _pat_signature -> "signature"
-	|  >0(  pattern )
+  _pat ::= _pat_signature -> signature
+	|  >0(  pattern ) 
 
-  view_pattern ::= ( _exp ):expression _arrow ( _pat_texp ):pattern
+  view_pattern ::= _exp:expression _arrow _pat_texp:pattern
 
   _pat_texp ::= view_pattern
 	| _pat
 
-  _modid ::= name -> "module_id"
+  _modid ::= name -> module_id
 
-  _modid_prefix ::=  qualifying-module(  _modid _any_tight_dot )
+  _modid_prefix ::=  qualifying-module(  _modid _any_tight_dot ) 
 
   _qualifying_module ::= _modid_prefix+
 
@@ -623,30 +624,30 @@ rules:
   namespace ::= 'pattern'
 	| 'type'
 
-  _child_type ::= ( 'type' ):namespace ( _tyconids ):type
+  _child_type ::= 'type':namespace _tyconids:type
 
-  _child ::= _child_type -> "associated_type"
+  _child ::= _child_type -> associated_type
 	| _qname
 
-  children ::= _paren_open ( ( '..' -> "all_names" | _child ):element ( ',' ( '..' -> "all_names" | _child ):element )* )? _paren_close
+  children ::= _paren_open ( ( '..' -> all_names | _child ):element ( ',' ( '..' -> all_names | _child ):element )* )? _paren_close
 
-  _ie_entity ::= ( namespace )?:namespace ( ( _varids ):variable | ( _tyconids ):type | ( _sym_prefix | _pqsym ):operator ) ( children )?:children
+  _ie_entity ::= ( namespace:namespace )? ( _varids:variable | _tyconids:type | ( _sym_prefix | _pqsym ):operator ) ( children:children )?
 
-  import_list ::= _paren_open ( ( _ie_entity -> "import_name" ):name ( ',' ( _ie_entity -> "import_name" ):name )* )? ','? _paren_close
+  import_list ::= _paren_open ( ( _ie_entity -> import_name ):name ( ',' ( _ie_entity -> import_name ):name )* )? ','? _paren_close
 
-  import ::= 'import' 'qualified'? ( string -> "import_package" )?:package ( module ):module 'qualified'? ( 'as' ( module ):alias )? ( 'hiding'? ( import_list ):names )?
+  import ::= 'import' 'qualified'? ( ( string -> import_package ):package )? module:module 'qualified'? ( 'as' module:alias )? ( 'hiding'? import_list:names )?
 
-  module_export ::= 'module' ( module ):module
+  module_export ::= 'module' module:module
 
-  exports ::= _paren_open ( ( ( _ie_entity -> "export" ):export | module_export ) ( ',' ( ( _ie_entity -> "export" ):export | module_export ) )* )? ','? _paren_close
+  exports ::= _paren_open ( ( ( _ie_entity -> export ):export | module_export ) ( ',' ( ( _ie_entity -> export ):export | module_export ) )* )? ','? _paren_close
 
-  header ::= 'module' ( module ):module ( exports )?:exports _where
+  header ::= 'module' module:module exports?:exports _where
 
-  imports ::= ( import ):import ( ( ';'+ | _cond_layout_semicolon ) ( import ):import )* ( ';'+ | _cond_layout_semicolon )
+  imports ::= import:import ( ( ';'+ | _cond_layout_semicolon ) import:import )* ( ';'+ | _cond_layout_semicolon )
 
   declarations ::= declaration ( ( ';'+ | _cond_layout_semicolon ) ( declaration | import ) )* ( ';'+ | _cond_layout_semicolon )?
 
-  _body ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) ( ';'+ | _cond_layout_semicolon )? ( imports )?:imports ( declarations )?:declarations _layout_end
+  _body ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) ( ';'+ | _cond_layout_semicolon )? imports?:imports declarations?:declarations _layout_end
 
   _layout_end ::= _cond_layout_end
 	| _cond_layout_end_explicit -> "}"
@@ -673,95 +674,95 @@ rules:
 
   field_name ::= variable
 
-  _qfield_name ::=  qualified-id(  ( _qualifying_module -> "module" ):module ( field_name ):id )
+  _qfield_name ::=  qualified-id(  ( _qualifying_module -> module ):module field_name:id ) 
 
   _field_names ::= field_name
-	| _qfield_name -> "qualified"
+	| _qfield_name -> qualified
 
-  field_path ::= ( _field_names ):field ( _tight_dot ( field_name ):subfield )+
+  field_path ::= _field_names:field ( _tight_dot field_name:subfield )+
 
   _field_spec ::= _field_names
 	| field_path
 
-  field ::=  annotated(  ( field_name ):name ( ',' ( field_name ):name )* _colon2 ( _parameter_type ):type )
+  field ::=  annotated(  field_name:name ( ',' field_name:name )* _colon2 _parameter_type:type ) 
 
-  _record_fields ::= '{' _cmd_brace_open ( ( field ):field ( ',' ( field ):field )* )? ','? '}' _cmd_brace_close
+  _record_fields ::= '{' _cmd_brace_open ( field:field ( ',' field:field )* )? ','? '}' _cmd_brace_close
 
-  via ::= 'via' ( quantified_type ):type
+  via ::= 'via' quantified_type:type
 
   deriving_strategy ::= 'stock'
 	| 'newtype'
 	| 'anyclass'
 
-  deriving ::= _phantom_deriving? 'deriving' ( deriving_strategy )?:strategy ( constraint ):classes ( via )?:via
+  deriving ::= _phantom_deriving? 'deriving' ( deriving_strategy:strategy )? constraint:classes ( via:via )?
 
-  _gadt_con_prefix ::= ( quantified_type ):type
+  _gadt_con_prefix ::= quantified_type:type
 
-  _gadt_con_record ::= ( _record_fields -> "fields" ):fields ( _fun_arrow ):arrow ( quantified_type ):type
+  _gadt_con_record ::= ( _record_fields -> fields ):fields _fun_arrow:arrow quantified_type:type
 
-  gadt_constructor ::= ( ( _con ):name | ( _con_binding_list -> "binding_list" ):names ) _colon2 ( _forall )?:forall ( context )?:context ( _gadt_con_prefix -> "prefix" | _gadt_con_record -> "record" ):type
+  gadt_constructor ::= ( _con:name | ( _con_binding_list -> binding_list ):names ) _colon2 ( _forall:forall )? ( context:context )? ( _gadt_con_prefix -> prefix | _gadt_con_record -> record ):type
 
-  gadt_constructors ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? ( gadt_constructor ):constructor ( ( ';'+ | _cond_layout_semicolon ) ( gadt_constructor ):constructor )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
+  gadt_constructors ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? gadt_constructor:constructor ( ( ';'+ | _cond_layout_semicolon ) gadt_constructor:constructor )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
 
-  _gadt ::= _kind_annotation? _where ( gadt_constructors )?:constructors
+  _gadt ::= _kind_annotation? _where ( gadt_constructors:constructors )?
 
   _field_type ::= strict_field
 	| lazy_field
 	| type
 
-  _datacon_prefix ::= ( _con ):name  patterns(  ( _field_type ):field ) *
+  _datacon_prefix ::= _con:name  patterns(  _field_type:field ) *
 
-  _datacon_infix ::=  infix(  _cond_data_infix ( _field_type ):left_operand ( _conop ):operator ( _field_type ):right_operand )
+  _datacon_infix ::=  infix(  _cond_data_infix _field_type:left_operand _conop:operator _field_type:right_operand ) 
 
-  _datacon_record ::= ( _constructor ):name ( _record_fields -> "fields" ):fields
+  _datacon_record ::= _constructor:name ( _record_fields -> fields ):fields
 
-  _datacon_unboxed_sum ::= _unboxed_open ( _unboxed_bar+ ( quantified_type ):element | ( quantified_type ):element _unboxed_bar ) _unboxed_bar* _unboxed_close
+  _datacon_unboxed_sum ::= _unboxed_open ( _unboxed_bar+ quantified_type:element | quantified_type:element _unboxed_bar ) _unboxed_bar* _unboxed_close
 
   _datacon_special ::= unit
 	| unboxed_unit
-	| _plist -> "empty_list"
-	| _type_tuple -> "tuple"
-	| _type_unboxed_tuple -> "unboxed_tuple"
-	| _datacon_unboxed_sum -> "unboxed_sum"
+	| _plist -> empty_list
+	| _type_tuple -> tuple
+	| _type_unboxed_tuple -> unboxed_tuple
+	| _datacon_unboxed_sum -> unboxed_sum
 
-  data_constructor ::= ( _forall )?:forall ( context )?:context ( _datacon_prefix -> "prefix" | _datacon_infix -> "infix" | _datacon_record -> "record" | _datacon_special -> "special" ):constructor
+  data_constructor ::= ( _forall:forall )? ( context:context )? ( _datacon_prefix -> prefix | _datacon_infix -> infix | _datacon_record -> record | _datacon_special -> special ):constructor
 
-  data_constructors ::= ( data_constructor ):constructor ( _bar ( data_constructor ):constructor )*
+  data_constructors ::= data_constructor:constructor ( _bar data_constructor:constructor )*
 
   _data_rhs ::= _kind_annotation
-	| '=' ( data_constructors ):constructors
+	| '=' data_constructors:constructors
 	| _gadt
 
-  _data ::= ( context )?:context _type_head _data_rhs? ( deriving )*:deriving
+  _data ::= ( context:context )? _type_head _data_rhs? ( deriving:deriving )*
 
   data_type ::= 'type'? 'data' _data
 
   _newtype_con_field ::= type
 
-  newtype_constructor ::= ( _con ):name ( _newtype_con_field -> "field" | _record_fields -> "record" ):field
+  newtype_constructor ::= _con:name ( _newtype_con_field -> field | _record_fields -> record ):field
 
-  _newtype ::= ( '=' ( newtype_constructor ):constructor | _gadt ) ( deriving )*:deriving
+  _newtype ::= ( '=' newtype_constructor:constructor | _gadt ) ( deriving:deriving )*
 
-  newtype ::= 'newtype' ( context )?:context _type_head _newtype
+  newtype ::= 'newtype' ( context:context )? _type_head _newtype
 
   _datafam ::= _type_head _kind_annotation?
 
   data_family ::= 'data' 'family' _datafam
 
-  _inst_adt ::= ( _forall )?:forall ( context )?:context _type_instance_head _data_rhs? ( deriving )*:deriving
+  _inst_adt ::= ( _forall:forall )? ( context:context )? _type_instance_head _data_rhs? ( deriving:deriving )*
 
   decl_inst_adt ::= 'data' 'instance' _inst_adt
 
-  _inst_newtype ::= ( _forall )?:forall ( context )?:context _type_instance_head _newtype
+  _inst_newtype ::= ( _forall:forall )? ( context:context )? _type_instance_head _newtype
 
   decl_inst_newtype ::= 'newtype' 'instance' _inst_newtype
 
-  data_instance ::= decl_inst_adt -> "data_type"
-	| decl_inst_newtype -> "newtype"
+  data_instance ::= decl_inst_adt -> data_type
+	| decl_inst_newtype -> newtype
 
   _assoc_tyfam ::= 'type' 'family'? _type_head ( _kind_annotation | type_family_result type_family_injectivity )?
 
-  _assoc_tyinst ::= 'type' 'instance'? ( _forall )?:forall _cond_assoc_tyinst _type_instance_common
+  _assoc_tyinst ::= 'type' 'instance'? ( _forall:forall )? _cond_assoc_tyinst _type_instance_common
 
   _assoc_datafam ::= 'data' 'family'? _datafam
 
@@ -769,71 +770,71 @@ rules:
 
   _assoc_datainst_newtype ::= 'newtype' 'instance'? _inst_newtype
 
-  _assoc_datainst ::= _assoc_datainst_adt -> "data_type"
-	| _assoc_datainst_newtype -> "newtype"
+  _assoc_datainst ::= _assoc_datainst_adt -> data_type
+	| _assoc_datainst_newtype -> newtype
 
-  default_signature ::= 'default' ( signature ):signature
+  default_signature ::= 'default' signature:signature
 
   class_decl ::= _local_decl
 	| default_signature
-	| _assoc_tyfam -> "type_family"
-	| _assoc_tyinst -> "type_instance"
-	| _assoc_datafam -> "data_family"
+	| _assoc_tyfam -> type_family
+	| _assoc_tyinst -> type_instance
+	| _assoc_datafam -> data_family
 
-  fundep ::= ( variable+ ):matched _arrow ( variable+ ):determined
+  fundep ::= variable+:matched _arrow variable+:determined
 
-  fundeps ::= _bar ( fundep ):fundep ( ',' ( fundep ):fundep )*
+  fundeps ::= _bar fundep:fundep ( ',' fundep:fundep )*
 
-  class_declarations ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? ( class_decl ):declaration ( ( ';'+ | _cond_layout_semicolon ) ( class_decl ):declaration )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
+  class_declarations ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? class_decl:declaration ( ( ';'+ | _cond_layout_semicolon ) class_decl:declaration )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
 
-  class ::= 'class' ( context )?:context _type_head ( fundeps )?:fundeps ( _where ( class_declarations )?:declarations )?
+  class ::= 'class' ( context:context )? _type_head fundeps?:fundeps ( _where ( class_declarations:declarations )? )?
 
   instance_decl ::= decl
-	| _assoc_datainst -> "data_instance"
-	| _assoc_tyinst -> "type_instance"
+	| _assoc_datainst -> data_instance
+	| _assoc_tyinst -> type_instance
 
-  instance_declarations ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? ( instance_decl ):declaration ( ( ';'+ | _cond_layout_semicolon ) ( instance_decl ):declaration )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
+  instance_declarations ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? instance_decl:declaration ( ( ';'+ | _cond_layout_semicolon ) instance_decl:declaration )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
 
-  _instance ::= 'instance' ( _forall )?:forall ( context )?:context _type_instance_head
+  _instance ::= 'instance' ( _forall:forall )? ( context:context )? _type_instance_head
 
-  instance ::= _instance ( _where ( instance_declarations )?:declarations )?
+  instance ::= _instance ( _where ( instance_declarations:declarations )? )?
 
-  deriving_instance ::= _phantom_deriving? 'deriving' ( ( deriving_strategy ):strategy | ( via ):via )? _instance
+  deriving_instance ::= _phantom_deriving? 'deriving' ( deriving_strategy:strategy | via:via )? _instance
 
   _fun_arrow_prec ::= '-' '1'
 
-  _fun_arrow_fixity ::= ( 'infixr' ):associativity ( _fun_arrow_prec -> "integer" ):precedence ( '->' -> "operator" ):operator
+  _fun_arrow_fixity ::= 'infixr':associativity ( _fun_arrow_prec -> integer ):precedence ( '->' -> operator ):operator
 
   fixity ::= _fun_arrow_fixity
-	| ( 'infixl' | 'infixr' | 'infix' ):associativity ( integer )?:precedence ( ( _operator_minus | _varop | _conop ) ( ',' ( _operator_minus | _varop | _conop ) )* ):operator
+	| ( 'infixl' | 'infixr' | 'infix' ):associativity integer?:precedence ( ( _operator_minus | _varop | _conop ) ( ',' ( _operator_minus | _varop | _conop ) )* ):operator
 
-  _con_binding_list ::= ( _con ):name ( ',' ( _con ):name )+
+  _con_binding_list ::= _con:name ( ',' _con:name )+
 
-  _var_binding_list ::= ( _var ):name ( ',' ( _var ):name )+
+  _var_binding_list ::= _var:name ( ',' _var:name )+
 
-  signature ::= ( ( _var ):name | ( _var_binding_list -> "binding_list" ):names ) _type_annotation
+  signature ::= ( _var:name | ( _var_binding_list -> binding_list ):names ) _type_annotation
 
-  _simple_bind_match ::= '=' ( _exp ):expression
+  _simple_bind_match ::= '=' _exp:expression
 
-  _bind_match ::= _guards '=' _cmd_texp_end ( _exp ):expression
+  _bind_match ::= _guards '=' _cmd_texp_end _exp:expression
 
-  _bind_matches ::= ( ( _simple_bind_match -> "match" ):match | ( _bind_match -> "match" )+:match ) _where_binds?
+  _bind_matches ::= ( ( _simple_bind_match -> match ):match | ( ( _bind_match -> match ):match )+ ) _where_binds?
 
-  _function_name ::= ( _var ):name
+  _function_name ::= _var:name
 
   function_head_parens ::= _paren_open ( _function_head | _function_head_patterns ) _paren_close
 
   _function_head_patterns ::= _function_name
-	| ( function_head_parens ):parens
+	| function_head_parens:parens
 
-  _function_head_infix ::= ( pattern ):left_operand _cond_no_section_op? ( _cond_minus _operator_minus | _varop ):operator ( pattern ):right_operand
+  _function_head_infix ::= pattern:left_operand _cond_no_section_op? ( _cond_minus _operator_minus | _varop ):operator pattern:right_operand
 
-  _function_head ::= _function_head_patterns ( patterns ):patterns
-	| _function_head_infix -> "infix"
+  _function_head ::= _function_head_patterns patterns:patterns
+	| _function_head_infix -> infix
 
   function ::= _function_head _bind_matches
 
-  bind ::=  bind(  ( ( _pat ):pattern | ( _var ):name | ( implicit_variable ):implicit ) _bind_matches )
+  bind ::=  bind(  ( _pat:pattern | _var:name | implicit_variable:implicit ) _bind_matches ) 
 
   decl ::= signature
 	| function
@@ -842,9 +843,9 @@ rules:
   _local_decl ::= fixity
 	| decl
 
-  local_binds ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? ( _local_decl ):decl ( ( ';'+ | _cond_layout_semicolon ) ( _local_decl ):decl )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
+  local_binds ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? _local_decl:decl ( ( ';'+ | _cond_layout_semicolon ) _local_decl:decl )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
 
-  _where_binds ::= _where ( local_binds )?:binds
+  _where_binds ::= _where ( local_binds:binds )?
 
   calling_convention ::= @( 'ccall' | 'stdcall' | 'capi' | 'prim' | 'javascript' | /[A-Z_]+/ )
 
@@ -852,46 +853,45 @@ rules:
 
   entity ::= string
 
-  foreign_import ::= 'foreign' 'import' ( calling_convention ):calling_convention ( safety )?:safety ( entity )?:entity ( signature ):signature
+  foreign_import ::= 'foreign' 'import' calling_convention:calling_convention ( safety:safety )? ( entity:entity )? signature:signature
 
-  foreign_export ::= 'foreign' 'export' ( calling_convention ):calling_convention ( entity )?:entity ( signature ):signature
+  foreign_export ::= 'foreign' 'export' calling_convention:calling_convention ( entity:entity )? signature:signature
 
-  default_types ::= 'default' _paren_open ( ( _ktype ):type ( ',' ( _ktype ):type )* )? _paren_close
+  default_types ::= 'default' _paren_open ( _ktype:type ( ',' _ktype:type )* )? _paren_close
 
-  _patsyn_signature ::= ( _con | _con_binding_list -> "binding_list" ):synonym _colon2 ( quantified_type ):type
+  _patsyn_signature ::= ( _con | _con_binding_list -> binding_list ):synonym _colon2 quantified_type:type
 
-  _patsyn_cons ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? bind -> "constructor_synonym" ( ( ';'+ | _cond_layout_semicolon ) bind -> "constructor_synonym" )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
+  _patsyn_cons ::= ( _cmd_layout_start | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? bind -> constructor_synonym ( ( ';'+ | _cond_layout_semicolon ) bind -> constructor_synonym )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
 
-  _patsyn_equation ::= ( pattern ):synonym ( '=' | _larrow ) ( _pat ):pattern ( _where ( _patsyn_cons -> "constructor_synonyms" )?:constructors )?
+  _patsyn_equation ::= pattern:synonym ( '=' | _larrow ) _pat:pattern ( _where ( ( _patsyn_cons -> constructor_synonyms ):constructors )? )?
 
-  pattern_synonym ::= 'pattern' ( _patsyn_signature -> "signature" | _patsyn_equation -> "equation" )
+  pattern_synonym ::= 'pattern' ( _patsyn_signature -> signature | _patsyn_equation -> equation )
 
   _splice_exp ::= _exp_name
-	| _exp_parens -> "parens"
+	| _exp_parens -> parens
 	| literal
 
   _splice_dollars ::= _cond_splice ( '$' | '$$' )
 
-  splice ::= _splice_dollars ( _splice_exp ):expression
+  splice ::= _splice_dollars _splice_exp:expression
 
   top_splice ::= expression
 
   quoter ::= _varids
 
-  quasiquote ::= _cond_quote_start '[' ( quoter ):quoter '|' ( quasiquote_body )?:body ( @( '|]' ) | '⟧' )
+  quasiquote ::= _cond_quote_start '[' quoter:quoter '|' ( quasiquote_body:body )? ( @( '|]' ) | '⟧' )
 
-  quoted_decls ::= ( _cmd_layout_start_quote | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? ( declaration ):declaration ( ( ';'+ | _cond_layout_semicolon ) ( declaration ):declaration )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
+  quoted_decls ::= ( _cmd_layout_start_quote | _cmd_layout_start_explicit -> "{" ) ( ( ';'+ | _cond_layout_semicolon )? declaration:declaration ( ( ';'+ | _cond_layout_semicolon ) declaration:declaration )* ( ';'+ | _cond_layout_semicolon )? )? _layout_end
 
-  _exp_quote ::= ( ( '⟦' | _cond_quote_start '[' ( 'e' )?:quoter '|' ) _exp -> "quoted_expression"? | _cond_quote_start '[' ( 't' ):quoter '|' _ktype -> "quoted_type"? | _cond_quote_start '[' ( 'p' ):quoter '|' _pat -> "quoted_pattern"? | _cond_quote_start '[' ( 'd' ):quoter '|' quoted_decls? ) ( @( '|]' ) | '⟧' )
+  _exp_quote ::= ( ( '⟦' | _cond_quote_start '[' 'e'?:quoter '|' ) ( _exp -> quoted_expression )? | _cond_quote_start '[' 't':quoter '|' ( _ktype -> quoted_type )? | _cond_quote_start '[' 'p':quoter '|' ( _pat -> quoted_pattern )? | _cond_quote_start '[' 'd':quoter '|' quoted_decls? ) ( @( '|]' ) | '⟧' )
 
-  _exp_typed_quote ::= _cond_quote_start '[' 'e'? '||' _exp -> "quoted_expression"? @( '||]' )
+  _exp_typed_quote ::= _cond_quote_start '[' 'e'? '||' ( _exp -> quoted_expression )? @( '||]' )
 
   float ::= @( /[0-9][0-9_]*/ ( /\.[0-9_]+/ /[eE][+-]?[0-9_]+/? | /[eE][+-]?[0-9_]+/ ) !( /##?/ )? )
 
   char ::= @( ( /'[^']'/ | /'\\[^ ]*'/ ) !( /##?/ )? )
 
-  ;string ::= @( '"'  ( /[^\\"\n]/ | /\\(\^)?.\\/ | /\\\n\s*/ )* '"'  !( /##?/ )? ) FIXME
-  string ::= @( '"'  ( /[^\\"\n]/ | /\\(\^)?./ | /\\\n\s*/ )* '"'  !( /##?/ )? )
+  string ::= @( '"' ( /[^\\"\n]/ | /\\(\^)?./ | /\\\n\s*\\/ )* '"' !( /##?/ )? )
 
   _integer_literal ::= @( /[0-9][0-9_]*/ !( /##?/ )? )
 
@@ -934,9 +934,9 @@ rules:
 	| prefix_unboxed_tuple
 	| prefix_unboxed_sum
 
-  _qualified_variable ::=  qualified-id(  ( _qualifying_module -> "module" ):module ( variable ):id )
+  _qualified_variable ::=  qualified-id(  ( _qualifying_module -> module ):module variable:id ) 
 
-  _qvarid ::= _qualified_variable -> "qualified"
+  _qvarid ::= _qualified_variable -> qualified
 
   _varids ::= _qvarid
 	| variable
@@ -953,17 +953,17 @@ rules:
   _variable_ticked ::= '`' variable '`'
 
   _varop ::= operator
-	| _variable_ticked -> "infix_id"
+	| _variable_ticked -> infix_id
 
   _qvariable_ticked ::= '`' _qvarid '`'
 
-  _varids_ticked ::= ( _variable_ticked | _qvariable_ticked ) -> "infix_id"
+  _varids_ticked ::= ( _variable_ticked | _qvariable_ticked ) -> infix_id
 
-  _constructor ::= name -> "constructor"
+  _constructor ::= name -> constructor
 
-  _qualified_constructor ::=  qualified-id(  ( _qualifying_module -> "module" ):module ( _constructor ):id )
+  _qualified_constructor ::=  qualified-id(  ( _qualifying_module -> module ):module _constructor:id ) 
 
-  _qconid ::= _qualified_constructor -> "qualified"
+  _qconid ::= _qualified_constructor -> qualified
 
   _conids ::= _qconid
 	| _constructor
@@ -974,63 +974,63 @@ rules:
   _qcon ::= _qconid
 	| _pqconsym
 
-  _cons ::=  con(  _con )
+  _cons ::=  con(  _con ) 
 	| _qcon
 
   _constructor_ticked ::= '`' _constructor '`'
 
   _conop ::= _constructor_operator_alias
-	| _constructor_ticked -> "infix_id"
+	| _constructor_ticked -> infix_id
 
   _qconstructor_ticked ::= '`' _qconid '`'
 
-  _conids_ticked ::= ( _constructor_ticked | _qconstructor_ticked ) -> "infix_id"
+  _conids_ticked ::= ( _constructor_ticked | _qconstructor_ticked ) -> infix_id
 
   _tyconid ::= name
 
-  _qualified_type ::=  qualified-id(  ( _qualifying_module -> "module" ):module ( _tyconid ):id )
+  _qualified_type ::=  qualified-id(  ( _qualifying_module -> module ):module _tyconid:id ) 
 
-  _qtyconid ::= _qualified_type -> "qualified"
+  _qtyconid ::= _qualified_type -> qualified
 
   _tyconids ::= _qtyconid
 	| _tyconid
 
-  _tycon_arrow ::= _paren_open _arrow -> "operator" _paren_close
+  _tycon_arrow ::= _paren_open _arrow -> operator _paren_close
 
-  _qualified_arrow ::=  qualified-id(  ( _qualifying_module -> "module" ):module ( _arrow -> "operator" ):id )
+  _qualified_arrow ::=  qualified-id(  ( _qualifying_module -> module ):module ( _arrow -> operator ):id ) 
 
-  _qtycon_arrow ::= _paren_open _qualified_arrow -> "qualified" _paren_close
+  _qtycon_arrow ::= _paren_open _qualified_arrow -> qualified _paren_close
 
   _tycon ::= _tyconid
 	| _pvarsym
-	| _tycon_arrow -> "prefix_id"
+	| _tycon_arrow -> prefix_id
 	| _pconsym
 
   _qtycon ::= _qtyconid
-	| _qtycon_arrow -> "prefix_id"
+	| _qtycon_arrow -> prefix_id
 	| _pqsym
 
   _tycons ::= _tycon
 	| _qtycon
 
-  _promoted_tycons_alias ::= "'"  _cons
+  _promoted_tycons_alias ::= "'" _cons
 
-  _promoted_tycons ::= _promoted_tycons_alias -> "promoted"
+  _promoted_tycons ::= _promoted_tycons_alias -> promoted
 
   _tycon_ticked ::= '`' _tyconid '`'
 
   _qtycon_ticked ::= '`' _qtyconid '`'
 
-  _tyconids_ticked ::= ( _tycon_ticked | _qtycon_ticked ) -> "infix_id"
+  _tyconids_ticked ::= ( _tycon_ticked | _qtycon_ticked ) -> infix_id
 
   _tyconops ::= _sym
 	| _qsym
 	| _operator_minus
 	| _tyconids_ticked
 
-  _promoted_tyconops_alias ::= "'"  _tyconops
+  _promoted_tyconops_alias ::= "'" _tyconops
 
-  _promoted_tyconops ::= _promoted_tyconops_alias -> "promoted"
+  _promoted_tyconops ::= _promoted_tyconops_alias -> promoted
 
   _tyops ::= _tyconops
 	| _promoted_tyconops
@@ -1060,19 +1060,19 @@ rules:
 
   _operator_alias ::= operator
 
-  _operator_minus ::= '-' -> "operator"
+  _operator_minus ::= '-' -> operator
 
-  _varsym_prefix ::= _paren_open ( operator | _operator_minus | _operator_qual_dot_head -> "operator" ) _paren_close
+  _varsym_prefix ::= _paren_open ( operator | _operator_minus | _operator_qual_dot_head -> operator ) _paren_close
 
-  _pvarsym ::= _varsym_prefix -> "prefix_id"
+  _pvarsym ::= _varsym_prefix -> prefix_id
 
-  _qualified_varsym ::=  qualified-id(  ( _qualifying_module -> "module" ):module ( operator | _operator_minus ):id )
+  _qualified_varsym ::=  qualified-id(  ( _qualifying_module -> module ):module ( operator | _operator_minus ):id ) 
 
-  _qvarsym ::= _qualified_varsym -> "qualified"
+  _qvarsym ::= _qualified_varsym -> qualified
 
   _qvarsym_prefix ::= _paren_open _qvarsym _paren_close
 
-  _pqvarsym ::= _qvarsym_prefix -> "prefix_id"
+  _pqvarsym ::= _qvarsym_prefix -> prefix_id
 
   constructor_operator ::= _consym
 
@@ -1080,15 +1080,15 @@ rules:
 
   _consym_prefix ::= _paren_open constructor_operator _paren_close
 
-  _pconsym ::= _consym_prefix -> "prefix_id"
+  _pconsym ::= _consym_prefix -> prefix_id
 
-  _qualified_consym ::=  qualified-id(  ( _qualifying_module -> "module" ):module ( constructor_operator ):id )
+  _qualified_consym ::=  qualified-id(  ( _qualifying_module -> module ):module constructor_operator:id ) 
 
-  _qconsym ::= _qualified_consym -> "qualified"
+  _qconsym ::= _qualified_consym -> qualified
 
   _qconsym_prefix ::= _paren_open _qconsym _paren_close
 
-  _pqconsym ::= _qconsym_prefix -> "prefix_id"
+  _pqconsym ::= _qconsym_prefix -> prefix_id
 
   _sym ::= _operator_alias
 	| _constructor_operator_alias

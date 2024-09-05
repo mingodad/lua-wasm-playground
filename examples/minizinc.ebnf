@@ -1,10 +1,11 @@
-; From tree-sitter-minizinc/src/grammar.json
+; repository: https://github.com/Dekker1/tree-sitter-minizinc.git
+; commit: e4af426f3c0e26c9bc1f85a54d84ee855046d267
+; json from: tree-sitter-minizinc/src/grammar.json
+; From /tmp/tslua/minizinc0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 extras ::= {
@@ -41,17 +42,17 @@ rules:
 	| output
 	| predicate
 
-  annotation ::= 'annotation' ( identifier ):name ( _parameters )?:parameters ( '=' ( _expression ):expr )?
+  annotation ::= 'annotation' identifier:name ( _parameters:parameters )? ( '=' _expression:expr )?
 
-  assignment ::= ( identifier ):name '=' ( _expression ):expr
+  assignment ::= identifier:name '=' _expression:expr
 
   constraint ::= 'constraint' _expression
 
-  declaration ::= ( _type ):type ':' ( identifier ):name ( _annotations )?:annotations ( '=' ( _expression ):expr )?
+  declaration ::= _type:type ':' identifier:name ( _annotations:annotations )? ( '=' _expression:expr )?
 
-  enumeration ::= 'enum' ( identifier ):name ( _annotations )?:annotations ( '=' '{' ( ( identifier ',' )* identifier? ):members '}' )?
+  enumeration ::= 'enum' identifier:name ( _annotations:annotations )? ( '=' '{' ( ( identifier ',' )* identifier? ):members '}' )?
 
-  function_item ::= 'function' ( _type ):type ':' ( identifier ):name ( _parameters ):parameters ( _annotations )?:annotations ( '=' ( _expression ):expr )?
+  function_item ::= 'function' _type:type ':' identifier:name _parameters:parameters ( _annotations:annotations )? ( '=' _expression:expr )?
 
   goal ::= 'solve' ( 'satisfy' | 'maximize' _expression | 'minimize' _expression ):strategy
 
@@ -59,7 +60,7 @@ rules:
 
   output ::= 'output' _expression
 
-  predicate ::= ( 'predicate' | 'test' ):type ( identifier ):name ( _parameters ):parameters ( _annotations )?:annotations ( '=' ( _expression ):expr )?
+  predicate ::= ( 'predicate' | 'test' ):type identifier:name _parameters:parameters ( _annotations:annotations )? ( '=' _expression:expr )?
 
   _annotations ::= ( '::' _expression )+
 
@@ -83,46 +84,46 @@ rules:
 
   array_comprehension ::= '[' _expression '|' generator ( ',' generator )* ','? ']'
 
-  call ::=  15(  ( identifier ):name '(' ( ( _expression ',' )* _expression? ):arguments ')' )
+  call ::=  15(  identifier:name '(' ( ( _expression ',' )* _expression? ):arguments ')' ) 
 
-  generator_call ::=  15(  ( identifier ):name '(' ( generator ( ',' generator )* ','? ):generators ')' '(' ( _expression ):template ')' )
+  generator_call ::=  15(  identifier:name '(' ( generator ( ',' generator )* ','? ):generators ')' '(' _expression:template ')' ) 
 
   generator ::= identifier 'in' _expression ( 'where' _expression )?
 
   if_then_else ::= 'if' _expression 'then' _expression ( 'elseif' _expression 'then' _expression )* ( 'else' _expression )? 'endif'
 
-  indexed_access ::=  15(  ( _expression ):collection '[' ( _expression ( ',' _expression )* ):indices ']' )
+  indexed_access ::=  15(  _expression:collection '[' ( _expression ( ',' _expression )* ):indices ']' ) 
 
-  infix_operator ::=  <1(  ( _expression ):left ( '<->' ):operator ( _expression ):right )
-	|  <2(  ( _expression ):left ( '->' | '<-' ):operator ( _expression ):right )
-	|  <1(  ( _expression ):left ( '\/' ):operator ( _expression ):right )
-	|  <2(  ( _expression ):left ( 'xor' ):operator ( _expression ):right )
-	|  <3(  ( _expression ):left ( '/\' ):operator ( _expression ):right )
-	|  <4(  ( _expression ):left ( '=' | '==' | '!=' | '<' | '<=' | '>' | '>=' | 'in' | 'subset' | 'superset' ):operator ( _expression ):right )
-	|  <5(  ( _expression ):left ( 'union' ):operator ( _expression ):right )
-	|  <6(  ( _expression ):left ( 'diff' ):operator ( _expression ):right )
-	|  <7(  ( _expression ):left ( 'symdiff' ):operator ( _expression ):right )
-	|  <9(  ( _expression ):left ( 'intersect' ):operator ( _expression ):right )
-	|  <8(  ( _expression ):left ( '..' ):operator ( _expression ):right )
-	|  <10(  ( _expression ):left ( '+' | '-' | '++' ):operator ( _expression ):right )
-	|  <11(  ( _expression ):left ( '*' | '/' | 'div' | 'mod' ):operator ( _expression ):right )
-	|  <12(  ( _expression ):left ( '^' ):operator ( _expression ):right )
-	|  <14(  ( _expression ):left ( '::' ):operator ( _expression ):right )
+  infix_operator ::=  <1(  _expression:left '<->':operator _expression:right ) 
+	|  <2(  _expression:left ( '->' | '<-' ):operator _expression:right ) 
+	|  <1(  _expression:left '\\/':operator _expression:right ) 
+	|  <2(  _expression:left 'xor':operator _expression:right ) 
+	|  <3(  _expression:left '/\\':operator _expression:right ) 
+	|  <4(  _expression:left ( '=' | '==' | '!=' | '<' | '<=' | '>' | '>=' | 'in' | 'subset' | 'superset' ):operator _expression:right ) 
+	|  <5(  _expression:left 'union':operator _expression:right ) 
+	|  <6(  _expression:left 'diff':operator _expression:right ) 
+	|  <7(  _expression:left 'symdiff':operator _expression:right ) 
+	|  <9(  _expression:left 'intersect':operator _expression:right ) 
+	|  <8(  _expression:left '..':operator _expression:right ) 
+	|  <10(  _expression:left ( '+' | '-' | '++' ):operator _expression:right ) 
+	|  <11(  _expression:left ( '*' | '/' | 'div' | 'mod' ):operator _expression:right ) 
+	|  <12(  _expression:left '^':operator _expression:right ) 
+	|  <14(  _expression:left '::':operator _expression:right ) 
 
-  let_expression ::= 'let' '{' ( ( ( declaration | constraint ) ( ',' | ';' ) )* ( declaration | constraint )? ):let '}' 'in' ( _expression ):in
+  let_expression ::= 'let' '{' ( ( ( declaration | constraint ) ( ',' | ';' ) )* ( declaration | constraint )? ):let '}' 'in' _expression:in
 
-  prefix_operator ::=  13(  ( '-' | 'not' | '¬' ):operator _expression )
+  prefix_operator ::=  13(  ( '-' | 'not' | '¬' ):operator _expression ) 
 
   set_comprehension ::= '{' _expression '|' generator ( ',' generator )* ','? '}'
 
-  string_interpolation ::= '"'  string_content? ( '\(' _expression ')' string_content? )+ '"'
+  string_interpolation ::= '"' string_content? ( '\\(' _expression ')' string_content? )+ '"'
 
   _type ::= array_type
 	| type_base
 
   array_type ::= 'array' '[' type_base ( ',' type_base )* ','? ']' 'of' _type
 
-  type_base ::= ( 'var' | 'par' )?:var_par ( 'opt' )?:opt ( 'set' 'of' )?:set ( primitive_type | _expression )
+  type_base ::= ( ( 'var' | 'par' ):var_par )? ( 'opt':opt )? ( ( 'set' 'of' ):set )? ( primitive_type | _expression )
 
   primitive_type ::= 'ann'
 	| 'bool'
@@ -151,11 +152,11 @@ rules:
 
   set_literal ::= '{' ( _expression ',' )* _expression? '}'
 
-  string_literal ::= '"'  string_content? -> "content" '"'
+  string_literal ::= '"' string_content? -> "content" '"'
 
   string_content ::= ( !(  1(  /[^"\n\\]+/ )  ) | escape_sequence )+
 
-  escape_sequence ::= !( '\\'  ( /[^xuU]/ | /\d{2,3}/ | /x[0-9a-fA-F]{2,}/ | /u[0-9a-fA-F]{4}/ | /U[0-9a-fA-F]{8}/ ) )
+  escape_sequence ::= !( '\\' ( /[^xuU]/ | /\d{2,3}/ | /x[0-9a-fA-F]{2,}/ | /u[0-9a-fA-F]{4}/ | /U[0-9a-fA-F]{8}/ ) )
 
   identifier ::= /[A-Za-z][A-Za-z0-9_]*/
 

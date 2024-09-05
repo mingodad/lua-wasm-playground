@@ -64,7 +64,7 @@ const sampleList = [
 	["Tree-sitter-ebnf-generator-C", "tree-sitter-ebnf-generator.lua", "c.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-D", "tree-sitter-ebnf-generator.lua", "d.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Dart", "tree-sitter-ebnf-generator.lua", "dart.ebnf", "ace/mode/text"],
-	["Tree-sitter-ebnf-generator-Docker", "tree-sitter-ebnf-generator.lua", "docker.ebnf", "ace/mode/text"],
+	["Tree-sitter-ebnf-generator-Docker", "tree-sitter-ebnf-generator.lua", "dockerfile.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Elixir", "tree-sitter-ebnf-generator.lua", "elixir.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Elm", "tree-sitter-ebnf-generator.lua", "elm.ebnf", "ace/mode/text"],
 	["Tree-sitter-ebnf-generator-Erlang", "tree-sitter-ebnf-generator.lua", "erlang.ebnf", "ace/mode/text"],

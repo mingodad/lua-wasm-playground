@@ -1,10 +1,11 @@
-; From tree-sitter-cmake/src/grammar.json
+; repository: https://github.com/uyha/tree-sitter-cmake
+; commit: 69d7a8b0f7493b0dbb07d54e8fea96c5421e8a71
+; json from: tree-sitter-cmake/src/grammar.json
+; From /tmp/tslua/cmake0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -23,14 +24,14 @@ rules:
 
   _escape_identity ::= /\\[^A-Za-z0-9;]/
 
-  _escape_encoded ::= '\t'
-	| '\r'
-	| '\n'
+  _escape_encoded ::= '\\t'
+	| '\\r'
+	| '\\n'
 
   _escape_semicolon ::= ';'
-	| '\;'
+	| '\\;'
 
-  variable ::=  <0(  ( /[a-zA-Z0-9/_.+-]/ | escape_sequence | variable_ref )+ )
+  variable ::=  <0(  ( /[a-zA-Z0-9/_.+-]/ | escape_sequence | variable_ref )+ ) 
 
   variable_ref ::= normal_var
 	| env_var
@@ -54,17 +55,17 @@ rules:
 
   _paren_argument ::= '(' _untrimmed_argument* ')'
 
-  quoted_argument ::= '"'  quoted_element? '"'
+  quoted_argument ::= '"' quoted_element? '"'
 
   quoted_element ::= ( variable_ref | _quoted_text | escape_sequence )+
 
-  _quoted_text ::=  <0(  ( '$' | /[^\\"]/ )+ )
+  _quoted_text ::=  <0(  ( '$' | /[^\\"]/ )+ ) 
 
-  unquoted_argument ::=  >0(  ( variable_ref | _unquoted_text | escape_sequence )+ )
+  unquoted_argument ::=  >0(  ( variable_ref | _unquoted_text | escape_sequence )+ ) 
 
-  _unquoted_text ::=  <0(  ( '$' | /[^()#"\\]/ )+ )
+  _unquoted_text ::=  <0(  ( '$' | /[^()#"\\]/ )+ ) 
 
-  body ::=  >0(  _untrimmed_command_invocation+ )
+  body ::=  >0(  _untrimmed_command_invocation+ ) 
 
   argument_list ::= _untrimmed_argument+
 

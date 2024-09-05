@@ -1,10 +1,11 @@
-; From tree-sitter-ruby/src/grammar.json
+; repository: https://github.com/tree-sitter/tree-sitter-ruby.git
+; commit: a66579f70d6f50ffd81a16fc3d3358e2ac173c88
+; json from: tree-sitter-ruby/src/grammar.json
+; From /tmp/tslua/ruby0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -23,7 +24,7 @@ externals ::= {
 	_string_end
 	heredoc_end
 	heredoc_beginning
-	undefined
+	'/'
 	_block_ampersand
 	_splat_star
 	_unary_minus
@@ -74,7 +75,7 @@ word ::= identifier
 
 rules:
 
-  program ::= _statements? ( /__END__[\r\n]/ uninterpreted | '__END__' '' -> "uninterpreted" )?
+  program ::= _statements? ( /__END__[\r\n]/ uninterpreted | '__END__' '' -> uninterpreted )?
 
   uninterpreted ::= /(.|\s)*/
 
@@ -100,24 +101,24 @@ rules:
 
   method ::= 'def' _method_rest
 
-  singleton_method ::= 'def' ( ( _variable ):object | '(' ( _arg ):object ')' ) ( '.' | '::' ) _method_rest
+  singleton_method ::= 'def' ( _variable:object | '(' _arg:object ')' ) ( '.' | '::' ) _method_rest
 
-  _method_rest ::= ( _method_name ):name ( _body_expr | ( parameters -> "method_parameters" ):parameters ( _terminator? ( body_statement )?:body 'end' | _body_expr ) | ( bare_parameters -> "method_parameters" )?:parameters _terminator ( body_statement )?:body 'end' )
+  _method_rest ::= _method_name:name ( _body_expr | ( parameters -> method_parameters ):parameters ( _terminator? ( body_statement:body )? 'end' | _body_expr ) | ( ( bare_parameters -> method_parameters ):parameters )? _terminator ( body_statement:body )? 'end' )
 
-  rescue_modifier_arg ::=  16(  ( _arg ):body 'rescue' ( _arg ):handler )
+  rescue_modifier_arg ::=  16(  _arg:body 'rescue' _arg:handler ) 
 
-  rescue_modifier_expression ::=  16(  ( _expression ):body 'rescue' ( _arg ):handler )
+  rescue_modifier_expression ::=  16(  _expression:body 'rescue' _arg:handler ) 
 
-  _body_expr ::= '=' ( _arg | rescue_modifier_arg -> "rescue_modifier" ):body
+  _body_expr ::= '=' ( _arg | rescue_modifier_arg -> rescue_modifier ):body
 
   parameters ::= '(' ( _formal_parameter ( ',' _formal_parameter )* )? ')'
 
   bare_parameters ::= _simple_formal_parameter ( ',' _formal_parameter )*
 
-  block_parameters ::= '|' ( _formal_parameter ( ',' _formal_parameter )* )? ','? ( ';' ( identifier ):locals ( ',' ( identifier ):locals )* )? '|'
+  block_parameters ::= '|' ( _formal_parameter ( ',' _formal_parameter )* )? ','? ( ';' identifier:locals ( ',' identifier:locals )* )? '|'
 
   _formal_parameter ::= _simple_formal_parameter
-	| parameters -> "destructured_parameter"
+	| parameters -> destructured_parameter
 
   _simple_formal_parameter ::= identifier
 	| splat_parameter
@@ -130,73 +131,73 @@ rules:
 
   forward_parameter ::= '...'
 
-  splat_parameter ::=  >-2(  '*' ( identifier )?:name )
+  splat_parameter ::=  >-2(  '*' identifier?:name ) 
 
-  hash_splat_parameter ::= '**' ( identifier )?:name
+  hash_splat_parameter ::= '**' identifier?:name
 
   hash_splat_nil ::= '**' 'nil'
 
-  block_parameter ::= '&' ( identifier )?:name
+  block_parameter ::= '&' identifier?:name
 
-  keyword_parameter ::=  >51(  ( identifier ):name !( ':' ) ( _arg )?:value )
+  keyword_parameter ::=  >51(  identifier:name !( ':' ) _arg?:value ) 
 
-  optional_parameter ::=  51(  ( identifier ):name '=' ( _arg ):value )
+  optional_parameter ::=  51(  identifier:name '=' _arg:value ) 
 
-  class ::= 'class' ( constant | scope_resolution ):name ( ( superclass ):superclass _terminator | _terminator ) ( body_statement )?:body 'end'
+  class ::= 'class' ( constant | scope_resolution ):name ( superclass:superclass _terminator | _terminator? ) ( body_statement:body )? 'end'
 
   superclass ::= '<' _expression
 
-  singleton_class ::= 'class' _singleton_class_left_angle_left_langle -> "<<" ( _arg ):value _terminator ( body_statement )?:body 'end'
+  singleton_class ::= 'class' _singleton_class_left_angle_left_langle -> "<<" _arg:value _terminator ( body_statement:body )? 'end'
 
-  module ::= 'module' ( constant | scope_resolution ):name _terminator? ( body_statement )?:body 'end'
+  module ::= 'module' ( constant | scope_resolution ):name _terminator? ( body_statement:body )? 'end'
 
-  return_command ::=  <0(  'return' command_argument_list -> "argument_list" )
+  return_command ::=  <0(  'return' command_argument_list -> argument_list ) 
 
-  yield_command ::=  <0(  'yield' command_argument_list -> "argument_list" )
+  yield_command ::=  <0(  'yield' command_argument_list -> argument_list ) 
 
-  break_command ::=  <0(  'break' command_argument_list -> "argument_list" )
+  break_command ::=  <0(  'break' command_argument_list -> argument_list ) 
 
-  next_command ::=  <0(  'next' command_argument_list -> "argument_list" )
+  next_command ::=  <0(  'next' command_argument_list -> argument_list ) 
 
-  return ::=  <0(  'return' argument_list? )
+  return ::=  <0(  'return' argument_list? ) 
 
-  yield ::=  <0(  'yield' argument_list? )
+  yield ::=  <0(  'yield' argument_list? ) 
 
-  break ::=  <0(  'break' argument_list? )
+  break ::=  <0(  'break' argument_list? ) 
 
-  next ::=  <0(  'next' argument_list? )
+  next ::=  <0(  'next' argument_list? ) 
 
-  redo ::=  <0(  'redo' argument_list? )
+  redo ::=  <0(  'redo' argument_list? ) 
 
-  retry ::=  <0(  'retry' argument_list? )
+  retry ::=  <0(  'retry' argument_list? ) 
 
-  if_modifier ::=  16(  ( _statement ):body 'if' ( _expression ):condition )
+  if_modifier ::=  16(  _statement:body 'if' _expression:condition ) 
 
-  unless_modifier ::=  16(  ( _statement ):body 'unless' ( _expression ):condition )
+  unless_modifier ::=  16(  _statement:body 'unless' _expression:condition ) 
 
-  while_modifier ::=  16(  ( _statement ):body 'while' ( _expression ):condition )
+  while_modifier ::=  16(  _statement:body 'while' _expression:condition ) 
 
-  until_modifier ::=  16(  ( _statement ):body 'until' ( _expression ):condition )
+  until_modifier ::=  16(  _statement:body 'until' _expression:condition ) 
 
-  rescue_modifier ::=  16(  ( _statement ):body 'rescue' ( _expression ):handler )
+  rescue_modifier ::=  16(  _statement:body 'rescue' _expression:handler ) 
 
-  while ::= 'while' ( _statement ):condition ( do ):body
+  while ::= 'while' _statement:condition do:body
 
-  until ::= 'until' ( _statement ):condition ( do ):body
+  until ::= 'until' _statement:condition do:body
 
-  for ::= 'for' ( _lhs | left_assignment_list ):pattern ( in ):value ( do ):body
+  for ::= 'for' ( _lhs | left_assignment_list ):pattern in:value do:body
 
   in ::= 'in' _arg
 
   do ::= ( 'do' | _terminator ) _statements? 'end'
 
-  case ::= 'case' ( _line_break? ( _statement ):value )? _terminator? when* else? 'end'
+  case ::= 'case' ( _line_break? _statement:value )? _terminator? when* else? 'end'
 
-  case_match ::= 'case' _line_break? ( _statement ):value _terminator? ( in_clause )+:clauses ( else )?:else 'end'
+  case_match ::= 'case' _line_break? _statement:value _terminator? ( in_clause:clauses )+ ( else:else )? 'end'
 
-  when ::= 'when' ( pattern ):pattern ( ',' ( pattern ):pattern )* ( _terminator | ( then ):body )
+  when ::= 'when' pattern:pattern ( ',' pattern:pattern )* ( _terminator | then:body )
 
-  in_clause ::= 'in' ( _pattern_top_expr_body ):pattern ( _guard )?:guard ( _terminator | ( then ):body )
+  in_clause ::= 'in' _pattern_top_expr_body:pattern _guard?:guard ( _terminator | then:body )
 
   pattern ::= _arg
 	| splat_argument
@@ -204,62 +205,62 @@ rules:
   _guard ::= if_guard
 	| unless_guard
 
-  if_guard ::= 'if' ( _expression ):condition
+  if_guard ::= 'if' _expression:condition
 
-  unless_guard ::= 'unless' ( _expression ):condition
+  unless_guard ::= 'unless' _expression:condition
 
-  _pattern_top_expr_body ::=  -1(  _pattern_expr | _array_pattern_n -> "array_pattern" | _find_pattern_body -> "find_pattern" | _hash_pattern_body -> "hash_pattern" )
+  _pattern_top_expr_body ::=  -1(  _pattern_expr | _array_pattern_n -> array_pattern | _find_pattern_body -> find_pattern | _hash_pattern_body -> hash_pattern ) 
 
-  _array_pattern_n ::=  >0(  _pattern_expr ',' -> "splat_parameter" | _pattern_expr ',' ( _pattern_expr | _array_pattern_n ) | splat_parameter ( ',' _pattern_expr )* )
+  _array_pattern_n ::=  >0(  _pattern_expr ',' -> splat_parameter | _pattern_expr ',' ( _pattern_expr | _array_pattern_n ) | splat_parameter ( ',' _pattern_expr )* ) 
 
   _pattern_expr ::= as_pattern
 	| _pattern_expr_alt
 
-  as_pattern ::= ( _pattern_expr ):value '=>' ( identifier ):name
+  as_pattern ::= _pattern_expr:value '=>' identifier:name
 
   _pattern_expr_alt ::= alternative_pattern
 	| _pattern_expr_basic
 
-  alternative_pattern ::= ( _pattern_expr_basic ):alternatives ( '|' ( _pattern_expr_basic ):alternatives )+
+  alternative_pattern ::= _pattern_expr_basic:alternatives ( '|' _pattern_expr_basic:alternatives )+
 
   _array_pattern_body ::= _pattern_expr
 	| _array_pattern_n
 
-  array_pattern ::=  >-1(  '[' _array_pattern_body? ']' | ( _pattern_constant ):class !( '[' ) _array_pattern_body? ']' | ( _pattern_constant ):class !( '(' ) _array_pattern_body? ')' )
+  array_pattern ::=  >-1(  '[' _array_pattern_body? ']' | _pattern_constant:class !( '[' ) _array_pattern_body? ']' | _pattern_constant:class !( '(' ) _array_pattern_body? ')' ) 
 
   _find_pattern_body ::= splat_parameter ( ',' _pattern_expr )+ ',' splat_parameter
 
   find_pattern ::= '[' _find_pattern_body ']'
-	| ( _pattern_constant ):class !( '[' ) _find_pattern_body ']'
-	| ( _pattern_constant ):class !( '(' ) _find_pattern_body ')'
+	| _pattern_constant:class !( '[' ) _find_pattern_body ']'
+	| _pattern_constant:class !( '(' ) _find_pattern_body ')'
 
-  _hash_pattern_body ::=  >0(  keyword_pattern ( ',' keyword_pattern )* ','? | keyword_pattern ( ',' keyword_pattern )* ',' _hash_pattern_any_rest | _hash_pattern_any_rest )
+  _hash_pattern_body ::=  >0(  keyword_pattern ( ',' keyword_pattern )* ','? | keyword_pattern ( ',' keyword_pattern )* ',' _hash_pattern_any_rest | _hash_pattern_any_rest ) 
 
-  keyword_pattern ::=  >-1(  ( identifier -> "hash_key_symbol" | constant -> "hash_key_symbol" | identifier_suffix -> "hash_key_symbol" | constant_suffix -> "hash_key_symbol" | string ):key !( ':' ) ( _pattern_expr )?:value )
+  keyword_pattern ::=  >-1(  ( identifier -> hash_key_symbol | constant -> hash_key_symbol | identifier_suffix -> hash_key_symbol | constant_suffix -> hash_key_symbol | string ):key !( ':' ) ( _pattern_expr:value )? ) 
 
   _hash_pattern_any_rest ::= hash_splat_parameter
 	| hash_splat_nil
 
-  hash_pattern ::=  >-1(  '{' _hash_pattern_body? '}' | ( _pattern_constant ):class !( '[' ) _hash_pattern_body ']' | ( _pattern_constant ):class !( '(' ) _hash_pattern_body ')' )
+  hash_pattern ::=  >-1(  '{' _hash_pattern_body? '}' | _pattern_constant:class !( '[' ) _hash_pattern_body ']' | _pattern_constant:class !( '(' ) _hash_pattern_body ')' ) 
 
-  _pattern_expr_basic ::=  >-1(  _pattern_value | identifier | array_pattern | find_pattern | hash_pattern | parenthesized_pattern )
+  _pattern_expr_basic ::=  >-1(  _pattern_value | identifier | array_pattern | find_pattern | hash_pattern | parenthesized_pattern ) 
 
   parenthesized_pattern ::= '(' _pattern_expr ')'
 
-  _pattern_value ::=  >-1(  _pattern_primitive | _pattern_range -> "range" | variable_reference_pattern | expression_reference_pattern | _pattern_constant )
+  _pattern_value ::=  >-1(  _pattern_primitive | _pattern_range -> range | variable_reference_pattern | expression_reference_pattern | _pattern_constant ) 
 
-  _pattern_range ::= ( _pattern_primitive ):begin ( '..' | '...' ):operator ( _pattern_primitive ):end
-	| ( '..' | '...' ):operator ( _pattern_primitive ):end
-	| ( _pattern_primitive ):begin ( '..' | '...' ):operator
+  _pattern_range ::= _pattern_primitive:begin ( '..' | '...' ):operator _pattern_primitive:end
+	| ( '..' | '...' ):operator _pattern_primitive:end
+	| _pattern_primitive:begin ( '..' | '...' ):operator
 
   _pattern_primitive ::= _pattern_literal
 	| _pattern_lambda
 
-  _pattern_lambda ::=  >-1(  lambda )
+  _pattern_lambda ::=  >-1(  lambda ) 
 
-  _pattern_literal ::=  >-1(  _literal | string | subshell | heredoc_beginning | regex | string_array | symbol_array | _keyword_variable )
+  _pattern_literal ::=  >-1(  _literal | string | subshell | heredoc_beginning | regex | string_array | symbol_array | _keyword_variable ) 
 
-  _keyword_variable ::=  >-1(  nil | self | true | false | line | file | encoding )
+  _keyword_variable ::=  >-1(  nil | self | true | false | line | file | encoding ) 
 
   line ::= '__LINE__'
 
@@ -269,17 +270,17 @@ rules:
 
   variable_reference_pattern ::= '^' ( identifier | _nonlocal_variable ):name
 
-  expression_reference_pattern ::= '^' '(' ( _expression ):value ')'
+  expression_reference_pattern ::= '^' '(' _expression:value ')'
 
-  _pattern_constant ::=  >-1(  constant | _pattern_constant_resolution -> "scope_resolution" )
+  _pattern_constant ::=  >-1(  constant | _pattern_constant_resolution -> scope_resolution ) 
 
-  _pattern_constant_resolution ::= ( _pattern_constant )?:scope '::' ( constant ):name
+  _pattern_constant_resolution ::= ( _pattern_constant:scope )? '::' constant:name
 
-  if ::= 'if' ( _statement ):condition ( _terminator | ( then ):consequence ) ( else | elsif )?:alternative 'end'
+  if ::= 'if' _statement:condition ( _terminator | then:consequence ) ( else | elsif )?:alternative 'end'
 
-  unless ::= 'unless' ( _statement ):condition ( _terminator | ( then ):consequence ) ( else | elsif )?:alternative 'end'
+  unless ::= 'unless' _statement:condition ( _terminator | then:consequence ) ( else | elsif )?:alternative 'end'
 
-  elsif ::= 'elsif' ( _statement ):condition ( _terminator | ( then ):consequence ) ( else | elsif )?:alternative
+  elsif ::= 'elsif' _statement:condition ( _terminator | then:consequence ) ( else | elsif )?:alternative
 
   else ::= 'else' _terminator? _statements?
 
@@ -290,7 +291,7 @@ rules:
 
   ensure ::= 'ensure' _statements?
 
-  rescue ::= 'rescue' ( exceptions )?:exceptions ( exception_variable )?:variable ( _terminator | ( then ):body )
+  rescue ::= 'rescue' exceptions?:exceptions exception_variable?:variable ( _terminator | then:body )
 
   exceptions ::= ( _arg | splat_argument ) ( ',' ( _arg | splat_argument ) )*
 
@@ -301,26 +302,26 @@ rules:
   _body_statement ::= _statements ( rescue | else | ensure )*
 	| _statements? ( rescue | else | ensure )+
 
-  _expression ::= command_binary -> "binary"
-	| command_unary -> "unary"
-	| command_assignment -> "assignment"
-	| command_operator_assignment -> "operator_assignment"
-	| command_call -> "call"
-	| command_call_with_block -> "call"
-	|  <0(  _chained_command_call -> "call" )
-	| return_command -> "return"
-	| yield_command -> "yield"
-	| break_command -> "break"
-	| next_command -> "next"
+  _expression ::= command_binary -> binary
+	| command_unary -> unary
+	| command_assignment -> assignment
+	| command_operator_assignment -> operator_assignment
+	| command_call -> call
+	| command_call_with_block -> call
+	|  <0(  _chained_command_call -> call ) 
+	| return_command -> return
+	| yield_command -> yield
+	| break_command -> break
+	| next_command -> next
 	| match_pattern
 	| test_pattern
 	| _arg
 
-  match_pattern ::=  100(  ( _arg ):value '=>' ( _pattern_top_expr_body ):pattern )
+  match_pattern ::=  100(  _arg:value '=>' _pattern_top_expr_body:pattern ) 
 
-  test_pattern ::=  100(  ( _arg ):value 'in' ( _pattern_top_expr_body ):pattern )
+  test_pattern ::=  100(  _arg:value 'in' _pattern_top_expr_body:pattern ) 
 
-  _arg ::= _unary_minus_pow -> "unary"
+  _arg ::= _unary_minus_pow -> unary
 	| _primary
 	| assignment
 	| operator_assignment
@@ -329,13 +330,13 @@ rules:
 	| binary
 	| unary
 
-  _unary_minus_pow ::= ( _unary_minus_num -> "-" ):operator ( _pow -> "binary" ):operand
+  _unary_minus_pow ::= ( _unary_minus_num -> "-" ):operator ( _pow -> binary ):operand
 
-  _pow ::=  >80(  ( _simple_numeric ):left ( _binary_star_star -> "**" ):operator ( _arg ):right )
+  _pow ::=  >80(  _simple_numeric:left ( _binary_star_star -> "**" ):operator _arg:right ) 
 
   _primary ::= parenthesized_statements
 	| _lhs
-	| _function_identifier_call -> "call"
+	| _function_identifier_call -> call
 	| call
 	| array
 	| string_array
@@ -367,128 +368,128 @@ rules:
 	| next
 	| redo
 	| retry
-	| parenthesized_unary -> "unary"
+	| parenthesized_unary -> unary
 	| heredoc_beginning
 
   parenthesized_statements ::= '(' _statements? ')'
 
-  element_reference ::=  <1(  ( _primary ):object _element_reference_bracket -> "[" _argument_list_with_trailing_comma? ']' ( block | do_block )?:block )
+  element_reference ::=  <1(  _primary:object _element_reference_bracket -> "[" _argument_list_with_trailing_comma? ']' ( ( block | do_block ):block )? ) 
 
-  scope_resolution ::=  <57(  ( '::' | ( _primary ):scope !( '::' ) ) ( constant ):name )
+  scope_resolution ::=  <57(  ( '::' | _primary:scope !( '::' ) ) constant:name ) 
 
   _call_operator ::= '.'
 	| '&.'
 	| !( '::' )
 
-  _call ::=  <56(  ( _primary ):receiver ( _call_operator ):operator ( identifier | operator | constant | _function_identifier ):method )
+  _call ::=  <56(  _primary:receiver _call_operator:operator ( identifier | operator | constant | _function_identifier ):method ) 
 
-  command_call ::= ( _call | _chained_command_call | ( _variable | _function_identifier ):method ) ( command_argument_list -> "argument_list" ):arguments
+  command_call ::= ( _call | _chained_command_call | ( _variable | _function_identifier ):method ) ( command_argument_list -> argument_list ):arguments
 
-  command_call_with_block ::= ( _call | ( _variable | _function_identifier ):method )  1(  ( command_argument_list -> "argument_list" ):arguments ( block ):block )
-	| ( _call | ( _variable | _function_identifier ):method )  -1(  ( command_argument_list -> "argument_list" ):arguments ( do_block ):block )
+  command_call_with_block ::= ( _call | ( _variable | _function_identifier ):method )  1(  ( command_argument_list -> argument_list ):arguments block:block ) 
+	| ( _call | ( _variable | _function_identifier ):method )  -1(  ( command_argument_list -> argument_list ):arguments do_block:block ) 
 
-  _chained_command_call ::= ( command_call_with_block -> "call" ):receiver ( _call_operator ):operator ( identifier | _function_identifier | operator | constant ):method
+  _chained_command_call ::= ( command_call_with_block -> call ):receiver _call_operator:operator ( identifier | _function_identifier | operator | constant ):method
 
-  call ::= ( _call | ( _variable | _function_identifier ):method |  <56(  ( _primary ):receiver ( _call_operator ):operator )  ) ( argument_list ):arguments
-	|  1(  ( _call | ( _variable | _function_identifier ):method |  <56(  ( _primary ):receiver ( _call_operator ):operator )  ) ( argument_list ):arguments ( block ):block )
-	|  -1(  ( _call | ( _variable | _function_identifier ):method |  <56(  ( _primary ):receiver ( _call_operator ):operator )  ) ( argument_list ):arguments ( do_block ):block )
-	|  1(  ( _call | ( _variable | _function_identifier ):method ) ( block ):block )
-	|  -1(  ( _call | ( _variable | _function_identifier ):method ) ( do_block ):block )
+  call ::= ( _call | ( _variable | _function_identifier ):method |  <56(  _primary:receiver _call_operator:operator )  ) argument_list:arguments
+	|  1(  ( _call | ( _variable | _function_identifier ):method |  <56(  _primary:receiver _call_operator:operator )  ) argument_list:arguments block:block ) 
+	|  -1(  ( _call | ( _variable | _function_identifier ):method |  <56(  _primary:receiver _call_operator:operator )  ) argument_list:arguments do_block:block ) 
+	|  1(  ( _call | ( _variable | _function_identifier ):method ) block:block ) 
+	|  -1(  ( _call | ( _variable | _function_identifier ):method ) do_block:block ) 
 
-  command_argument_list ::=  >0(  _argument ( ',' _argument )* )
+  command_argument_list ::=  >0(  _argument ( ',' _argument )* ) 
 
-  argument_list ::=  >0(  !( '(' ) _argument_list_with_trailing_comma? ')' )
+  argument_list ::=  >0(  !( '(' ) _argument_list_with_trailing_comma? ')' ) 
 
-  _argument_list_with_trailing_comma ::=  >0(  _argument ( ',' _argument )* ','? )
+  _argument_list_with_trailing_comma ::=  >0(  _argument ( ',' _argument )* ','? ) 
 
-  _argument ::=  <0(  _expression | splat_argument | hash_splat_argument | forward_argument | block_argument | pair )
+  _argument ::=  <0(  _expression | splat_argument | hash_splat_argument | forward_argument | block_argument | pair ) 
 
   forward_argument ::= '...'
 
-  splat_argument ::=  >0(  _splat_star -> "*" _arg? )
+  splat_argument ::=  >0(  _splat_star -> "*" _arg? ) 
 
-  hash_splat_argument ::=  >0(  _hash_splat_star_star -> "**" _arg? )
+  hash_splat_argument ::=  >0(  _hash_splat_star_star -> "**" _arg? ) 
 
-  block_argument ::=  >0(  _block_ampersand -> "&" _arg? )
+  block_argument ::=  >0(  _block_ampersand -> "&" _arg? ) 
 
-  do_block ::= 'do' _terminator? ( ( block_parameters ):parameters _terminator? )? ( body_statement )?:body 'end'
+  do_block ::= 'do' _terminator? ( block_parameters:parameters _terminator? )? ( body_statement:body )? 'end'
 
-  block ::=  1(  '{' ( block_parameters )?:parameters ( block_body )?:body '}' )
+  block ::=  1(  '{' block_parameters?:parameters ( block_body:body )? '}' ) 
 
   _arg_rhs ::= _arg
-	| rescue_modifier_arg -> "rescue_modifier"
+	| rescue_modifier_arg -> rescue_modifier
 
-  assignment ::=  >15(  ( _lhs | left_assignment_list ):left '=' ( _arg_rhs | splat_argument | right_assignment_list ):right )
+  assignment ::=  >15(  ( _lhs | left_assignment_list ):left '=' ( _arg_rhs | splat_argument | right_assignment_list ):right ) 
 
-  command_assignment ::=  >15(  ( _lhs | left_assignment_list ):left '=' ( _expression | rescue_modifier_expression -> "rescue_modifier" ):right )
+  command_assignment ::=  >15(  ( _lhs | left_assignment_list ):left '=' ( _expression | rescue_modifier_expression -> rescue_modifier ):right ) 
 
-  operator_assignment ::=  >15(  ( _lhs ):left ( '+=' | '-=' | '*=' | '**=' | '/=' | '||=' | '|=' | '&&=' | '&=' | '%=' | '>>=' | '<<=' | '^=' ):operator ( _arg_rhs ):right )
+  operator_assignment ::=  >15(  _lhs:left ( '+=' | '-=' | '*=' | '**=' | '/=' | '||=' | '|=' | '&&=' | '&=' | '%=' | '>>=' | '<<=' | '^=' ):operator _arg_rhs:right ) 
 
-  command_operator_assignment ::=  >15(  ( _lhs ):left ( '+=' | '-=' | '*=' | '**=' | '/=' | '||=' | '|=' | '&&=' | '&=' | '%=' | '>>=' | '<<=' | '^=' ):operator ( _expression | rescue_modifier_expression -> "rescue_modifier" ):right )
+  command_operator_assignment ::=  >15(  _lhs:left ( '+=' | '-=' | '*=' | '**=' | '/=' | '||=' | '|=' | '&&=' | '&=' | '%=' | '>>=' | '<<=' | '^=' ):operator ( _expression | rescue_modifier_expression -> rescue_modifier ):right ) 
 
-  conditional ::=  >20(  ( _arg ):condition '?' ( _arg ):consequence ':' ( _arg ):alternative )
+  conditional ::=  >20(  _arg:condition '?' _arg:consequence ':' _arg:alternative ) 
 
-  range ::=  >25(  ( _arg ):begin ( '..' | '...' ):operator ( _arg ):end | ( '..' | '...' ):operator ( _arg ):end | ( _arg ):begin ( '..' | '...' ):operator )
+  range ::=  >25(  _arg:begin ( '..' | '...' ):operator _arg:end | ( '..' | '...' ):operator _arg:end | _arg:begin ( '..' | '...' ):operator ) 
 
-  binary ::=  <-2(  ( _arg ):left ( 'and' ):operator ( _arg ):right )
-	|  <-2(  ( _arg ):left ( 'or' ):operator ( _arg ):right )
-	|  <30(  ( _arg ):left ( '||' ):operator ( _arg ):right )
-	|  <35(  ( _arg ):left ( '&&' ):operator ( _arg ):right )
-	|  <60(  ( _arg ):left ( '<<' | '>>' ):operator ( _arg ):right )
-	|  <45(  ( _arg ):left ( '<' | '<=' | '>' | '>=' ):operator ( _arg ):right )
-	|  <55(  ( _arg ):left ( '&' ):operator ( _arg ):right )
-	|  <50(  ( _arg ):left ( '^' | '|' ):operator ( _arg ):right )
-	|  <65(  ( _arg ):left ( '+' | _binary_minus -> "-" ):operator ( _arg ):right )
-	|  <70(  ( _arg ):left ( '/' | '%' | _binary_star -> "*" ):operator ( _arg ):right )
-	|  >40(  ( _arg ):left ( '==' | '!=' | '===' | '<=>' | '=~' | '!~' ):operator ( _arg ):right )
-	|  >80(  ( _arg ):left ( _binary_star_star -> "**" ):operator ( _arg ):right )
+  binary ::=  <-2(  _arg:left 'and':operator _arg:right ) 
+	|  <-2(  _arg:left 'or':operator _arg:right ) 
+	|  <30(  _arg:left '||':operator _arg:right ) 
+	|  <35(  _arg:left '&&':operator _arg:right ) 
+	|  <60(  _arg:left ( '<<' | '>>' ):operator _arg:right ) 
+	|  <45(  _arg:left ( '<' | '<=' | '>' | '>=' ):operator _arg:right ) 
+	|  <55(  _arg:left '&':operator _arg:right ) 
+	|  <50(  _arg:left ( '^' | '|' ):operator _arg:right ) 
+	|  <65(  _arg:left ( '+' | _binary_minus -> "-" ):operator _arg:right ) 
+	|  <70(  _arg:left ( '/' | '%' | _binary_star -> "*" ):operator _arg:right ) 
+	|  >40(  _arg:left ( '==' | '!=' | '===' | '<=>' | '=~' | '!~' ):operator _arg:right ) 
+	|  >80(  _arg:left ( _binary_star_star -> "**" ):operator _arg:right ) 
 
-  command_binary ::=  <0(  ( _expression ):left ( 'or' | 'and' ):operator ( _expression ):right )
+  command_binary ::=  <0(  _expression:left ( 'or' | 'and' ):operator _expression:right ) 
 
-  unary ::=  10(  ( 'defined?' ):operator ( _arg ):operand )
-	|  >5(  ( 'not' ):operator ( _arg ):operand )
-	|  >75(  ( _unary_minus -> "-" | _binary_minus -> "-" | '+' ):operator ( _arg ):operand )
-	|  >85(  ( '!' | '~' ):operator ( _arg ):operand )
+  unary ::=  10(  'defined?':operator _arg:operand ) 
+	|  >5(  'not':operator _arg:operand ) 
+	|  >75(  ( _unary_minus -> "-" | _binary_minus -> "-" | '+' ):operator _arg:operand ) 
+	|  >85(  ( '!' | '~' ):operator _arg:operand ) 
 
-  command_unary ::=  10(  ( 'defined?' ):operator ( _expression ):operand )
-	|  >5(  ( 'not' ):operator ( _expression ):operand )
-	|  >75(  ( _unary_minus -> "-" | '+' ):operator ( _expression ):operand )
-	|  >85(  ( '!' | '~' ):operator ( _expression ):operand )
+  command_unary ::=  10(  'defined?':operator _expression:operand ) 
+	|  >5(  'not':operator _expression:operand ) 
+	|  >75(  ( _unary_minus -> "-" | '+' ):operator _expression:operand ) 
+	|  >85(  ( '!' | '~' ):operator _expression:operand ) 
 
-  parenthesized_unary ::=  56(  ( 'defined?' | 'not' ):operator ( parenthesized_statements ):operand )
+  parenthesized_unary ::=  56(  ( 'defined?' | 'not' ):operator parenthesized_statements:operand ) 
 
-  unary_literal ::=  >75(  ( _unary_minus_num -> "-" | '+' ):operator ( _simple_numeric ):operand )
+  unary_literal ::=  >75(  ( _unary_minus_num -> "-" | '+' ):operator _simple_numeric:operand ) 
 
   _literal ::= simple_symbol
 	| delimited_symbol
 	| _numeric
 
   _numeric ::= _simple_numeric
-	| unary_literal -> "unary"
+	| unary_literal -> unary
 
   _simple_numeric ::= integer
 	| float
 	| complex
 	| rational
 
-  right_assignment_list ::=  -1(  ( _arg | splat_argument ) ( ',' ( _arg | splat_argument ) )* )
+  right_assignment_list ::=  -1(  ( _arg | splat_argument ) ( ',' ( _arg | splat_argument ) )* ) 
 
   left_assignment_list ::= _mlhs
 
-  _mlhs ::=  <-1(  ( _lhs | rest_assignment | destructured_left_assignment ) ( ',' ( _lhs | rest_assignment | destructured_left_assignment ) )* ','? )
+  _mlhs ::=  <-1(  ( _lhs | rest_assignment | destructured_left_assignment ) ( ',' ( _lhs | rest_assignment | destructured_left_assignment ) )* ','? ) 
 
-  destructured_left_assignment ::=  -1(  '(' _mlhs ')' )
+  destructured_left_assignment ::=  -1(  '(' _mlhs ')' ) 
 
-  rest_assignment ::=  -1(  '*' _lhs? )
+  rest_assignment ::=  -1(  '*' _lhs? ) 
 
-  _function_identifier ::= identifier_suffix -> "identifier"
-	| constant_suffix -> "constant"
+  _function_identifier ::= identifier_suffix -> identifier
+	| constant_suffix -> constant
 
-  _function_identifier_call ::=  <0(  ( _function_identifier ):method )
+  _function_identifier_call ::=  <0(  _function_identifier:method ) 
 
-  _lhs ::=  <0(  _variable | true | false | nil | scope_resolution | element_reference | _call -> "call" )
+  _lhs ::=  <0(  _variable | true | false | nil | scope_resolution | element_reference | _call -> call ) 
 
-  _variable ::=  >0(  self | super | _nonlocal_variable | identifier | constant )
+  _variable ::=  >0(  self | super | _nonlocal_variable | identifier | constant ) 
 
   operator ::= '..'
 	| '|'
@@ -534,11 +535,11 @@ rules:
 	| class_variable
 	| global_variable
 
-  setter ::= ( identifier ):name !( '=' )
+  setter ::= identifier:name !( '=' )
 
   undef ::= 'undef' _method_name ( ',' _method_name )*
 
-  alias ::= 'alias' ( _method_name ):name ( _method_name ):alias
+  alias ::= 'alias' _method_name:name _method_name:alias
 
   comment ::= @(  -2(  '#' /.*/ | /=begin.*\r?\n/ ( /[^=]/ | /=[^e]/ | /=e[^n]/ | /=en[^d]/ )* /[\s*]*=end.*/ )  )
 
@@ -550,7 +551,7 @@ rules:
   float ::= /\d(_?\d)*(\.\d)?(_?\d)*([eE][\+-]?\d(_?\d)*)?/
 
   complex ::= _int_or_float !( 'i' )
-	| _int_or_float -> "rational" !( 'ri' )
+	| _int_or_float -> rational !( 'ri' )
 
   rational ::= _int_or_float !( 'r' )
 
@@ -587,15 +588,15 @@ rules:
   interpolation ::= '#{' _statements? '}'
 	| _short_interpolation _nonlocal_variable
 
-  string ::= _string_start -> """ _literal_contents? _string_end -> """
+  string ::= _string_start -> '"' _literal_contents? _string_end -> '"'
 
   subshell ::= _subshell_start -> "`" _literal_contents? _string_end -> "`"
 
-  string_array ::= _string_array_start -> "%w(" /\s+/? ( _literal_contents -> "bare_string" ( /\s+/ _literal_contents -> "bare_string" )* )? /\s+/? _string_end -> ")"
+  string_array ::= _string_array_start -> "%w(" /\s+/? ( _literal_contents -> bare_string ( /\s+/ _literal_contents -> bare_string )* )? /\s+/? _string_end -> ")"
 
-  symbol_array ::= _symbol_array_start -> "%i(" /\s+/? ( _literal_contents -> "bare_symbol" ( /\s+/ _literal_contents -> "bare_symbol" )* )? /\s+/? _string_end -> ")"
+  symbol_array ::= _symbol_array_start -> "%i(" /\s+/? ( _literal_contents -> bare_symbol ( /\s+/ _literal_contents -> bare_symbol )* )? /\s+/? _string_end -> ")"
 
-  delimited_symbol ::= _symbol_start -> ":"" _literal_contents? _string_end -> """
+  delimited_symbol ::= _symbol_start -> ':"' _literal_contents? _string_end -> '"'
 
   regex ::= _regex_start -> "/" _literal_contents? _string_end -> "/"
 
@@ -603,17 +604,17 @@ rules:
 
   _literal_contents ::= ( string_content | interpolation | escape_sequence )+
 
-  escape_sequence ::= @( '\\'  ( /[^ux0-7]/ | /x[0-9a-fA-F]{1,2}/ | /[0-7]{1,3}/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F ]+\}/ ) )
+  escape_sequence ::= @( '\\' ( /[^ux0-7]/ | /x[0-9a-fA-F]{1,2}/ | /[0-7]{1,3}/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F ]+\}/ ) )
 
   array ::= '[' _argument_list_with_trailing_comma? ']'
 
   hash ::= '{' ( ( pair | hash_splat_argument ) ( ',' ( pair | hash_splat_argument ) )* ','? )? '}'
 
-  pair ::=  >0(  ( _arg ):key '=>' ( _arg ):value | ( string ):key !( ':' ) ( _arg ):value | ( hash_key_symbol | identifier -> "hash_key_symbol" | constant -> "hash_key_symbol" | identifier_suffix -> "hash_key_symbol" | constant_suffix -> "hash_key_symbol" ):key !( ':' ) ( ( _arg )?:value | _no_line_break ) )
+  pair ::=  >0(  _arg:key '=>' _arg:value | ( string ):key !( ':' ) _arg:value | ( hash_key_symbol | identifier -> hash_key_symbol | constant -> hash_key_symbol | identifier_suffix -> hash_key_symbol | constant_suffix -> hash_key_symbol ):key !( ':' ) ( _arg?:value | _no_line_break ) ) 
 
-  lambda ::= '->' ( parameters -> "lambda_parameters" | bare_parameters -> "lambda_parameters" )?:parameters ( block | do_block ):body
+  lambda ::= '->' ( parameters -> lambda_parameters | bare_parameters -> lambda_parameters )?:parameters ( block | do_block ):body
 
-  empty_statement ::=  -1(  ';' )
+  empty_statement ::=  -1(  ';' ) 
 
   _terminator ::= _line_break
 	| ';'

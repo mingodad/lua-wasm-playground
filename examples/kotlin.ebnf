@@ -1,10 +1,11 @@
-; From tree-sitter-kotlin/src/grammar.json
+; repository: https://github.com/fwcd/tree-sitter-kotlin.git
+; commit: 7276b93ca6754c21f9630757e753f1b6aec500c1
+; json from: tree-sitter-kotlin/src/grammar.json
+; From /tmp/tslua/kotlin0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -65,15 +66,15 @@ rules:
 
   import_list ::= import_header+ _import_list_delimiter
 
-  import_header ::= 'import' _import_identifier -> "identifier" ( '.' wildcard_import | import_alias )? _semi
+  import_header ::= 'import' _import_identifier -> identifier ( '.' wildcard_import | import_alias )? _semi
 
   wildcard_import ::= !( '*' )
 
-  import_alias ::= 'as' simple_identifier -> "type_identifier"
+  import_alias ::= 'as' simple_identifier -> type_identifier
 
   top_level_object ::= _declaration _semi?
 
-  type_alias ::= modifiers? 'typealias' simple_identifier -> "type_identifier" type_parameters? '=' _type
+  type_alias ::= modifiers? 'typealias' simple_identifier -> type_identifier type_parameters? '=' _type
 
   _declaration ::= class_declaration
 	| object_declaration
@@ -83,7 +84,7 @@ rules:
 	| setter
 	| type_alias
 
-  class_declaration ::=  >0(  modifiers? ( 'class' | 'interface' ) simple_identifier -> "type_identifier" type_parameters? primary_constructor? ( ':' _delegation_specifiers )? type_constraints? class_body? | modifiers? 'enum' 'class' simple_identifier -> "type_identifier" type_parameters? primary_constructor? ( ':' _delegation_specifiers )? type_constraints? enum_class_body? )
+  class_declaration ::=  >0(  modifiers? ( 'class' | 'interface' ) simple_identifier -> type_identifier type_parameters? primary_constructor? ( ':' _delegation_specifiers )? type_constraints? class_body? | modifiers? 'enum' 'class' simple_identifier -> type_identifier type_parameters? primary_constructor? ( ':' _delegation_specifiers )? type_constraints? enum_class_body? ) 
 
   primary_constructor ::= ( modifiers? 'constructor' )? _class_parameters
 
@@ -96,9 +97,9 @@ rules:
 
   class_parameter ::= modifiers? binding_pattern_kind? simple_identifier ':' _type ( '=' _expression )?
 
-  _delegation_specifiers ::=  <0(  delegation_specifier ( ',' delegation_specifier )* )
+  _delegation_specifiers ::=  <0(  delegation_specifier ( ',' delegation_specifier )* ) 
 
-  delegation_specifier ::=  <0(  constructor_invocation | explicit_delegation | user_type | function_type )
+  delegation_specifier ::=  <0(  constructor_invocation | explicit_delegation | user_type | function_type ) 
 
   constructor_invocation ::= user_type value_arguments
 
@@ -108,11 +109,11 @@ rules:
 
   type_parameters ::= '<' type_parameter ( ',' type_parameter )* '>'
 
-  type_parameter ::= type_parameter_modifiers? simple_identifier -> "type_identifier" ( ':' _type )?
+  type_parameter ::= type_parameter_modifiers? simple_identifier -> type_identifier ( ':' _type )?
 
-  type_constraints ::=  >0(  'where' type_constraint ( ',' type_constraint )* )
+  type_constraints ::=  >0(  'where' type_constraint ( ',' type_constraint )* ) 
 
-  type_constraint ::= annotation* simple_identifier -> "type_identifier" ':' _type
+  type_constraint ::= annotation* simple_identifier -> type_identifier ':' _type
 
   _class_member_declarations ::= ( _class_member_declaration _semi )+
 
@@ -123,7 +124,7 @@ rules:
 
   anonymous_initializer ::= 'init' _block
 
-  companion_object ::= modifiers? 'companion' 'object' simple_identifier -> "type_identifier"? ( ':' _delegation_specifiers )? class_body?
+  companion_object ::= modifiers? 'companion' 'object' ( simple_identifier -> type_identifier )? ( ':' _delegation_specifiers )? class_body?
 
   function_value_parameters ::= '(' ( _function_value_parameter ( ',' _function_value_parameter )* )? ','? ')'
 
@@ -131,20 +132,20 @@ rules:
 
   _receiver_type ::= type_modifiers? ( _type_reference | parenthesized_type | nullable_type )
 
-  function_declaration ::=  >0(  modifiers? 'fun' type_parameters? ( _receiver_type '.'? )? simple_identifier function_value_parameters ( ':' _type )? type_constraints? function_body? )
+  function_declaration ::=  >0(  modifiers? 'fun' type_parameters? ( _receiver_type '.'? )? simple_identifier function_value_parameters ( ':' _type )? type_constraints? function_body? ) 
 
   function_body ::= _block
 	| '=' _expression
 
-  variable_declaration ::=  <3(  simple_identifier ( ':' _type )? )
+  variable_declaration ::=  <3(  simple_identifier ( ':' _type )? ) 
 
-  property_declaration ::=  >0(  modifiers? binding_pattern_kind type_parameters? ( _receiver_type '.'? )? ( variable_declaration | multi_variable_declaration ) type_constraints? ( '=' _expression | property_delegate )? ';'? ( getter | setter ) )
+  property_declaration ::=  >0(  modifiers? binding_pattern_kind type_parameters? ( _receiver_type '.'? )? ( variable_declaration | multi_variable_declaration ) type_constraints? ( '=' _expression | property_delegate )? ';'? ( getter? | setter? ) ) 
 
   property_delegate ::= 'by' _expression
 
-  getter ::=  >0(  modifiers? 'get' ( '(' ')' ( ':' _type )? function_body )? )
+  getter ::=  >0(  modifiers? 'get' ( '(' ')' ( ':' _type )? function_body )? ) 
 
-  setter ::=  >0(  modifiers? 'set' ( '(' parameter_with_optional_type ')' ( ':' _type )? function_body )? )
+  setter ::=  >0(  modifiers? 'set' ( '(' parameter_with_optional_type ')' ( ':' _type )? function_body )? ) 
 
   parameters_with_optional_type ::= '(' parameter_with_optional_type ( ',' parameter_with_optional_type )* ')'
 
@@ -152,7 +153,7 @@ rules:
 
   parameter ::= simple_identifier ':' _type
 
-  object_declaration ::=  >0(  modifiers? 'object' simple_identifier -> "type_identifier" ( ':' _delegation_specifiers )? class_body? )
+  object_declaration ::=  >0(  modifiers? 'object' simple_identifier -> type_identifier ( ':' _delegation_specifiers )? class_body? ) 
 
   secondary_constructor ::= modifiers? 'constructor' function_value_parameters ( ':' constructor_delegation_call )? _block?
 
@@ -166,7 +167,7 @@ rules:
 
   _type ::= type_modifiers? ( parenthesized_type | nullable_type | _type_reference | function_type | not_nullable_type )
 
-  _type_reference ::=  <1(  user_type | 'dynamic' )
+  _type_reference ::=  <1(  user_type | 'dynamic' ) 
 
   not_nullable_type ::= type_modifiers? ( user_type | parenthesized_user_type ) '&' type_modifiers? ( user_type | parenthesized_user_type )
 
@@ -176,7 +177,7 @@ rules:
 
   user_type ::= _simple_user_type ( '.' _simple_user_type )*
 
-  _simple_user_type ::=  >2(  simple_identifier -> "type_identifier" type_arguments? )
+  _simple_user_type ::=  >2(  simple_identifier -> type_identifier type_arguments? ) 
 
   type_projection ::= type_projection_modifiers? _type
 	| '*'
@@ -187,7 +188,7 @@ rules:
 
   function_type ::= ( _simple_user_type '.' )? function_type_parameters '->' _type
 
-  function_type_parameters ::=  <1(  '(' ( ( parameter | _type ) ( ',' ( parameter | _type ) )* )? ')' )
+  function_type_parameters ::=  <1(  '(' ( ( parameter | _type ) ( ',' ( parameter | _type ) )* )? ')' ) 
 
   parenthesized_type ::= '(' _type ')'
 
@@ -203,22 +204,22 @@ rules:
   control_structure_body ::= _block
 	| _statement
 
-  _block ::=  1(  '{' statements? '}' )
+  _block ::=  1(  '{' statements? '}' ) 
 
   _loop_statement ::= for_statement
 	| while_statement
 	| do_while_statement
 
-  for_statement ::=  >0(  'for' '(' annotation* ( variable_declaration | multi_variable_declaration ) 'in' _expression ')' control_structure_body? )
+  for_statement ::=  >0(  'for' '(' annotation* ( variable_declaration | multi_variable_declaration ) 'in' _expression ')' control_structure_body? ) 
 
   while_statement ::= 'while' '(' _expression ')' ( ';' | control_structure_body )
 
-  do_while_statement ::=  >0(  'do' control_structure_body? 'while' '(' _expression ')' )
+  do_while_statement ::=  >0(  'do' control_structure_body? 'while' '(' _expression ')' ) 
 
   _semi ::= _automatic_semicolon
 
-  assignment ::=  <1(  directly_assignable_expression _assignment_and_operator _expression )
-	|  <1(  directly_assignable_expression '=' _expression )
+  assignment ::=  <1(  directly_assignable_expression _assignment_and_operator _expression ) 
+	|  <1(  directly_assignable_expression '=' _expression ) 
 
   _expression ::= _unary_expression
 	| _binary_expression
@@ -232,19 +233,19 @@ rules:
 	| as_expression
 	| spread_expression
 
-  postfix_expression ::=  <16(  _expression _postfix_unary_operator )
+  postfix_expression ::=  <16(  _expression _postfix_unary_operator ) 
 
-  call_expression ::=  <16(  _expression call_suffix )
+  call_expression ::=  <16(  _expression call_suffix ) 
 
-  indexing_expression ::=  <16(  _expression indexing_suffix )
+  indexing_expression ::=  <16(  _expression indexing_suffix ) 
 
-  navigation_expression ::=  <16(  _expression navigation_suffix )
+  navigation_expression ::=  <16(  _expression navigation_suffix ) 
 
-  prefix_expression ::=  >0(  ( annotation | label | _prefix_unary_operator ) _expression )
+  prefix_expression ::=  >0(  ( annotation | label | _prefix_unary_operator ) _expression ) 
 
-  as_expression ::=  <13(  _expression _as_operator _type )
+  as_expression ::=  <13(  _expression _as_operator _type ) 
 
-  spread_expression ::=  <2(  '*' _expression )
+  spread_expression ::=  <2(  '*' _expression ) 
 
   _binary_expression ::= multiplicative_expression
 	| additive_expression
@@ -259,31 +260,31 @@ rules:
 	| conjunction_expression
 	| disjunction_expression
 
-  multiplicative_expression ::=  <12(  _expression _multiplicative_operator _expression )
+  multiplicative_expression ::=  <12(  _expression _multiplicative_operator _expression ) 
 
-  additive_expression ::=  <11(  _expression _additive_operator _expression )
+  additive_expression ::=  <11(  _expression _additive_operator _expression ) 
 
-  range_expression ::=  <10(  _expression '..' _expression )
+  range_expression ::=  <10(  _expression '..' _expression ) 
 
-  infix_expression ::=  <9(  _expression simple_identifier _expression )
+  infix_expression ::=  <9(  _expression simple_identifier _expression ) 
 
-  elvis_expression ::=  <8(  _expression '?:' _expression )
+  elvis_expression ::=  <8(  _expression '?:' _expression ) 
 
-  check_expression ::=  <7(  _expression ( _in_operator _expression | _is_operator _type ) )
+  check_expression ::=  <7(  _expression ( _in_operator _expression | _is_operator _type ) ) 
 
-  comparison_expression ::=  <6(  _expression _comparison_operator _expression )
+  comparison_expression ::=  <6(  _expression _comparison_operator _expression ) 
 
-  equality_expression ::=  <5(  _expression _equality_operator _expression )
+  equality_expression ::=  <5(  _expression _equality_operator _expression ) 
 
-  conjunction_expression ::=  <4(  _expression '&&' _expression )
+  conjunction_expression ::=  <4(  _expression '&&' _expression ) 
 
-  disjunction_expression ::=  <3(  _expression '||' _expression )
+  disjunction_expression ::=  <3(  _expression '||' _expression ) 
 
   indexing_suffix ::= '[' _expression ( ',' _expression )* ']'
 
   navigation_suffix ::= _member_access_operator ( simple_identifier | parenthesized_expression | 'class' )
 
-  call_suffix ::=  <0(  type_arguments? (  1(  value_arguments? annotated_lambda )  | value_arguments ) )
+  call_suffix ::=  <0(  type_arguments? (  1(  value_arguments? annotated_lambda )  | value_arguments ) ) 
 
   annotated_lambda ::= annotation* label? lambda_literal
 
@@ -326,10 +327,10 @@ rules:
 
   line_string_expression ::= '${' _expression '}'
 
-  _interpolation ::= '${' _expression -> "interpolated_expression" '}'
-	| '$' simple_identifier -> "interpolated_identifier"
+  _interpolation ::= '${' _expression -> interpolated_expression '}'
+	| '$' simple_identifier -> interpolated_identifier
 
-  lambda_literal ::=  0(  '{' ( lambda_parameters? '->' )? statements? '}' )
+  lambda_literal ::=  0(  '{' ( lambda_parameters? '->' )? statements? '}' ) 
 
   multi_variable_declaration ::= '(' variable_declaration ( ',' variable_declaration )* ')'
 
@@ -338,7 +339,7 @@ rules:
   _lambda_parameter ::= variable_declaration
 	| multi_variable_declaration
 
-  anonymous_function ::=  >0(  'fun' ( _simple_user_type ( '.' _simple_user_type )* '.' )? function_value_parameters ( ':' _type )? function_body? )
+  anonymous_function ::=  >0(  'fun' ( _simple_user_type ( '.' _simple_user_type )* '.' )? function_value_parameters ( ':' _type )? function_body? ) 
 
   _function_literal ::= lambda_literal
 	| anonymous_function
@@ -348,9 +349,9 @@ rules:
   this_expression ::= 'this'
 	| _this_at
 
-  super_expression ::=  >0(  'super' | 'super' '<' _type '>' | _super_at )
+  super_expression ::=  >0(  'super' | 'super' '<' _type '>' | _super_at ) 
 
-  if_expression ::=  >0(  'if' '(' ( _expression ):condition ')' ( ( control_structure_body ):consequence | ( control_structure_body )?:consequence ';'? 'else' ( ( control_structure_body ):alternative | ';' ) | ';' ) )
+  if_expression ::=  >0(  'if' '(' _expression:condition ')' ( control_structure_body:consequence | ( control_structure_body:consequence )? ';'? 'else' ( control_structure_body:alternative | ';' ) | ';' ) ) 
 
   when_subject ::= '(' ( annotation* 'val' variable_declaration '=' )? _expression ')'
 
@@ -372,14 +373,14 @@ rules:
 
   finally_block ::= 'finally' _block
 
-  jump_expression ::=  >0(  'throw' _expression )
-	|  >0(  ( 'return' | _return_at ) _expression? )
+  jump_expression ::=  >0(  'throw' _expression ) 
+	|  >0(  ( 'return' | _return_at ) _expression? ) 
 	| 'continue'
 	| _continue_at
 	| 'break'
 	| _break_at
 
-  callable_reference ::= simple_identifier -> "type_identifier"? '::' ( simple_identifier | 'class' )
+  callable_reference ::= ( simple_identifier -> type_identifier )? '::' ( simple_identifier | 'class' )
 
   _assignment_and_operator ::= '+='
 	| '-='
@@ -435,9 +436,9 @@ rules:
 
   _postfix_unary_expression ::= _primary_expression _postfix_unary_suffix*
 
-  directly_assignable_expression ::=  1(  _postfix_unary_expression | simple_identifier )
+  directly_assignable_expression ::=  1(  _postfix_unary_expression | simple_identifier ) 
 
-  modifiers ::=  <0(  ( annotation | _modifier )+ )
+  modifiers ::=  <0(  ( annotation | _modifier )+ ) 
 
   parameter_modifiers ::= ( annotation | parameter_modifier )+
 
@@ -528,16 +529,16 @@ rules:
 
   line_comment ::= @( '//' /.*/ )
 
-  _return_at ::= 'return@' _lexical_identifier -> "label"
+  _return_at ::= 'return@' _lexical_identifier -> label
 
-  _continue_at ::= 'continue@' _lexical_identifier -> "label"
+  _continue_at ::= 'continue@' _lexical_identifier -> label
 
-  _break_at ::= 'break@' _lexical_identifier -> "label"
+  _break_at ::= 'break@' _lexical_identifier -> label
 
-  _this_at ::= 'this@' _lexical_identifier -> "type_identifier"
+  _this_at ::= 'this@' _lexical_identifier -> type_identifier
 
-  _super_at ::= 'super@' _lexical_identifier -> "type_identifier"
-	| 'super' '<' _type '>' !( '@' ) _lexical_identifier -> "type_identifier"
+  _super_at ::= 'super@' _lexical_identifier -> type_identifier
+	| 'super' '<' _type '>' !( '@' ) _lexical_identifier -> type_identifier
 
   real_literal ::= @( ( @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) @( /[eE]/ /[+-]/? @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) ) | @( /[0-9]+/ ( /_+/ /[0-9]+/ )* )? '.' @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) @( /[eE]/ /[+-]/? @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) )? ) /[fF]/? | @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) /[fF]/ )
 
@@ -554,7 +555,7 @@ rules:
   boolean_literal ::= 'true'
 	| 'false'
 
-  character_literal ::= "'"  ( character_escape_seq | /[^\n\r'\\]/ ) "'"
+  character_literal ::= "'" ( character_escape_seq | /[^\n\r'\\]/ ) "'"
 
   character_escape_seq ::= _uni_character_literal
 	| _escaped_identifier
@@ -568,7 +569,7 @@ rules:
 
   _backtick_identifier ::= /`[^\r\n`]+`/
 
-  _uni_character_literal ::= '\u' /[0-9a-fA-F]{4}/
+  _uni_character_literal ::= '\\u' /[0-9a-fA-F]{4}/
 
   _escaped_identifier ::= /\\[tbrn'"\\$]/
 

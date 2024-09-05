@@ -1,10 +1,11 @@
-; From tree-sitter-nim2/src/grammar.json
+; repository: https://github.com/alaviss/tree-sitter-nim.git
+; commit: 897e5d346f0b59ed62b517cfb0f1a845ad8f0ab7
+; json from: tree-sitter-nim2/src/grammar.json
+; From /tmp/tslua/nim20.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -18,7 +19,7 @@ externals ::= {
 	_layout_empty
 	_inhibit_layout_end
 	_inhibit_keyword_termination
-	undefined
+	','
 	_synchronize
 	_invalid_layout
 	_sigil_operator
@@ -79,7 +80,7 @@ rules:
 	| _line_statement_list
 	| _layout_empty
 
-  _line_statement_list ::=  >0(  _simple_statement ( ';' _simple_statement )* )
+  _line_statement_list ::=  >0(  _simple_statement ( ';' _simple_statement )* ) 
 
   _block_statement_list ::= _layout_start _semi_statement_list? _layout_end
 
@@ -92,7 +93,7 @@ rules:
 	| static_statement
 	| defer
 	| typeof
-	| _infix_typeof_expression -> "infix_expression"
+	| _infix_typeof_expression -> infix_expression
 	| _declaration
 
   _simple_statement ::= _expression_statement
@@ -115,13 +116,13 @@ rules:
 
   _expression_statement ::= _expression
 	| assignment
-	| _call_extended -> "call"
-	| _infix_extended -> "infix_expression"
-	| _prefix_extended -> "prefix_expression"
+	| _call_extended -> call
+	| _infix_extended -> infix_expression
+	| _prefix_extended -> prefix_expression
 
-  import_statement ::=  >0(  @(  1(  /i_?[mM]_?[pP]_?[oO]_?[rR]_?[tT]/ )  ) -> "import" _import_body )
+  import_statement ::=  >0(  @(  1(  /i_?[mM]_?[pP]_?[oO]_?[rR]_?[tT]/ )  ) -> "import" _import_body ) 
 
-  export_statement ::=  >0(  @(  1(  /e_?[xX]_?[pP]_?[oO]_?[rR]_?[tT]/ )  ) -> "export" _import_body )
+  export_statement ::=  >0(  @(  1(  /e_?[xX]_?[pP]_?[oO]_?[rR]_?[tT]/ )  ) -> "export" _import_body ) 
 
   _import_body ::= expression_list
 	| _import_except
@@ -132,51 +133,51 @@ rules:
 
   include_statement ::= @(  1(  /i_?[nN]_?[cC]_?[lL]_?[uU]_?[dD]_?[eE]/ )  ) -> "include" expression_list
 
-  discard_statement ::=  >0(  @(  1(  /d_?[iI]_?[sS]_?[cC]_?[aA]_?[rR]_?[dD]/ )  ) -> "discard" _expression_with_post_block? )
+  discard_statement ::=  >0(  @(  1(  /d_?[iI]_?[sS]_?[cC]_?[aA]_?[rR]_?[dD]/ )  ) -> "discard" _expression_with_post_block? ) 
 
-  return_statement ::=  >0(  @(  1(  /r_?[eE]_?[tT]_?[uU]_?[rR]_?[nN]/ )  ) -> "return" _expression_with_post_block? )
+  return_statement ::=  >0(  @(  1(  /r_?[eE]_?[tT]_?[uU]_?[rR]_?[nN]/ )  ) -> "return" _expression_with_post_block? ) 
 
-  raise_statement ::=  >0(  @(  1(  /r_?[aA]_?[iI]_?[sS]_?[eE]/ )  ) -> "raise" _expression_with_post_block? )
+  raise_statement ::=  >0(  @(  1(  /r_?[aA]_?[iI]_?[sS]_?[eE]/ )  ) -> "raise" _expression_with_post_block? ) 
 
-  yield_statement ::=  >0(  @(  1(  /y_?[iI]_?[eE]_?[lL]_?[dD]/ )  ) -> "yield" _expression_with_post_block? )
+  yield_statement ::=  >0(  @(  1(  /y_?[iI]_?[eE]_?[lL]_?[dD]/ )  ) -> "yield" _expression_with_post_block? ) 
 
-  break_statement ::=  >0(  @(  1(  /b_?[rR]_?[eE]_?[aA]_?[kK]/ )  ) -> "break" _expression_with_post_block? )
+  break_statement ::=  >0(  @(  1(  /b_?[rR]_?[eE]_?[aA]_?[kK]/ )  ) -> "break" _expression_with_post_block? ) 
 
-  continue_statement ::=  >0(  @(  1(  /c_?[oO]_?[nN]_?[tT]_?[iI]_?[nN]_?[uU]_?[eE]/ )  ) -> "continue" _expression_with_post_block? )
+  continue_statement ::=  >0(  @(  1(  /c_?[oO]_?[nN]_?[tT]_?[iI]_?[nN]_?[uU]_?[eE]/ )  ) -> "continue" _expression_with_post_block? ) 
 
-  assembly_statement ::= @(  1(  /a_?[sS]_?[mM]/ )  ) -> "asm" ( pragma_list )?:pragma _string_literal
+  assembly_statement ::= @(  1(  /a_?[sS]_?[mM]/ )  ) -> "asm" ( pragma_list:pragma )? _string_literal
 
   bind_statement ::= @(  1(  /b_?[iI]_?[nN]_?[dD]/ )  ) -> "bind" expression_list
 
   mixin_statement ::= @(  1(  /m_?[iI]_?[xX]_?[iI]_?[nN]/ )  ) -> "mixin" expression_list
 
-  import_from_statement ::= @(  0(  /f_?[rR]_?[oO]_?[mM]/ )  ) -> "from" ( _expression ):module @(  1(  /i_?[mM]_?[pP]_?[oO]_?[rR]_?[tT]/ )  ) -> "import" expression_list
+  import_from_statement ::= @(  0(  /f_?[rR]_?[oO]_?[mM]/ )  ) -> "from" _expression:module @(  1(  /i_?[mM]_?[pP]_?[oO]_?[rR]_?[tT]/ )  ) -> "import" expression_list
 
-  while ::= @(  1(  /w_?[hH]_?[iI]_?[lL]_?[eE]/ )  ) -> "while" ( _simple_expression ):condition ':' ( statement_list ):body
+  while ::= @(  1(  /w_?[hH]_?[iI]_?[lL]_?[eE]/ )  ) -> "while" _simple_expression:condition ':' statement_list:body
 
-  static_statement ::= @(  1(  /s_?[tT]_?[aA]_?[tT]_?[iI]_?[cC]/ )  ) -> "static" ':' ( statement_list ):body
+  static_statement ::= @(  1(  /s_?[tT]_?[aA]_?[tT]_?[iI]_?[cC]/ )  ) -> "static" ':' statement_list:body
 
-  pragma_statement ::=  >0(  pragma_list ( ':' ( statement_list ):body )? )
+  pragma_statement ::=  >0(  pragma_list ( ':' statement_list:body )? ) 
 
-  defer ::= @(  1(  /d_?[eE]_?[fF]_?[eE]_?[rR]/ )  ) -> "defer" ':' ( statement_list ):body
+  defer ::= @(  1(  /d_?[eE]_?[fF]_?[eE]_?[rR]/ )  ) -> "defer" ':' statement_list:body
 
   _typeof_expression ::= typeof
-	| _infix_typeof_expression -> "infix_expression"
+	| _infix_typeof_expression -> infix_expression
 
   typeof ::= @(  1(  /t_?[yY]_?[pP]_?[eE]/ )  ) -> "type" '(' _simple_expression _paren_close
 
-  _infix_typeof_expression ::=  >binary_10(  ( _typeof_expression ):left ( _infix_operator_10r ):operator ( _typeof_expression | _simple_expression ):right )
-	|  <binary_10(  ( _typeof_expression ):left ( _infix_operator_10l ):operator ( _typeof_expression | _simple_expression ):right )
-	|  <binary_9(  ( _typeof_expression ):left ( _infix_operator_9 ):operator ( _typeof_expression | _simple_expression ):right )
-	|  <binary_8(  ( _typeof_expression ):left ( _infix_operator_8 ):operator ( _typeof_expression | _simple_expression ):right )
-	|  <binary_7(  ( _typeof_expression ):left ( _infix_operator_7 ):operator ( _typeof_expression | _simple_expression ):right )
-	|  <binary_6(  ( _typeof_expression ):left ( _infix_operator_6 ):operator ( _typeof_expression | _simple_expression ):right )
-	|  <binary_5(  ( _typeof_expression ):left ( _infix_operator_5 ):operator ( _typeof_expression | _simple_expression ):right )
-	|  <binary_4(  ( _typeof_expression ):left ( _infix_operator_4 ):operator ( _typeof_expression | _simple_expression ):right )
-	|  <binary_3(  ( _typeof_expression ):left ( _infix_operator_3 ):operator ( _typeof_expression | _simple_expression ):right )
-	|  <binary_2(  ( _typeof_expression ):left ( _infix_operator_2 ):operator ( _typeof_expression | _simple_expression ):right )
-	|  <binary_1(  ( _typeof_expression ):left ( _infix_operator_1 ):operator ( _typeof_expression | _simple_expression ):right )
-	|  <binary_0(  ( _typeof_expression ):left ( _infix_operator_0 ):operator ( _typeof_expression | _simple_expression ):right )
+  _infix_typeof_expression ::=  >binary_10(  _typeof_expression:left _infix_operator_10r:operator ( _typeof_expression | _simple_expression ):right ) 
+	|  <binary_10(  _typeof_expression:left _infix_operator_10l:operator ( _typeof_expression | _simple_expression ):right ) 
+	|  <binary_9(  _typeof_expression:left _infix_operator_9:operator ( _typeof_expression | _simple_expression ):right ) 
+	|  <binary_8(  _typeof_expression:left _infix_operator_8:operator ( _typeof_expression | _simple_expression ):right ) 
+	|  <binary_7(  _typeof_expression:left _infix_operator_7:operator ( _typeof_expression | _simple_expression ):right ) 
+	|  <binary_6(  _typeof_expression:left _infix_operator_6:operator ( _typeof_expression | _simple_expression ):right ) 
+	|  <binary_5(  _typeof_expression:left _infix_operator_5:operator ( _typeof_expression | _simple_expression ):right ) 
+	|  <binary_4(  _typeof_expression:left _infix_operator_4:operator ( _typeof_expression | _simple_expression ):right ) 
+	|  <binary_3(  _typeof_expression:left _infix_operator_3:operator ( _typeof_expression | _simple_expression ):right ) 
+	|  <binary_2(  _typeof_expression:left _infix_operator_2:operator ( _typeof_expression | _simple_expression ):right ) 
+	|  <binary_1(  _typeof_expression:left _infix_operator_1:operator ( _typeof_expression | _simple_expression ):right ) 
+	|  <binary_0(  _typeof_expression:left _infix_operator_0:operator ( _typeof_expression | _simple_expression ):right ) 
 
   _declaration ::= proc_declaration
 	| func_declaration
@@ -205,11 +206,11 @@ rules:
 
   converter_declaration ::= @(  1(  /c_?[oO]_?[nN]_?[vV]_?[eE]_?[rR]_?[tT]_?[eE]_?[rR]/ )  ) -> "converter" _routine_declaration
 
-  _routine_declaration ::= ( _symbol | exported_symbol ):name ( term_rewriting_pattern )?:rewrite_pattern ( generic_parameter_list )?:generic_parameters ( parameter_declaration_list )?:parameters ( ':' ( type_expression ):return_type )? ( pragma_list )?:pragmas ( '=' ( statement_list ):body )?
+  _routine_declaration ::= ( _symbol | exported_symbol ):name term_rewriting_pattern?:rewrite_pattern generic_parameter_list?:generic_parameters parameter_declaration_list?:parameters ( ':' type_expression:return_type )? pragma_list?:pragmas ( '=' statement_list:body )?
 
   generic_parameter_list ::= '[' _parameter_declaration_list? _bracket_close
 
-  term_rewriting_pattern ::= '{' _semi_statement_list -> "statement_list" _curly_close
+  term_rewriting_pattern ::= '{' _semi_statement_list -> statement_list _curly_close
 
   using_section ::= @(  1(  /u_?[sS]_?[iI]_?[nN]_?[gG]/ )  ) -> "using" _variable_declaration_section
 
@@ -217,29 +218,29 @@ rules:
 
   let_section ::= @(  1(  /l_?[eE]_?[tT]/ )  ) -> "let" _variable_declaration_section
 
-  var_section ::=  ~1(  @(  1(  /v_?[aA]_?[rR]/ )  ) -> "var" _variable_declaration_section )
+  var_section ::=  ~1(  @(  1(  /v_?[aA]_?[rR]/ )  ) -> "var" _variable_declaration_section ) 
 
   _variable_declaration_section ::= variable_declaration
 	| _layout_start ( variable_declaration _layout_terminator )* _layout_end
 
-  variable_declaration ::= symbol_declaration_list ':' ( type_expression ):type ( '=' ( _expression_with_post_block ):value )?
-	| symbol_declaration_list ( '=' ( _expression_with_post_block ):value )?
+  variable_declaration ::= symbol_declaration_list ':' type_expression:type ( '=' _expression_with_post_block:value )?
+	| symbol_declaration_list ( '=' _expression_with_post_block:value )?
 
   type_section ::= @(  1(  /t_?[yY]_?[pP]_?[eE]/ )  ) -> "type" ( type_declaration | _layout_start ( type_declaration _layout_terminator )* _layout_end )
 
   type_declaration ::= type_symbol_declaration ( '=' _type_definition )?
 
-  type_symbol_declaration ::= ( _symbol | exported_symbol ):name generic_parameter_list? ( pragma_list )?:pragma
+  type_symbol_declaration ::= ( _symbol | exported_symbol ):name generic_parameter_list? ( pragma_list:pragma )?
 
   _type_definition ::= type_expression
 	| enum_declaration
 	| object_declaration
 	| concept_declaration
-	| _distinct_declaration -> "distinct_type"
-	| _ref_declaration -> "ref_type"
-	| _pointer_declaration -> "pointer_type"
-	| _tuple_declaration -> "tuple_type"
-	| _call_extended -> "call"
+	| _distinct_declaration -> distinct_type
+	| _ref_declaration -> ref_type
+	| _pointer_declaration -> pointer_type
+	| _tuple_declaration -> tuple_type
+	| _call_extended -> call
 
   _distinct_declaration ::= @(  1(  /d_?[iI]_?[sS]_?[tT]_?[iI]_?[nN]_?[cC]_?[tT]/ )  ) -> "distinct" _type_definition
 
@@ -249,11 +250,11 @@ rules:
 
   enum_declaration ::= @(  1(  /e_?[nN]_?[uU]_?[mM]/ )  ) -> "enum" ( ( enum_field_declaration ','? )+ | _layout_start ( ( enum_field_declaration ','? )+ _layout_terminator )* _layout_end )
 
-  enum_field_declaration ::=  >0(  symbol_declaration ( '=' ( _expression ):value )? )
+  enum_field_declaration ::=  >0(  symbol_declaration ( '=' _expression:value )? ) 
 
-  _tuple_declaration ::= @(  1(  /t_?[uU]_?[pP]_?[lL]_?[eE]/ )  ) -> "tuple" _layout_start ( _identifier_declaration -> "field_declaration" _layout_terminator )+ _layout_end
+  _tuple_declaration ::= @(  1(  /t_?[uU]_?[pP]_?[lL]_?[eE]/ )  ) -> "tuple" _layout_start ( _identifier_declaration -> field_declaration _layout_terminator )+ _layout_end
 
-  object_declaration ::= @(  1(  /o_?[bB]_?[jJ]_?[eE]_?[cC]_?[tT]/ )  ) -> "object" ( pragma_list )?:pragma ( @(  1(  /o_?[fF]/ )  ) -> "of" ( type_expression ):inherits )? _object_field_declaration_list -> "field_declaration_list"?
+  object_declaration ::= @(  1(  /o_?[bB]_?[jJ]_?[eE]_?[cC]_?[tT]/ )  ) -> "object" ( pragma_list:pragma )? ( @(  1(  /o_?[fF]/ )  ) -> "of" type_expression:inherits )? ( _object_field_declaration_list -> field_declaration_list )?
 
   _object_field_declaration_branch_list ::= _object_field_declaration
 	| _object_field_declaration_list
@@ -261,38 +262,38 @@ rules:
 
   _object_field_declaration_list ::= _layout_start ( _object_field_declaration _layout_terminator )* _layout_end
 
-  _object_field_declaration ::= _identifier_declaration -> "field_declaration"
+  _object_field_declaration ::= _identifier_declaration -> field_declaration
 	| conditional_declaration
 	| variant_declaration
 	| nil_literal
-	| @(  1(  /d_?[iI]_?[sS]_?[cC]_?[aA]_?[rR]_?[dD]/ )  ) -> "discard" -> "discard_statement"
+	| @(  1(  /d_?[iI]_?[sS]_?[cC]_?[aA]_?[rR]_?[dD]/ )  ) -> "discard" -> discard_statement
 
-  conditional_declaration ::=  >0(  @(  1(  /w_?[hH]_?[eE]_?[nN]/ )  ) -> "when" ( _expression ):condition ':' ( _object_field_declaration_branch_list -> "field_declaration_list" ):consequence ( _elif_declaration_branch -> "elif_branch" | _else_declaration_branch -> "else_branch" | _inhibit_keyword_termination )*:alternative )
+  conditional_declaration ::=  >0(  @(  1(  /w_?[hH]_?[eE]_?[nN]/ )  ) -> "when" _expression:condition ':' ( _object_field_declaration_branch_list -> field_declaration_list ):consequence ( ( _elif_declaration_branch -> elif_branch | _else_declaration_branch -> else_branch | _inhibit_keyword_termination ):alternative )* ) 
 
-  _elif_declaration_branch ::= @(  1(  /e_?[lL]_?[iI]_?[fF]/ )  ) -> "elif" ( _expression ):condition ':' ( _object_field_declaration_branch_list -> "field_declaration_list" ):consequence
+  _elif_declaration_branch ::= @(  1(  /e_?[lL]_?[iI]_?[fF]/ )  ) -> "elif" _expression:condition ':' ( _object_field_declaration_branch_list -> field_declaration_list ):consequence
 
   variant_declaration ::= @(  1(  /c_?[aA]_?[sS]_?[eE]/ )  ) -> "case" _variant_declaration_body
 
-  _variant_declaration_body ::=  >0(  variant_discriminator_declaration ':'? ( _of_declaration_branch -> "of_branch" )*:alternative _inhibit_keyword_termination? ( _else_declaration_branch -> "else_branch" )?:alternative )
+  _variant_declaration_body ::=  >0(  variant_discriminator_declaration ':'? ( ( _of_declaration_branch -> of_branch ):alternative )* _inhibit_keyword_termination? ( ( _else_declaration_branch -> else_branch ):alternative )? ) 
 
   variant_discriminator_declaration ::= _identifier_declaration
 
-  _of_declaration_branch ::= _case_of -> "of" ( expression_list ):values ':' ( _object_field_declaration_branch_list -> "field_declaration_list" ):consequence
+  _of_declaration_branch ::= _case_of -> "of" expression_list:values ':' ( _object_field_declaration_branch_list -> field_declaration_list ):consequence
 
-  _else_declaration_branch ::= @(  1(  /e_?[lL]_?[sS]_?[eE]/ )  ) -> "else" ':' ( _object_field_declaration_branch_list -> "field_declaration_list" ):consequence
+  _else_declaration_branch ::= @(  1(  /e_?[lL]_?[sS]_?[eE]/ )  ) -> "else" ':' ( _object_field_declaration_branch_list -> field_declaration_list ):consequence
 
-  concept_declaration ::= @(  1(  /c_?[oO]_?[nN]_?[cC]_?[eE]_?[pP]_?[tT]/ )  ) -> "concept" ( _concept_parameter_list -> "parameter_list" )?:parameters ( @(  1(  /o_?[fF]/ )  ) -> "of" ( refinement_list ):refines )? ( _block_statement_list -> "statement_list" )?:body
+  concept_declaration ::= @(  1(  /c_?[oO]_?[nN]_?[cC]_?[eE]_?[pP]_?[tT]/ )  ) -> "concept" ( _concept_parameter_list -> parameter_list )?:parameters ( @(  1(  /o_?[fF]/ )  ) -> "of" refinement_list:refines )? ( ( _block_statement_list -> statement_list ):body )?
 
   refinement_list ::= type_expression ( ',' type_expression )*
 
   _concept_parameter_list ::= _concept_parameter ( ',' _concept_parameter )*
 
   _concept_parameter ::= _symbol
-	| _concept_pointer_parameter -> "pointer_parameter"
-	| _concept_ref_parameter -> "ref_parameter"
-	| _concept_static_parameter -> "static_parameter"
-	| _concept_type_parameter -> "type_parameter"
-	| _concept_var_parameter -> "var_parameter"
+	| _concept_pointer_parameter -> pointer_parameter
+	| _concept_ref_parameter -> ref_parameter
+	| _concept_static_parameter -> static_parameter
+	| _concept_type_parameter -> type_parameter
+	| _concept_var_parameter -> var_parameter
 
   _concept_pointer_parameter ::= @(  1(  /p_?[tT]_?[rR]/ )  ) -> "ptr" _symbol
 
@@ -305,16 +306,16 @@ rules:
   _concept_var_parameter ::= @(  1(  /v_?[aA]_?[rR]/ )  ) -> "var" _symbol
 
   _expression_with_post_block ::= _expression_with_call_do
-	| _call_block -> "call"
-	| _command_block -> "call"
-	| _dot_generic_call_block -> "dot_generic_call"
-	| _infix_extended -> "infix_expression"
-	| _prefix_extended -> "prefix_expression"
+	| _call_block -> call
+	| _command_block -> call
+	| _dot_generic_call_block -> dot_generic_call
+	| _infix_extended -> infix_expression
+	| _prefix_extended -> prefix_expression
 
   _expression_with_call_do ::= _expression
-	| _call_do -> "call"
-	| _command_complex_expression -> "call"
-	| _dot_generic_call_do -> "dot_generic_call"
+	| _call_do -> call
+	| _command_complex_expression -> call
+	| _dot_generic_call_do -> dot_generic_call
 
   _expression ::= _simple_expression
 	| proc_expression
@@ -328,12 +329,12 @@ rules:
 	| for
 
   _simple_expression ::= _simple_expression_command_start
-	| _prefix_expression -> "prefix_expression"
+	| _prefix_expression -> prefix_expression
 
   _simple_expression_command_start ::= _basic_expression
-	| _command_expression -> "call"
-	| _infix_expression -> "infix_expression"
-	| _prefix_expression_command_start -> "prefix_expression"
+	| _command_expression -> call
+	| _infix_expression -> infix_expression
+	| _prefix_expression_command_start -> prefix_expression
 
   _basic_expression ::= _literal
 	| _symbol
@@ -356,98 +357,98 @@ rules:
 	| ref_type
 	| pointer_type
 	| dot_generic_call
-	| _proc_type -> "proc_type"
-	| _iterator_type -> "iterator_type"
-	| _call_expression -> "call"
-	| _sigil_expression -> "prefix_expression"
+	| _proc_type -> proc_type
+	| _iterator_type -> iterator_type
+	| _call_expression -> call
+	| _sigil_expression -> prefix_expression
 
-  for ::= @(  1(  /f_?[oO]_?[rR]/ )  ) -> "for" _for_body ':' ( statement_list ):body
+  for ::= @(  1(  /f_?[oO]_?[rR]/ )  ) -> "for" _for_body ':' statement_list:body
 
-  _for_body ::= ( symbol_declaration_list ):left @(  1(  /i_?[nN]/ )  ) -> "in" ( _expression ):right
+  _for_body ::= symbol_declaration_list:left @(  1(  /i_?[nN]/ )  ) -> "in" _expression:right
 
-  block ::= @(  1(  /b_?[lL]_?[oO]_?[cC]_?[kK]/ )  ) -> "block" ( _symbol )?:label ':' ( statement_list ):body
+  block ::= @(  1(  /b_?[lL]_?[oO]_?[cC]_?[kK]/ )  ) -> "block" ( _symbol:label )? ':' statement_list:body
 
-  if ::= @(  1(  /i_?[fF]/ )  ) -> "if" ( _expression ):condition _if_body
+  if ::= @(  1(  /i_?[fF]/ )  ) -> "if" _expression:condition _if_body
 
-  when ::= @(  1(  /w_?[hH]_?[eE]_?[nN]/ )  ) -> "when" ( _expression ):condition _if_body
+  when ::= @(  1(  /w_?[hH]_?[eE]_?[nN]/ )  ) -> "when" _expression:condition _if_body
 
-  _if_body ::=  >0(  ':' ( statement_list ):consequence _if_alternatives? )
+  _if_body ::=  >0(  ':' statement_list:consequence _if_alternatives? ) 
 
   _if_branch ::= elif_branch
 	| else_branch
 
-  _if_alternatives ::= ( _inhibit_keyword_termination | ( _if_branch ):alternative )+
+  _if_alternatives ::= ( _inhibit_keyword_termination | _if_branch:alternative )+
 
-  case ::=  >0(  @(  1(  /c_?[aA]_?[sS]_?[eE]/ )  ) -> "case" ( _expression ):value ':'? ( of_branch )*:alternative _if_alternatives? )
+  case ::=  >0(  @(  1(  /c_?[aA]_?[sS]_?[eE]/ )  ) -> "case" _expression:value ':'? ( of_branch:alternative )* _if_alternatives? ) 
 
-  try ::=  >0(  @(  1(  /t_?[rR]_?[yY]/ )  ) -> "try" ':' ( statement_list ):body ( _inhibit_keyword_termination | _try_branch )* )
+  try ::=  >0(  @(  1(  /t_?[rR]_?[yY]/ )  ) -> "try" ':' statement_list:body ( _inhibit_keyword_termination | _try_branch )* ) 
 
   _try_branch ::= except_branch
 	| finally_branch
 
-  of_branch ::= _case_of -> "of" ( expression_list ):values ':' ( statement_list ):consequence
+  of_branch ::= _case_of -> "of" expression_list:values ':' statement_list:consequence
 
-  elif_branch ::= @(  1(  /e_?[lL]_?[iI]_?[fF]/ )  ) -> "elif" ( _expression ):condition ':' ( statement_list ):consequence
+  elif_branch ::= @(  1(  /e_?[lL]_?[iI]_?[fF]/ )  ) -> "elif" _expression:condition ':' statement_list:consequence
 
-  else_branch ::= @(  1(  /e_?[lL]_?[sS]_?[eE]/ )  ) -> "else" ':' ( statement_list ):consequence
+  else_branch ::= @(  1(  /e_?[lL]_?[sS]_?[eE]/ )  ) -> "else" ':' statement_list:consequence
 
-  except_branch ::= @(  1(  /e_?[xX]_?[cC]_?[eE]_?[pP]_?[tT]/ )  ) -> "except" ( expression_list )?:values ':' ( statement_list ):consequence
+  except_branch ::= @(  1(  /e_?[xX]_?[cC]_?[eE]_?[pP]_?[tT]/ )  ) -> "except" ( expression_list:values )? ':' statement_list:consequence
 
-  finally_branch ::= @(  1(  /f_?[iI]_?[nN]_?[aA]_?[lL]_?[lL]_?[yY]/ )  ) -> "finally" ':' ( statement_list ):body
+  finally_branch ::= @(  1(  /f_?[iI]_?[nN]_?[aA]_?[lL]_?[lL]_?[yY]/ )  ) -> "finally" ':' statement_list:body
 
-  do_block ::= @(  1(  /d_?[oO]/ )  ) -> "do" ( parameter_declaration_list )?:parameters ( '->' ( type_expression ):return_type )? ( pragma_list )?:pragmas ':' ( statement_list ):body
+  do_block ::= @(  1(  /d_?[oO]/ )  ) -> "do" parameter_declaration_list?:parameters ( '->' type_expression:return_type )? pragma_list?:pragmas ':' statement_list:body
 
   _call_extended ::= _command_statement
 	| _call_block
 	| _dot_generic_call_block
 
-  _command_statement ::= ( _basic_expression ):function _command_statement_argument_list -> "argument_list"
+  _command_statement ::= _basic_expression:function _command_statement_argument_list -> argument_list
 
-  _command_statement_argument_list ::=  >0(  _equal_expression_list ( ':' statement_list _post_expression_block_tail? )? )
+  _command_statement_argument_list ::=  >0(  _equal_expression_list ( ':' statement_list _post_expression_block_tail? )? ) 
 
-  _command_block ::= ( _basic_expression ):function _command_block_argument_list -> "argument_list"
+  _command_block ::= _basic_expression:function _command_block_argument_list -> argument_list
 
-  _command_block_argument_list ::=  >0(  _command_expression_argument_list ':' statement_list _post_expression_block_tail? )
+  _command_block_argument_list ::=  >0(  _command_expression_argument_list ':' statement_list _post_expression_block_tail? ) 
 
-  _dot_generic_call_block ::= _dot_generic_head _call_block_argument_list -> "argument_list"
+  _dot_generic_call_block ::= _dot_generic_head _call_block_argument_list -> argument_list
 
-  _call_block ::= ( _basic_expression ):function _call_block_argument_list -> "argument_list"
+  _call_block ::= _basic_expression:function _call_block_argument_list -> argument_list
 
   _call_block_argument_list ::= _call_argument_list? _post_expression_block
 
-  _dot_generic_call_do ::= _dot_generic_head _call_do_argument_list -> "argument_list"
+  _dot_generic_call_do ::= _dot_generic_head _call_do_argument_list -> argument_list
 
-  _call_do ::= ( _basic_expression ):function _call_do_argument_list -> "argument_list"
+  _call_do ::= _basic_expression:function _call_do_argument_list -> argument_list
 
-  _call_do_argument_list ::=  >0(  _call_argument_list? do_block _post_expression_block_tail? )
+  _call_do_argument_list ::=  >0(  _call_argument_list? do_block _post_expression_block_tail? ) 
 
-  _call_expression ::=  suffix(  ( _basic_expression ):function _call_argument_list -> "argument_list" )
+  _call_expression ::=  suffix(  _basic_expression:function _call_argument_list -> argument_list ) 
 
   _call_argument_list ::= !( '(' ) _colon_equal_expression_list? _paren_close
 
-  _command_complex_expression ::= ( _basic_expression ):function _command_complex_expression_argument_list -> "argument_list"
+  _command_complex_expression ::= _basic_expression:function _command_complex_expression_argument_list -> argument_list
 
   _command_complex_expression_argument_list ::= _expression_with_call_do
 
-  _command_expression ::= ( _basic_expression ):function _command_expression_argument_list -> "argument_list"
+  _command_expression ::= _basic_expression:function _command_expression_argument_list -> argument_list
 
   _command_expression_argument_list ::= _simple_expression_command_start
 
-  dot_generic_call ::=  >0(  _dot_generic_head _call_argument_list -> "argument_list"? )
+  dot_generic_call ::=  >0(  _dot_generic_head ( _call_argument_list -> argument_list )? ) 
 
-  _dot_generic_head ::=  suffix(  ( _basic_expression ):first_argument '.' ( _symbol ):function ( _dot_generic_argument_list -> "generic_argument_list" ):generic_arguments )
+  _dot_generic_head ::=  suffix(  _basic_expression:first_argument '.' _symbol:function ( _dot_generic_argument_list -> generic_argument_list ):generic_arguments ) 
 
   _dot_generic_argument_list ::= !( '[:' ) _expression ( ',' _expression )* _bracket_close
 
-  _post_expression_block ::=  >0(  ( ':' statement_list | do_block ) _post_expression_block_tail? )
+  _post_expression_block ::=  >0(  ( ':' statement_list | do_block ) _post_expression_block_tail? ) 
 
   _post_expression_block_tail ::= ( ( _if_branch | of_branch | _try_branch | do_block | _inhibit_keyword_termination ) )+
 
-  proc_expression ::=  proc_expr(  _proc_type '=' ( statement_list ):body )
+  proc_expression ::=  proc_expr(  _proc_type '=' statement_list:body ) 
 
-  func_expression ::=  proc_expr(  _func_type '=' ( statement_list ):body )
+  func_expression ::=  proc_expr(  _func_type '=' statement_list:body ) 
 
-  iterator_expression ::=  proc_expr(  _iterator_type '=' ( statement_list ):body )
+  iterator_expression ::=  proc_expr(  _iterator_type '=' statement_list:body ) 
 
   type_expression ::= _simple_expression
 
@@ -455,94 +456,94 @@ rules:
 
   enum_type ::= @(  1(  /e_?[nN]_?[uU]_?[mM]/ )  ) -> "enum"
 
-  tuple_type ::=  >0(  @(  1(  /t_?[uU]_?[pP]_?[lL]_?[eE]/ )  ) -> "tuple" _tuple_field_declaration_list -> "field_declaration_list"? )
+  tuple_type ::=  >0(  @(  1(  /t_?[uU]_?[pP]_?[lL]_?[eE]/ )  ) -> "tuple" ( _tuple_field_declaration_list -> field_declaration_list )? ) 
 
-  var_type ::=  >type_modifiers(  @(  1(  /v_?[aA]_?[rR]/ )  ) -> "var" type_expression? )
+  var_type ::=  >type_modifiers(  @(  1(  /v_?[aA]_?[rR]/ )  ) -> "var" type_expression? ) 
 
-  out_type ::=  >type_modifiers(  @(  1(  /o_?[uU]_?[tT]/ )  ) -> "out" type_expression? )
+  out_type ::=  >type_modifiers(  @(  1(  /o_?[uU]_?[tT]/ )  ) -> "out" type_expression? ) 
 
-  distinct_type ::=  >type_modifiers(  @(  1(  /d_?[iI]_?[sS]_?[tT]_?[iI]_?[nN]_?[cC]_?[tT]/ )  ) -> "distinct" type_expression? )
+  distinct_type ::=  >type_modifiers(  @(  1(  /d_?[iI]_?[sS]_?[tT]_?[iI]_?[nN]_?[cC]_?[tT]/ )  ) -> "distinct" type_expression? ) 
 
-  ref_type ::=  >type_modifiers(  @(  1(  /r_?[eE]_?[fF]/ )  ) -> "ref" type_expression? )
+  ref_type ::=  >type_modifiers(  @(  1(  /r_?[eE]_?[fF]/ )  ) -> "ref" type_expression? ) 
 
-  pointer_type ::=  >type_modifiers(  @(  1(  /p_?[tT]_?[rR]/ )  ) -> "ptr" type_expression? )
+  pointer_type ::=  >type_modifiers(  @(  1(  /p_?[tT]_?[rR]/ )  ) -> "ptr" type_expression? ) 
 
   _tuple_field_declaration_list ::= ( '[' | !( '[' ) ) _field_declaration_list? _bracket_close
 
-  _proc_type ::=  >0(  @(  1(  /p_?[rR]_?[oO]_?[cC]/ )  ) -> "proc" ( parameter_declaration_list )?:parameters ( ':' ( type_expression ):return_type )? ( pragma_list )?:pragmas )
+  _proc_type ::=  >0(  @(  1(  /p_?[rR]_?[oO]_?[cC]/ )  ) -> "proc" parameter_declaration_list?:parameters ( ':' type_expression:return_type )? pragma_list?:pragmas ) 
 
-  _iterator_type ::=  >0(  @(  1(  /i_?[tT]_?[eE]_?[rR]_?[aA]_?[tT]_?[oO]_?[rR]/ )  ) -> "iterator" ( parameter_declaration_list )?:parameters ( ':' ( type_expression ):return_type )? ( pragma_list )?:pragmas )
+  _iterator_type ::=  >0(  @(  1(  /i_?[tT]_?[eE]_?[rR]_?[aA]_?[tT]_?[oO]_?[rR]/ )  ) -> "iterator" parameter_declaration_list?:parameters ( ':' type_expression:return_type )? pragma_list?:pragmas ) 
 
-  _func_type ::=  >0(  @(  1(  /f_?[uU]_?[nN]_?[cC]/ )  ) -> "func" ( parameter_declaration_list )?:parameters ( ':' ( type_expression ):return_type )? ( pragma_list )?:pragmas )
+  _func_type ::=  >0(  @(  1(  /f_?[uU]_?[nN]_?[cC]/ )  ) -> "func" parameter_declaration_list?:parameters ( ':' type_expression:return_type )? pragma_list?:pragmas ) 
 
-  _infix_extended ::=  post_expr(  _infix_expression _post_expression_block )
+  _infix_extended ::=  post_expr(  _infix_expression _post_expression_block ) 
 
-  _infix_expression ::=  >binary_10(  ( _simple_expression ):left ( _infix_operator_10r ):operator ( _simple_expression ):right )
-	|  <binary_10(  ( _simple_expression ):left ( _infix_operator_10l ):operator ( _simple_expression ):right )
-	|  <binary_9(  ( _simple_expression ):left ( _infix_operator_9 ):operator ( _simple_expression ):right )
-	|  <binary_8(  ( _simple_expression ):left ( _infix_operator_8 ):operator ( _simple_expression ):right )
-	|  <binary_7(  ( _simple_expression ):left ( _infix_operator_7 ):operator ( _simple_expression ):right )
-	|  <binary_6(  ( _simple_expression ):left ( _infix_operator_6 ):operator ( _simple_expression ):right )
-	|  <binary_5(  ( _simple_expression ):left ( _infix_operator_5 ):operator ( _simple_expression ):right )
-	|  <binary_4(  ( _simple_expression ):left ( _infix_operator_4 ):operator ( _simple_expression ):right )
-	|  <binary_3(  ( _simple_expression ):left ( _infix_operator_3 ):operator ( _simple_expression ):right )
-	|  <binary_2(  ( _simple_expression ):left ( _infix_operator_2 ):operator ( _simple_expression ):right )
-	|  <binary_1(  ( _simple_expression ):left ( _infix_operator_1 ):operator ( _simple_expression ):right )
-	|  <binary_0(  ( _simple_expression ):left ( _infix_operator_0 ):operator ( _simple_expression ):right )
+  _infix_expression ::=  >binary_10(  _simple_expression:left _infix_operator_10r:operator _simple_expression:right ) 
+	|  <binary_10(  _simple_expression:left _infix_operator_10l:operator _simple_expression:right ) 
+	|  <binary_9(  _simple_expression:left _infix_operator_9:operator _simple_expression:right ) 
+	|  <binary_8(  _simple_expression:left _infix_operator_8:operator _simple_expression:right ) 
+	|  <binary_7(  _simple_expression:left _infix_operator_7:operator _simple_expression:right ) 
+	|  <binary_6(  _simple_expression:left _infix_operator_6:operator _simple_expression:right ) 
+	|  <binary_5(  _simple_expression:left _infix_operator_5:operator _simple_expression:right ) 
+	|  <binary_4(  _simple_expression:left _infix_operator_4:operator _simple_expression:right ) 
+	|  <binary_3(  _simple_expression:left _infix_operator_3:operator _simple_expression:right ) 
+	|  <binary_2(  _simple_expression:left _infix_operator_2:operator _simple_expression:right ) 
+	|  <binary_1(  _simple_expression:left _infix_operator_1:operator _simple_expression:right ) 
+	|  <binary_0(  _simple_expression:left _infix_operator_0:operator _simple_expression:right ) 
 
-  _infix_operator_0 ::= @( ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ( '=' | '-' | '~' ) '>' ) -> "operator"
+  _infix_operator_0 ::= @( ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ( '=' | '-' | '~' ) '>' ) -> operator
 
-  _infix_operator_1 ::= @( ( '+' | '-' | '*' | '/' | '@' | '$' | '&' | '%' | '|' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ '=' ) -> "operator"
+  _infix_operator_1 ::= @( ( '+' | '-' | '*' | '/' | '@' | '$' | '&' | '%' | '|' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ '=' ) -> operator
 
-  _infix_operator_10r ::= @( '^' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) -> "operator"
+  _infix_operator_10r ::= @( '^' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) -> operator
 
-  _infix_operator_10l ::= @( '$' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) -> "operator"
+  _infix_operator_10l ::= @( '$' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) -> operator
 
-  _infix_operator_9 ::= ( @( ( '%' | '\\'  | '/' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( '*' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @(  1(  /d_?[iI]_?[vV]/ )  ) -> "div" | @(  1(  /m_?[oO]_?[dD]/ )  ) -> "mod" | @(  1(  /s_?[hH]_?[lL]/ )  ) -> "shl" | @(  1(  /s_?[hH]_?[rR]/ )  ) -> "shr" ) -> "operator"
+  _infix_operator_9 ::= ( @( ( '%' | '\\' | '/' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( '*' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @(  1(  /d_?[iI]_?[vV]/ )  ) -> "div" | @(  1(  /m_?[oO]_?[dD]/ )  ) -> "mod" | @(  1(  /s_?[hH]_?[lL]/ )  ) -> "shl" | @(  1(  /s_?[hH]_?[rR]/ )  ) -> "shr" ) -> operator
 
-  _infix_operator_8 ::= @( ( '+' | '-' | '~' | '|' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) -> "operator"
+  _infix_operator_8 ::= @( ( '+' | '-' | '~' | '|' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) -> operator
 
-  _infix_operator_7 ::= @( '&' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) -> "operator"
+  _infix_operator_7 ::= @( '&' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) -> operator
 
-  _infix_operator_6 ::= @( '.' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ ) -> "operator"
+  _infix_operator_6 ::= @( '.' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ ) -> operator
 
-  _infix_operator_5 ::= ( @( '=' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ | ( '<' | '>' | '!' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @(  1(  /i_?[nN]/ )  ) -> "in" | @(  1(  /n_?[oO]_?[tT]_?[iI]_?[nN]/ )  ) -> "notin" | @(  1(  /i_?[sS]/ )  ) -> "is" | @(  1(  /i_?[sS]_?[nN]_?[oO]_?[tT]/ )  ) -> "isnot" | @(  1(  /o_?[fF]/ )  ) -> "of" | @(  1(  /a_?[sS]/ )  ) -> "as" | @(  1(  /f_?[rR]_?[oO]_?[mM]/ )  ) -> "from" ) -> "operator"
+  _infix_operator_5 ::= ( @( '=' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ | ( '<' | '>' | '!' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @(  1(  /i_?[nN]/ )  ) -> "in" | @(  1(  /n_?[oO]_?[tT]_?[iI]_?[nN]/ )  ) -> "notin" | @(  1(  /i_?[sS]/ )  ) -> "is" | @(  1(  /i_?[sS]_?[nN]_?[oO]_?[tT]/ )  ) -> "isnot" | @(  1(  /o_?[fF]/ )  ) -> "of" | @(  1(  /a_?[sS]/ )  ) -> "as" | @(  1(  /f_?[rR]_?[oO]_?[mM]/ )  ) -> "from" ) -> operator
 
-  _infix_operator_4 ::= ( @(  1(  /a_?[nN]_?[dD]/ )  ) -> "and" ) -> "operator"
+  _infix_operator_4 ::= ( @(  1(  /a_?[nN]_?[dD]/ )  ) -> "and" ) -> operator
 
-  _infix_operator_3 ::= ( @(  1(  /o_?[rR]/ )  ) -> "or" | @(  1(  /x_?[oO]_?[rR]/ )  ) -> "xor" ) -> "operator"
+  _infix_operator_3 ::= ( @(  1(  /o_?[rR]/ )  ) -> "or" | @(  1(  /x_?[oO]_?[rR]/ )  ) -> "xor" ) -> operator
 
-  _infix_operator_2 ::= @( ':' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ | ( '@' | '?' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) -> "operator"
+  _infix_operator_2 ::= @( ':' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ | ( '@' | '?' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) -> operator
 
-  _prefix_extended ::=  post_expr(  _prefix_expression _post_expression_block )
+  _prefix_extended ::=  post_expr(  _prefix_expression _post_expression_block ) 
 
   _prefix_expression ::= _prefix_expression_command_start
 	| _prefix_expression_word
 
-  _prefix_expression_word ::=  <unary(  ( @(  1(  /o_?[rR]/ )  ) -> "or" | @(  1(  /x_?[oO]_?[rR]/ )  ) -> "xor" | @(  1(  /a_?[nN]_?[dD]/ )  ) -> "and" | @(  1(  /i_?[nN]/ )  ) -> "in" | @(  1(  /n_?[oO]_?[tT]_?[iI]_?[nN]/ )  ) -> "notin" | @(  1(  /i_?[sS]/ )  ) -> "is" | @(  1(  /i_?[sS]_?[nN]_?[oO]_?[tT]/ )  ) -> "isnot" | @(  1(  /o_?[fF]/ )  ) -> "of" | @(  1(  /a_?[sS]/ )  ) -> "as" | @(  1(  /f_?[rR]_?[oO]_?[mM]/ )  ) -> "from" | @(  1(  /d_?[iI]_?[vV]/ )  ) -> "div" | @(  1(  /m_?[oO]_?[dD]/ )  ) -> "mod" | @(  1(  /s_?[hH]_?[lL]/ )  ) -> "shl" | @(  1(  /s_?[hH]_?[rR]/ )  ) -> "shr" ):operator _simple_expression )
+  _prefix_expression_word ::=  <unary(  ( @(  1(  /o_?[rR]/ )  ) -> "or" | @(  1(  /x_?[oO]_?[rR]/ )  ) -> "xor" | @(  1(  /a_?[nN]_?[dD]/ )  ) -> "and" | @(  1(  /i_?[nN]/ )  ) -> "in" | @(  1(  /n_?[oO]_?[tT]_?[iI]_?[nN]/ )  ) -> "notin" | @(  1(  /i_?[sS]/ )  ) -> "is" | @(  1(  /i_?[sS]_?[nN]_?[oO]_?[tT]/ )  ) -> "isnot" | @(  1(  /o_?[fF]/ )  ) -> "of" | @(  1(  /a_?[sS]/ )  ) -> "as" | @(  1(  /f_?[rR]_?[oO]_?[mM]/ )  ) -> "from" | @(  1(  /d_?[iI]_?[vV]/ )  ) -> "div" | @(  1(  /m_?[oO]_?[dD]/ )  ) -> "mod" | @(  1(  /s_?[hH]_?[lL]/ )  ) -> "shl" | @(  1(  /s_?[hH]_?[rR]/ )  ) -> "shr" ):operator _simple_expression ) 
 
-  _prefix_expression_command_start ::=  <unary(  ( _prefix_operator -> "operator" ):operator _simple_expression )
-	|  <unary(  ( @(  1(  /n_?[oO]_?[tT]/ )  ) -> "not" ):operator _simple_expression )
-	|  <sigil(  ( _sigil_operator -> "operator" ):operator _simple_expression )
+  _prefix_expression_command_start ::=  <unary(  ( _prefix_operator -> operator ):operator _simple_expression ) 
+	|  <unary(  ( @(  1(  /n_?[oO]_?[tT]/ )  ) -> "not" ):operator _simple_expression ) 
+	|  <sigil(  ( _sigil_operator -> operator ):operator _simple_expression ) 
 
-  _sigil_expression ::=  <sigil(  ( _sigil_operator -> "operator" ):operator _basic_expression )
+  _sigil_expression ::=  <sigil(  ( _sigil_operator -> operator ):operator _basic_expression ) 
 
-  _sigil_operator ::= @( '@' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* )
+  _sigil_operator ::= @( '@' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* )
 
-  _prefix_operator ::= @(  -1(  @( '^' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( '$' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( ( '%' | '\\'  | '/' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( '*' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( ( '+' | '-' | '~' | '|' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( '&' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( '.' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ ) | @( '=' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ | ( '<' | '>' | '!' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( ':' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ | ( '@' | '?' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( ( '+' | '-' | '*' | '/' | '@' | '$' | '&' | '%' | '|' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ '=' ) | @( ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\'  | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ( '=' | '-' | '~' ) '>' ) )  )
+  _prefix_operator ::= @(  -1(  @( '^' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( '$' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( ( '%' | '\\' | '/' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( '*' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( ( '+' | '-' | '~' | '|' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( '&' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( '.' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ ) | @( '=' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ | ( '<' | '>' | '!' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( ':' ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ | ( '@' | '?' ) ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ) | @( ( '+' | '-' | '*' | '/' | '@' | '$' | '&' | '%' | '|' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )+ '=' ) | @( ( '=' | '+' | '-' | '*' | '/' | '<' | '>' | '@' | '$' | '~' | '&' | '%' | '|' | '!' | '?' | '^' | '.' | ':' | '\\' | '∙' | '∘' | '×' | '★' | '⊗' | '⊘' | '⊙' | '⊛' | '⊠' | '⊡' | '∩' | '∧' | '⊓' | '±' | '⊕' | '⊖' | '⊞' | '⊟' | '∪' | '∨' | '⊔' )* ( '=' | '-' | '~' ) '>' ) )  )
 
-  cast ::= @(  1(  /c_?[aA]_?[sS]_?[tT]/ )  ) -> "cast" ( '[' ( type_expression ):type _bracket_close )? '(' ( _expression | colon_expression ):value _paren_close
+  cast ::= @(  1(  /c_?[aA]_?[sS]_?[tT]/ )  ) -> "cast" ( '[' type_expression:type _bracket_close )? '(' ( _expression | colon_expression ):value _paren_close
 
   parenthesized ::= '(' ( _expression_with_call_do | _simple_statement_no_expression | assignment | const_section | var_section | let_section | while ) ( ';' _statement )* ';'? _paren_close
 	| '(' ';' _statement ( ';' _statement )* ';'? _paren_close
 
-  dot_expression ::=  suffix(  ( _basic_expression ):left '.' ( _symbol ):right )
+  dot_expression ::=  suffix(  _basic_expression:left '.' _symbol:right ) 
 
-  bracket_expression ::=  suffix(  ( _basic_expression ):left !( '[' ) ( _colon_equal_expression_list -> "argument_list" )?:right _bracket_close )
+  bracket_expression ::=  suffix(  _basic_expression:left !( '[' ) ( _colon_equal_expression_list -> argument_list )?:right _bracket_close ) 
 
-  curly_expression ::=  suffix(  ( _basic_expression ):left !( '{' ) ( _colon_equal_expression_list -> "argument_list" )?:right _curly_close )
+  curly_expression ::=  suffix(  _basic_expression:left !( '{' ) ( _colon_equal_expression_list -> argument_list )?:right _curly_close ) 
 
-  pragma_expression ::= ( _basic_expression ):left ( pragma_list ):right
+  pragma_expression ::= _basic_expression:left pragma_list:right
 
   array_construction ::= '[' _colon_equal_expression_list? _bracket_close
 
@@ -553,34 +554,34 @@ rules:
 
   generalized_string ::= ( identifier | dot_expression ):function _generalized_string_literal
 
-  _generalized_string_literal ::= !( '"""' ) _long_string_body -> "string_content"? !( '"""' )
-	| !( '"'  ) _raw_string_body -> "string_content"? !( '"'  )
+  _generalized_string_literal ::= !( '"""' ) ( _long_string_body -> string_content )? !( '"""' )
+	| !( '"' ) ( _raw_string_body -> string_content )? !( '"' )
 
   pragma_list ::= '{.' _colon_equal_expression_list? ( _dot_curly_close | _curly_close )
 
-  expression_list ::=  >0(  ( _expression ) ( ',' ( _expression ) )* )
+  expression_list ::=  >0(  ( _expression ) ( ',' ( _expression ) )* ) 
 
-  _equal_expression_list ::=  >0(  ( _expression_with_call_do | equal_expression ) ( ',' ( _expression_with_call_do | equal_expression ) )* )
+  _equal_expression_list ::=  >0(  ( _expression_with_call_do | equal_expression ) ( ',' ( _expression_with_call_do | equal_expression ) )* ) 
 
-  _colon_equal_expression_list ::=  >0(  ( _expression_with_call_do | colon_expression | equal_expression ) ( ',' ( _expression_with_call_do | colon_expression | equal_expression ) )* ','? )
+  _colon_equal_expression_list ::=  >0(  ( _expression_with_call_do | colon_expression | equal_expression ) ( ',' ( _expression_with_call_do | colon_expression | equal_expression ) )* ','? ) 
 
-  colon_expression ::= ( _left_hand_side ):left ':' ( _expression ):right
+  colon_expression ::= _left_hand_side:left ':' _expression:right
 
-  equal_expression ::= ( _left_hand_side ):left '=' ( _expression ):right
+  equal_expression ::= _left_hand_side:left '=' _expression:right
 
-  assignment ::= ( _left_hand_side ):left '=' ( _expression_with_post_block ):right
+  assignment ::= _left_hand_side:left '=' _expression_with_post_block:right
 
   _left_hand_side ::= _simple_expression
 
   parameter_declaration_list ::= ( '(' | !( '(' ) ) _parameter_declaration_list? _paren_close
 
-  _parameter_declaration_list ::= _identifier_declaration -> "parameter_declaration" ( ( ',' | ';' ) _identifier_declaration -> "parameter_declaration" )* ( ',' | ';' )?
+  _parameter_declaration_list ::= _identifier_declaration -> parameter_declaration ( ( ',' | ';' ) _identifier_declaration -> parameter_declaration )* ( ',' | ';' )?
 
-  _field_declaration_list ::= _identifier_declaration -> "field_declaration" ( ( ',' | ';' ) _identifier_declaration -> "field_declaration" )* ( ',' | ';' )?
+  _field_declaration_list ::= _identifier_declaration -> field_declaration ( ( ',' | ';' ) _identifier_declaration -> field_declaration )* ( ',' | ';' )?
 
-  _identifier_declaration ::=  >0(  symbol_declaration_list ( ':' ( type_expression ):type )? ( '=' ( _expression_with_post_block ):value )? )
+  _identifier_declaration ::=  >0(  symbol_declaration_list ( ':' type_expression:type )? ( '=' _expression_with_post_block:value )? ) 
 
-  symbol_declaration_list ::=  >0(  ( symbol_declaration | tuple_deconstruct_declaration ) ( ',' ( symbol_declaration | tuple_deconstruct_declaration ) )* ','? )
+  symbol_declaration_list ::=  >0(  ( symbol_declaration | tuple_deconstruct_declaration ) ( ',' ( symbol_declaration | tuple_deconstruct_declaration ) )* ','? ) 
 
   tuple_deconstruct_declaration ::= '(' ( symbol_declaration | tuple_deconstruct_declaration ) ( ',' ( symbol_declaration | tuple_deconstruct_declaration ) )* ','? _paren_close
 
@@ -601,29 +602,29 @@ rules:
 
   float_literal ::= @( @( '-'? ( /[0-9](_?[0-9])*/ | /0[xX][0-9a-fA-F](_?[0-9a-fA-F])*/ | /0[oO][0-7](_?[0-7])*/ | /0[bB][01](_?[01])*/ ) ) /'?[fFdD](32|64|128)?/ | @( '-'? ( /[0-9](_?[0-9])*/ '.' /[0-9](_?[0-9])*/ | /[0-9](_?[0-9])*/ /[eE][+-]?/ /[0-9](_?[0-9])*/ | /[0-9](_?[0-9])*/ '.' /[0-9](_?[0-9])*/ /[eE][+-]?/ /[0-9](_?[0-9])*/ ) ) /'?[fFdD](32|64|128)?/? )
 
-  custom_numeric_literal ::= @( ( @( '-'? ( /[0-9](_?[0-9])*/ | /0[xX][0-9a-fA-F](_?[0-9a-fA-F])*/ | /0[oO][0-7](_?[0-7])*/ | /0[bB][01](_?[01])*/ ) ) | @( '-'? ( /[0-9](_?[0-9])*/ '.' /[0-9](_?[0-9])*/ | /[0-9](_?[0-9])*/ /[eE][+-]?/ /[0-9](_?[0-9])*/ | /[0-9](_?[0-9])*/ '.' /[0-9](_?[0-9])*/ /[eE][+-]?/ /[0-9](_?[0-9])*/ ) ) ) "'"  /[a-zA-Z\U00000080-\U0010FFFF&&[^∙∘×★⊗⊘⊙⊛⊠⊡∩∧⊓±⊕⊖⊞⊟∪∨⊔]](_?[a-zA-Z0-9\U00000080-\U0010FFFF&&[^∙∘×★⊗⊘⊙⊛⊠⊡∩∧⊓±⊕⊖⊞⊟∪∨⊔]])*/ )
+  custom_numeric_literal ::= @( ( @( '-'? ( /[0-9](_?[0-9])*/ | /0[xX][0-9a-fA-F](_?[0-9a-fA-F])*/ | /0[oO][0-7](_?[0-7])*/ | /0[bB][01](_?[01])*/ ) ) | @( '-'? ( /[0-9](_?[0-9])*/ '.' /[0-9](_?[0-9])*/ | /[0-9](_?[0-9])*/ /[eE][+-]?/ /[0-9](_?[0-9])*/ | /[0-9](_?[0-9])*/ '.' /[0-9](_?[0-9])*/ /[eE][+-]?/ /[0-9](_?[0-9])*/ ) ) ) "'" /[a-zA-Z\U00000080-\U0010FFFF&&[^∙∘×★⊗⊘⊙⊛⊠⊡∩∧⊓±⊕⊖⊞⊟∪∨⊔]](_?[a-zA-Z0-9\U00000080-\U0010FFFF&&[^∙∘×★⊗⊘⊙⊛⊠⊡∩∧⊓±⊕⊖⊞⊟∪∨⊔]])*/ )
 
-  char_literal ::= "'"  ( !(  2(  /[^\\\n\r']/ )  ) | _char_escape_sequence -> "escape_sequence" ) !( "'"  )
+  char_literal ::= "'" ( !(  2(  /[^\\\n\r']/ )  ) | _char_escape_sequence -> escape_sequence ) !( "'" )
 
-  _char_escape_sequence ::= !( '\\'  /[rRcCnNlLfFtTvV\\"'aAbBeE]|\d+|[xX][0-9a-fA-F]{2}/ )
+  _char_escape_sequence ::= !( '\\' /[rRcCnNlLfFtTvV\\"'aAbBeE]|\d+|[xX][0-9a-fA-F]{2}/ )
 
   _string_literal ::= interpreted_string_literal
 	| raw_string_literal
 	| long_string_literal
 
-  interpreted_string_literal ::= '"'  _interpreted_string_body -> "string_content"? !( '"'  )
+  interpreted_string_literal ::= '"' ( _interpreted_string_body -> string_content )? !( '"' )
 
   _interpreted_string_body ::= ( !(  2(  /[^\n\r"\\]+/ )  ) | escape_sequence )+
 
-  escape_sequence ::= !( '\\'  ( /[rRcCnNlLfFtTvV\\"'aAbBeE]|\d+|[xX][0-9a-fA-F]{2}/ | /[pP]/ | /[uU]([0-9a-fA-F]{4}|\{[0-9a-fA-F]+\})/ ) )
+  escape_sequence ::= !( '\\' ( /[rRcCnNlLfFtTvV\\"'aAbBeE]|\d+|[xX][0-9a-fA-F]{2}/ | /[pP]/ | /[uU]([0-9a-fA-F]{4}|\{[0-9a-fA-F]+\})/ ) )
 
-  raw_string_literal ::= ( 'r"' | 'R"' ) _raw_string_body -> "string_content"? !( '"'  )
+  raw_string_literal ::= ( 'r"' | 'R"' ) ( _raw_string_body -> string_content )? !( '"' )
 
-  _raw_string_body ::= ( !(  2(  /[^\n\r"]/ )  ) | _raw_string_escape -> "escape_sequence" )+
+  _raw_string_body ::= ( !(  2(  /[^\n\r"]/ )  ) | _raw_string_escape -> escape_sequence )+
 
   _raw_string_escape ::= !( '""' )
 
-  long_string_literal ::= ( '"""' | 'r"""' | 'R"""' ) _long_string_body -> "string_content"? !( '"""' )
+  long_string_literal ::= ( '"""' | 'r"""' | 'R"""' ) ( _long_string_body -> string_content )? !( '"""' )
 
   _long_string_body ::= ( !(  2(  /[^"]+/ )  ) | _long_string_quote )+
 
@@ -631,7 +632,7 @@ rules:
 	| identifier
 	| blank_identifier
 
-  accent_quoted ::= '`' _accent_quoted_identifier -> "identifier"+ '`'
+  accent_quoted ::= '`' ( _accent_quoted_identifier -> identifier )+ '`'
 
   _accent_quoted_identifier ::= /[^\x00-\x1f\r\n\t` ]+/
 
@@ -647,9 +648,9 @@ rules:
 
   _dot_curly_close ::= _inhibit_layout_end? '.}'
 
-  block_documentation_comment ::= @(  1(  '##[' )  ) _block_documentation_comment_content -> "comment_content" ']##'
+  block_documentation_comment ::= @(  1(  '##[' )  ) _block_documentation_comment_content -> comment_content ']##'
 
-  block_comment ::= @(  1(  '#[' )  ) _block_comment_content -> "comment_content" ']#'
+  block_comment ::= @(  1(  '#[' )  ) _block_comment_content -> comment_content ']#'
 
   documentation_comment ::= '##' comment_content
 

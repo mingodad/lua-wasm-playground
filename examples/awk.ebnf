@@ -1,10 +1,11 @@
-; From tree-sitter-awk/src/grammar.json
+; repository: https://github.com/Beaglefoot/tree-sitter-awk.git
+; commit: ba7472152d79a8c916550c80fdbfd5724d07a0c9
+; json from: tree-sitter-awk/src/grammar.json
+; From /tmp/tslua/awk0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -38,11 +39,11 @@ rules:
 
   program ::= ( rule | func_def | directive | comment )*
 
-  rule ::=  >0(  pattern block? | pattern? block )
+  rule ::=  >0(  pattern block? | pattern? block ) 
 
-  pattern ::=  >0(  _exp | range_pattern | _special_pattern )
+  pattern ::=  >0(  _exp | range_pattern | _special_pattern ) 
 
-  range_pattern ::= ( _exp ):start ',' ( _exp ):stop
+  range_pattern ::= _exp:start ',' _exp:stop
 
   _special_pattern ::= 'BEGIN'
 	| 'END'
@@ -51,9 +52,9 @@ rules:
 
   directive ::= ( '@include' | '@load' | '@namespace' ) string
 
-  _statement ::=  <0(  _statement_separated _statement | _statement_separated | _control_statement | _io_statement | _exp )
+  _statement ::=  <0(  _statement_separated _statement | _statement_separated | _control_statement | _io_statement | _exp ) 
 
-  _statement_separated ::=  >0(  _statement ( ';' | '\n'  | '\r\n' ) )
+  _statement_separated ::=  >0(  _statement ( ';' | '\n' | '\r\n' ) ) 
 
   _control_statement ::= if_statement
 	| while_statement
@@ -67,17 +68,17 @@ rules:
 	| return_statement
 	| switch_statement
 
-  if_statement ::=  >0(  'if' ( '(' _exp ')' ):condition comment* ( block | _statement | ';' ) ( _if_else_separator comment* else_clause )? )
+  if_statement ::=  >0(  'if' ( '(' _exp ')' ):condition comment* ( block | _statement | ';' ) ( _if_else_separator comment* else_clause )? ) 
 
   else_clause ::= 'else' ( block | _statement )
 
-  while_statement ::=  >0(  'while' ( '(' _exp ')' ):condition comment* ( block | _statement | ';' ) )
+  while_statement ::=  >0(  'while' ( '(' _exp ')' ):condition comment* ( block | _statement | ';' ) ) 
 
-  do_while_statement ::=  >0(  'do' comment* ( block | _statement ) 'while' ( '(' _exp ')' ):condition )
+  do_while_statement ::=  >0(  'do' comment* ( block | _statement ) 'while' ( '(' _exp ')' ):condition ) 
 
-  for_statement ::=  >0(  'for' '(' ( _exp )?:initializer ';' ( _exp )?:condition ';' ( _exp )?:advancement ')' comment* ( block | _statement | ';' ) )
+  for_statement ::=  >0(  'for' '(' _exp?:initializer ';' _exp?:condition ';' _exp?:advancement ')' comment* ( block | _statement | ';' ) ) 
 
-  for_in_statement ::=  >0(  'for' '(' ( identifier | ns_qualified_name ):left 'in' ( identifier | array_ref | ns_qualified_name ):right ')' comment* ( block | _statement | ';' ) )
+  for_in_statement ::=  >0(  'for' '(' ( identifier | ns_qualified_name ):left 'in' ( identifier | array_ref | ns_qualified_name ):right ')' comment* ( block | _statement | ';' ) ) 
 
   break_statement ::= 'break'
 
@@ -85,17 +86,17 @@ rules:
 
   delete_statement ::= 'delete' ( identifier | array_ref | ns_qualified_name )
 
-  exit_statement ::=  >0(  'exit' _exp? )
+  exit_statement ::=  >0(  'exit' _exp? ) 
 
-  return_statement ::=  >0(  'return' _exp? )
+  return_statement ::=  >0(  'return' _exp? ) 
 
   switch_statement ::= 'switch' '(' _exp ')' comment* switch_body
 
   switch_body ::= '{' ( switch_case | switch_default | comment )* '}'
 
-  switch_case ::=  >0(  'case' ( _primitive | regex ):value ':' comment* _statement? )
+  switch_case ::=  >0(  'case' ( _primitive | regex ):value ':' comment* _statement? ) 
 
-  switch_default ::=  >0(  'default' ':' comment* _statement? )
+  switch_default ::=  >0(  'default' ':' comment* _statement? ) 
 
   _io_statement ::= next_statement
 	| nextfile_statement
@@ -107,27 +108,27 @@ rules:
   _getline_exp ::= getline_input
 	| getline_file
 
-  getline_input ::=  >0(  'getline' ( identifier | ns_qualified_name | array_ref )? )
+  getline_input ::=  >0(  'getline' ( identifier | ns_qualified_name | array_ref )? ) 
 
-  getline_file ::= 'getline' ( identifier | ns_qualified_name )? '<' ( _exp ):filename
+  getline_file ::= 'getline' ( identifier | ns_qualified_name )? '<' _exp:filename
 
   next_statement ::= 'next'
 
   nextfile_statement ::= 'nextfile'
 
-  _print_args ::=  >0(  _exp | exp_list )
+  _print_args ::=  >0(  _exp | exp_list ) 
 
-  print_statement ::=  >0(  'print' ( _print_args | !( '(' ) _print_args ')' )? )
+  print_statement ::=  >0(  'print' ( _print_args | !( '(' ) _print_args ')' )? ) 
 
   printf_statement ::= 'printf' ( _print_args | '(' _print_args ')' )
 
-  redirected_io_statement ::=  >0(  ( print_statement | printf_statement ) ( '>' | '>>' ) ( _exp ):filename )
+  redirected_io_statement ::=  >0(  ( print_statement | printf_statement ) ( '>' | '>>' ) _exp:filename ) 
 
-  piped_io_statement ::=  >0(  ( print_statement | printf_statement ) ( '|' | '|&' ) ( _exp ):command )
+  piped_io_statement ::=  >0(  ( print_statement | printf_statement ) ( '|' | '|&' ) _exp:command ) 
 
   block ::= '{' _block_content* '}'
 
-  _block_content ::=  <0(  block | _statement | comment )
+  _block_content ::=  <0(  block | _statement | comment ) 
 
   _exp ::= identifier
 	| ns_qualified_name
@@ -148,40 +149,40 @@ rules:
 	| string_concat
 	| _getline_exp
 
-  ternary_exp ::=  >0(  ( _exp ):condition '?' comment? ( _exp ):consequence ':' comment? ( _exp ):alternative )
+  ternary_exp ::=  >0(  _exp:condition '?' comment? _exp:consequence ':' comment? _exp:alternative ) 
 
-  binary_exp ::=  <binary_exponent(  ( _exp ):left ( '^' ):operator ( _exp ):right )
-	|  <binary_exponent(  ( _exp ):left ( '**' ):operator ( _exp ):right )
-	|  <binary_times(  ( _exp ):left ( '*' ):operator ( _exp ):right )
-	|  <binary_times(  ( _exp ):left ( '/' ):operator ( _exp ):right )
-	|  <binary_times(  ( _exp ):left ( '%' ):operator ( _exp ):right )
-	|  <binary_plus(  ( _exp ):left ( '+' ):operator ( _exp ):right )
-	|  <binary_plus(  ( _exp ):left ( '-' ):operator ( _exp ):right )
-	|  <binary_relation(  ( _exp ):left ( '<' ):operator ( _exp ):right )
-	|  <binary_relation(  ( _exp ):left ( '>' ):operator ( _exp ):right )
-	|  <binary_relation(  ( _exp ):left ( '<=' ):operator ( _exp ):right )
-	|  <binary_relation(  ( _exp ):left ( '>=' ):operator ( _exp ):right )
-	|  <binary_relation(  ( _exp ):left ( '==' ):operator ( _exp ):right )
-	|  <binary_relation(  ( _exp ):left ( '!=' ):operator ( _exp ):right )
-	|  <binary_match(  ( _exp ):left ( '~' ):operator ( _exp ):right )
-	|  <binary_match(  ( _exp ):left ( '!~' ):operator ( _exp ):right )
-	|  <binary_and(  ( _exp ):left ( '&&' ):operator ( _exp ):right )
-	|  <binary_or(  ( _exp ):left ( '||' ):operator ( _exp ):right )
+  binary_exp ::=  <binary_exponent(  _exp:left '^':operator _exp:right ) 
+	|  <binary_exponent(  _exp:left '**':operator _exp:right ) 
+	|  <binary_times(  _exp:left '*':operator _exp:right ) 
+	|  <binary_times(  _exp:left '/':operator _exp:right ) 
+	|  <binary_times(  _exp:left '%':operator _exp:right ) 
+	|  <binary_plus(  _exp:left '+':operator _exp:right ) 
+	|  <binary_plus(  _exp:left '-':operator _exp:right ) 
+	|  <binary_relation(  _exp:left '<':operator _exp:right ) 
+	|  <binary_relation(  _exp:left '>':operator _exp:right ) 
+	|  <binary_relation(  _exp:left '<=':operator _exp:right ) 
+	|  <binary_relation(  _exp:left '>=':operator _exp:right ) 
+	|  <binary_relation(  _exp:left '==':operator _exp:right ) 
+	|  <binary_relation(  _exp:left '!=':operator _exp:right ) 
+	|  <binary_match(  _exp:left '~':operator _exp:right ) 
+	|  <binary_match(  _exp:left '!~':operator _exp:right ) 
+	|  <binary_and(  _exp:left '&&':operator _exp:right ) 
+	|  <binary_or(  _exp:left '||':operator _exp:right ) 
 	| _binary_in
 
-  _binary_in ::=  <0(  ( '(' exp_list ')' | _exp ):left ( 'in' ):operator ( _exp ):right )
+  _binary_in ::=  <0(  ( '(' exp_list ')' | _exp ):left 'in':operator _exp:right ) 
 
-  unary_exp ::= ( '!' ):operator ( _exp ):argument
-	| ( '+' ):operator ( _exp ):argument
-	| ( '-' ):operator ( _exp ):argument
+  unary_exp ::= '!':operator _exp:argument
+	| '+':operator _exp:argument
+	| '-':operator _exp:argument
 
-  update_exp ::=  <0(  ( identifier | field_ref | array_ref | ns_qualified_name ):argument ( '++' | '--' ):operator | ( '++' | '--' ):operator ( identifier | field_ref | array_ref | ns_qualified_name ):argument )
+  update_exp ::=  <0(  ( identifier | field_ref | array_ref | ns_qualified_name ):argument ( '++' | '--' ):operator | ( '++' | '--' ):operator ( identifier | field_ref | array_ref | ns_qualified_name ):argument ) 
 
-  assignment_exp ::=  >0(  ( identifier | array_ref | field_ref | ns_qualified_name ):left ( '=' | '+=' | '-=' | '*=' | '/=' | '%=' | '^=' ) ( _exp ):right )
+  assignment_exp ::=  >0(  ( identifier | array_ref | field_ref | ns_qualified_name ):left ( '=' | '+=' | '-=' | '*=' | '/=' | '%=' | '^=' ) _exp:right ) 
 
-  piped_io_exp ::= ( _exp ):command ( '|' | '|&' ) getline_input
+  piped_io_exp ::= _exp:command ( '|' | '|&' ) getline_input
 
-  string_concat ::=  <0(  ( identifier | ns_qualified_name | ternary_exp | binary_exp | unary_exp | field_ref | func_call | _primitive | array_ref | grouping | string_concat ):left concatenating_space ( identifier | ns_qualified_name | ternary_exp | binary_exp | unary_exp | field_ref | func_call | _primitive | array_ref | grouping | string_concat ):right )
+  string_concat ::=  <0(  ( identifier | ns_qualified_name | ternary_exp | binary_exp | unary_exp | field_ref | func_call | _primitive | array_ref | grouping | string_concat ):left concatenating_space ( identifier | ns_qualified_name | ternary_exp | binary_exp | unary_exp | field_ref | func_call | _primitive | array_ref | grouping | string_concat ):right ) 
 
   field_ref ::= '$' _exp
 
@@ -189,11 +190,11 @@ rules:
 
   exp_list ::= ( _exp ',' )+ _exp
 
-  regex ::= '/' ( regex_pattern )?:pattern !( '/' ) ( regex_flags )?:flags
+  regex ::= '/' ( regex_pattern:pattern )? !( '/' ) ( regex_flags:flags )?
 
   _regex_char ::= !( /[^/\\\[\n\r]/ )
 
-  _regex_char_escaped ::= !( '\\'  /./ )
+  _regex_char_escaped ::= !( '\\' /./ )
 
   _regex_char_class ::= !( '[' ) !( ':' ) ( 'alnum' | 'alpha' | 'blank' | 'cntrl' | 'digit' | 'graph' | 'lower' | 'print' | 'punct' | 'space' | 'upper' | 'xdigit' ) !( ':' ) !( ']' )
 
@@ -219,9 +220,9 @@ rules:
   number ::= /[\d.]+/
 	| /[\d.]+e[\d.+-]+/
 
-  string ::= '"'  ( /[^"\\]+/ | escape_sequence )* '"'
+  string ::= '"' ( /[^"\\]+/ | escape_sequence )* '"'
 
-  escape_sequence ::= !( '\\'  ( '"'  | /[\\abfnrtv]/ | /x[0-9a-fA-F]{1,2}/ | /[0-7]{1,3}/ ) )
+  escape_sequence ::= !( '\\' ( '"' | /[\\abfnrtv]/ | /x[0-9a-fA-F]{1,2}/ | /[0-7]{1,3}/ ) )
 
   func_def ::= ( 'function' | 'func' ) ( identifier | ns_qualified_name ):name '(' param_list? ')' block
 

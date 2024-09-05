@@ -1,10 +1,11 @@
-; From tree-sitter-erlang/src/grammar.json
+; repository: https://github.com/AbstractMachinesLab/tree-sitter-erlang.git
+; commit: 3a9c769444f08bbccce03845270efac0c641c5e7
+; json from: tree-sitter-erlang/src/grammar.json
+; From /tmp/tslua/erlang0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 extras ::= {
@@ -28,8 +29,8 @@ rules:
 
   source_file ::= _structure_item*
 
-  _structure_item ::=  100(  expression )
-	|  8(  _module )
+  _structure_item ::=  100(  expression ) 
+	|  8(  _module ) 
 
   _module ::= type_declaration
 	| function_spec
@@ -46,13 +47,13 @@ rules:
 
   function_declaration ::= function_clause ( ';' function_clause )* '.'
 
-  function_clause ::=  7(  ( atom ):name lambda_clause )
+  function_clause ::=  7(  atom:name lambda_clause ) 
 
   comment ::= /%.*/
 
-  type_declaration ::= '-' ( 'type' | 'opaque' ) ( atom ):name ( '(' ( variable ( ',' variable )* )? ')' ):arguments '::' ( type_expression ):def '.'
+  type_declaration ::= '-' ( 'type' | 'opaque' ) atom:name ( '(' ( variable ( ',' variable )* )? ')' ):arguments '::' type_expression:def '.'
 
-  function_spec ::= '-' ( 'spec' | 'callback' ) ( atom ):name ( '(' ( type_expression ( ',' type_expression )* )? ')' ):arguments '->' ( type_expression ):def '.'
+  function_spec ::= '-' ( 'spec' | 'callback' ) atom:name ( '(' ( type_expression ( ',' type_expression )* )? ')' ):arguments '->' type_expression:def '.'
 
   type_expression ::= ( type_atom | type_application | type_bitstring | type_fun | type_integer | type_map | type_record | type_tuple | type_variable | _type_list ) ( '|' ( type_atom | type_application | type_bitstring | type_fun | type_integer | type_map | type_record | type_tuple | type_variable | _type_list ) )*
 
@@ -60,7 +61,7 @@ rules:
 
   type_atom ::= atom
 
-  type_application ::=  >1(  ( atom ':' )? atom ( '(' ( type_expression ( ',' type_expression )* )? ')' ):arguments )
+  type_application ::=  >1(  ( atom ':' )? atom ( '(' ( type_expression ( ',' type_expression )* )? ')' ):arguments ) 
 
   type_bitstring ::= '<<' ( '_' ':' variable | '_' ':' '_' '*' variable | '_' ':' variable '_' ':' '_' '*' variable | '>>' )
 
@@ -86,20 +87,20 @@ rules:
 
   type_record_field ::= type_expression '::' type_expression
 
-  pattern ::=  3(  term | variable | pat_list | pat_tuple )
+  pattern ::=  3(  term | variable | pat_list | pat_tuple ) 
 
-  pat_list ::=  3(  '[' ( pattern ( ',' pattern )* )? ']' | pat_list_cons )
+  pat_list ::=  3(  '[' ( pattern ( ',' pattern )* )? ']' | pat_list_cons ) 
 
-  pat_list_cons ::= '[' ( pattern ( ',' pattern )* ):init '|' ( pattern ):tail ']'
+  pat_list_cons ::= '[' ( pattern ( ',' pattern )* ):init '|' pattern:tail ']'
 
-  pat_tuple ::=  3(  '{' ( pattern ( ',' pattern )* )? '}' )
+  pat_tuple ::=  3(  '{' ( pattern ( ',' pattern )* )? '}' ) 
 
   pat_map ::= '#' '{' ( pat_map_entry ( ',' pat_map_entry )* )? '}'
 
   pat_map_entry ::= term ':=' pattern
 
-  expression ::=  6(  '(' _expr ')' )
-	|  4(  _expr )
+  expression ::=  6(  '(' _expr ')' ) 
+	|  4(  _expr ) 
 
   _expr ::= expr_begin_block
 	| expr_bitstring_comprehension
@@ -123,11 +124,11 @@ rules:
 	| term
 	| variable
 
-  expr_map_update ::=  <101(  expression map )
+  expr_map_update ::=  <101(  expression map ) 
 
-  expr_record_access ::=  <101(  expression '#' atom '.' atom )
+  expr_record_access ::=  <101(  expression '#' atom '.' atom ) 
 
-  expr_record_update ::=  <101(  expression record )
+  expr_record_update ::=  <101(  expression record ) 
 
   expr_try ::= 'try' expression ( 'of' case_clause ( ';' case_clause )* )? ( expr_try_catch | expr_try_after | _expr_try_catch_after ) 'end'
 
@@ -137,13 +138,13 @@ rules:
 
   _expr_try_catch_after ::= expr_try_catch expr_try_after
 
-  catch_clause ::= ( catch_pattern ):pattern guard_clause? '->' ( expression ( ',' expression )* ):body
+  catch_clause ::= catch_pattern:pattern guard_clause? '->' ( expression ( ',' expression )* ):body
 
-  catch_pattern ::= ( pattern ):class ( ':' pattern )?:exception ( ':' variable )?:stacktrace
+  catch_pattern ::= pattern:class ( ':' pattern )?:exception ( ':' variable )?:stacktrace
 
-  expr_catch ::=  <0(  'catch' expression )
+  expr_catch ::=  <0(  'catch' expression ) 
 
-  expr_throw ::=  <0(  'throw' expression )
+  expr_throw ::=  <0(  'throw' expression ) 
 
   expr_begin_block ::= 'begin' expression ( ',' expression )* 'end'
 
@@ -162,12 +163,12 @@ rules:
   expr_op ::= _expr_operator_unary
 	| _expr_operator_binary
 
-  _expr_operator_unary ::=  >10(  ( '+' | '-' | 'bnot' | 'not' ):operator ( expression ):operand )
+  _expr_operator_unary ::=  >10(  ( '+' | '-' | 'bnot' | 'not' ):operator expression:operand ) 
 
-  _expr_operator_binary ::=  <9(  ( expression ):lhs ( '*' | '+' | '-' | '/' | '/=' | '<' | '=/=' | '=:=' | '=<' | '==' | '>' | '>=' | 'and' | 'andalso' | 'band' | 'bor' | 'bsl' | 'bsr' | 'bxor' | 'div' | 'or' | 'orelse' | 'rem' | 'xor' ):operator ( expression ):rhs )
-	|  >9(  ( expression ):lhs ( '=!' | '++' | '--' ):operator ( expression ):rhs )
+  _expr_operator_binary ::=  <9(  expression:lhs ( '*' | '+' | '-' | '/' | '/=' | '<' | '=/=' | '=:=' | '=<' | '==' | '>' | '>=' | 'and' | 'andalso' | 'band' | 'bor' | 'bsl' | 'bsr' | 'bxor' | 'div' | 'or' | 'orelse' | 'rem' | 'xor' ):operator expression:rhs ) 
+	|  >9(  expression:lhs ( '=!' | '++' | '--' ):operator expression:rhs ) 
 
-  expr_send ::=  >0(  expression '!' expression )
+  expr_send ::=  >0(  expression '!' expression ) 
 
   expr_receive ::= 'receive' ( case_clause ( ';' case_clause )* )?:branches expr_receive_after? 'end'
 
@@ -175,15 +176,15 @@ rules:
 
   expr_if ::= 'if' if_clause ( ';' if_clause )* 'end'
 
-  if_clause ::= ( guard_seq ):condition '->' ( expression ( ',' expression )* ):body
+  if_clause ::= guard_seq:condition '->' ( expression ( ',' expression )* ):body
 
-  expr_list ::=  5(  '[' ( expression ( ',' expression )* )? ']' | expr_list_cons )
+  expr_list ::=  5(  '[' ( expression ( ',' expression )* )? ']' | expr_list_cons ) 
 
-  expr_list_cons ::= '[' ( expression ( ',' expression )* ):init '|' ( expression ):tail ']'
+  expr_list_cons ::= '[' ( expression ( ',' expression )* ):init '|' expression:tail ']'
 
   expr_case ::= 'case' expression 'of' case_clause ( ';' case_clause )* 'end'
 
-  case_clause ::= ( pattern ):pattern guard_clause? '->' ( expression ( ',' expression )* ):body
+  case_clause ::= pattern:pattern guard_clause? '->' ( expression ( ',' expression )* ):body
 
   guard_clause ::= 'when' guard_seq
 
@@ -191,21 +192,21 @@ rules:
 
   guard ::= expression ( ',' expression )*
 
-  expr_match ::=  >-1(  expression '=' expression )
+  expr_match ::=  >-1(  expression '=' expression ) 
 
   expr_lambda ::= 'fun' lambda_clause ( ';' lambda_clause )* 'end'
 
   lambda_clause ::= ( ( '(' ( pattern ( ',' pattern )* )? ')' ):arguments ):arguments guard_clause? '->' ( expression ( ',' expression )* ):body
 
-  expr_function_call ::= ( _function_name ):name ( '(' ( expression ( ',' expression )* )? ')' ):arguments
+  expr_function_call ::= _function_name:name ( '(' ( expression ( ',' expression )* )? ')' ):arguments
 
-  _function_name ::=  5(  computed_function_name | qualified_function_name )
+  _function_name ::=  5(  computed_function_name | qualified_function_name ) 
 
   qualified_function_name ::= ( variable | atom | '(' expression ')' ):module_name ':' ( variable | atom | '(' expression ')' ):function_name
 
-  computed_function_name ::=  5(  variable | atom | '(' expression ')' )
+  computed_function_name ::=  5(  variable | atom | '(' expression ')' ) 
 
-  expr_macro_application ::=  >1(  '?' _macro_name ( '(' ( expression ( ',' expression )* )? ')' )?:arguments )
+  expr_macro_application ::=  >1(  '?' _macro_name ( ( '(' ( expression ( ',' expression )* )? ')' ):arguments )? ) 
 
   _macro_name ::= variable
 	| atom
@@ -231,7 +232,7 @@ rules:
 
   _unquoted_atom ::= /[a-z\xDF-\xF6\xF8-\xFF][_@a-zA-Z0-9\xC0-\xD6\xD8-\xDE\xDF-\xF6\xF8-\xFF]*/
 
-  _quoted_atom ::= "'"  ( /[^'\\]+/ | _escape )* "'"
+  _quoted_atom ::= "'" ( /[^'\\]+/ | _escape )* "'"
 
   integer ::= /-?2#[01_]+/
 	| /-?16#[a-fA-F0-9_]+/
@@ -239,11 +240,11 @@ rules:
 
   float ::= /-?([\d_]*#)?[\d_]+\.[\d_]+(e-?[\d_]+)?/
 
-  string ::= '"'  ( /[^"\\]+/ | _escape )* '"'
+  string ::= '"' ( /[^"\\]+/ | _escape )* '"'
 
   char ::= '$' ( /[^\\]/ | _escape )
 
-  _escape ::= @( '\\'  ( /[0-7]{1,3}/ | /x[0-9a-fA-F]{2}/ | /x{[0-9a-fA-F]+}/ | '\n'  | /[nrtvbfesd]/ ) )
+  _escape ::= @( '\\' ( /[0-7]{1,3}/ | /x[0-9a-fA-F]{2}/ | /x{[0-9a-fA-F]+}/ | '\n' | /[nrtvbfesd]/ ) )
 
   binary_string ::= '<<' ( bin_part ( ',' bin_part )* )? '>>'
 

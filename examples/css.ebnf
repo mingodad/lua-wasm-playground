@@ -1,10 +1,11 @@
-; From tree-sitter-css/src/grammar.json
+; repository: https://github.com/tree-sitter/tree-sitter-css.git
+; commit: a68fcd1e6b03118d1e92ffa45e7ab7a39d52d3f7
+; json from: tree-sitter-css/src/grammar.json
+; From /tmp/tslua/css0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -44,9 +45,9 @@ rules:
 
   charset_statement ::= '@charset' _value ';'
 
-  namespace_statement ::= '@namespace' identifier -> "namespace_name"? ( string_value | call_expression ) ';'
+  namespace_statement ::= '@namespace' ( identifier -> namespace_name )? ( string_value | call_expression ) ';'
 
-  keyframes_statement ::= ( '@keyframes' | /@[-a-z]+keyframes/ -> "at_keyword" ) identifier -> "keyframes_name" keyframe_block_list
+  keyframes_statement ::= ( '@keyframes' | /@[-a-z]+keyframes/ -> at_keyword ) identifier -> keyframes_name keyframe_block_list
 
   keyframe_block_list ::= '{' keyframe_block* '}'
 
@@ -58,7 +59,7 @@ rules:
 
   supports_statement ::= '@supports' _query block
 
-  postcss_statement ::=  -1(  at_keyword _value* ';' )
+  postcss_statement ::=  -1(  at_keyword _value* ';' ) 
 
   at_rule ::= at_keyword ( _query ( ',' _query )* )? ( ';' | block )
 
@@ -66,7 +67,7 @@ rules:
 
   selectors ::= _selector ( ',' _selector )*
 
-  block ::= '{' _block_item* last_declaration -> "declaration"? '}'
+  block ::= '{' _block_item* ( last_declaration -> declaration )? '}'
 
   _block_item ::= declaration
 	| rule_set
@@ -80,7 +81,7 @@ rules:
 	| at_rule
 
   _selector ::= universal_selector
-	| identifier -> "tag_name"
+	| identifier -> tag_name
 	| class_selector
 	| nesting_selector
 	| pseudo_class_selector
@@ -98,25 +99,25 @@ rules:
 
   universal_selector ::= '*'
 
-  class_selector ::=  1(  _selector? '.' identifier -> "class_name" )
+  class_selector ::=  1(  _selector? '.' identifier -> class_name ) 
 
-  pseudo_class_selector ::= _selector? _pseudo_class_selector_colon -> ":" ( ( 'has' | 'not' | 'is' | 'where' ) -> "class_name" pseudo_class_with_selector_arguments -> "arguments" | identifier -> "class_name" pseudo_class_arguments -> "arguments"? )
+  pseudo_class_selector ::= _selector? _pseudo_class_selector_colon -> ":" ( ( 'has' | 'not' | 'is' | 'where' ) -> class_name pseudo_class_with_selector_arguments -> arguments | identifier -> class_name ( pseudo_class_arguments -> arguments )? )
 
-  pseudo_element_selector ::= _selector? '::' identifier -> "tag_name" pseudo_element_arguments -> "arguments"?
+  pseudo_element_selector ::= _selector? '::' identifier -> tag_name ( pseudo_element_arguments -> arguments )?
 
-  id_selector ::= _selector? '#' identifier -> "id_name"
+  id_selector ::= _selector? '#' identifier -> id_name
 
-  attribute_selector ::= _selector? '[' ( identifier | namespace_selector ) -> "attribute_name" ( ( '=' | '~=' | '^=' | '|=' | '*=' | '$=' ) _value )? ']'
+  attribute_selector ::= _selector? '[' ( identifier | namespace_selector ) -> attribute_name ( ( '=' | '~=' | '^=' | '|=' | '*=' | '$=' ) _value )? ']'
 
-  child_selector ::=  <0(  _selector '>' _selector )
+  child_selector ::=  <0(  _selector '>' _selector ) 
 
-  descendant_selector ::=  <0(  _selector _descendant_operator _selector )
+  descendant_selector ::=  <0(  _selector _descendant_operator _selector ) 
 
-  sibling_selector ::=  <0(  _selector '~' _selector )
+  sibling_selector ::=  <0(  _selector '~' _selector ) 
 
-  adjacent_sibling_selector ::=  <0(  _selector '+' _selector )
+  adjacent_sibling_selector ::=  <0(  _selector '+' _selector ) 
 
-  namespace_selector ::=  <0(  _selector '|' _selector )
+  namespace_selector ::=  <0(  _selector '|' _selector ) 
 
   pseudo_class_arguments ::= !( '(' ) ( ( _selector | _value+ ) ( ',' ( _selector | _value+ ) )* )? ')'
 
@@ -124,37 +125,37 @@ rules:
 
   pseudo_element_arguments ::= !( '(' ) ( ( _selector | _value+ ) ( ',' ( _selector | _value+ ) )* )? ')'
 
-  declaration ::= identifier -> "property_name" ':' _value ( ','? _value )* important? ';'
+  declaration ::= identifier -> property_name ':' _value ( ','? _value )* important? ';'
 
-  last_declaration ::=  1(  identifier -> "property_name" ':' _value ( ','? _value )* important? )
+  last_declaration ::=  1(  identifier -> property_name ':' _value ( ','? _value )* important? ) 
 
   important ::= '!important'
 
-  _query ::= identifier -> "keyword_query"
+  _query ::= identifier -> keyword_query
 	| feature_query
 	| binary_query
 	| unary_query
 	| selector_query
 	| parenthesized_query
 
-  feature_query ::= '(' identifier -> "feature_name" ':' _value+ ')'
+  feature_query ::= '(' identifier -> feature_name ':' _value+ ')'
 
   parenthesized_query ::= '(' _query ')'
 
-  binary_query ::=  <0(  _query ( 'and' | 'or' ) _query )
+  binary_query ::=  <0(  _query ( 'and' | 'or' ) _query ) 
 
-  unary_query ::=  1(  ( 'not' | 'only' ) _query )
+  unary_query ::=  1(  ( 'not' | 'only' ) _query ) 
 
   selector_query ::= 'selector' '(' _selector ')'
 
-  _value ::=  -1(  identifier -> "plain_value" | plain_value | color_value | integer_value | float_value | string_value | grid_value | binary_expression | parenthesized_value | call_expression | important )
+  _value ::=  -1(  identifier -> plain_value | plain_value | color_value | integer_value | float_value | string_value | grid_value | binary_expression | parenthesized_value | call_expression | important ) 
 
   parenthesized_value ::= '(' _value ')'
 
   color_value ::= '#' !( /[0-9a-fA-F]{3,8}/ )
 
-  string_value ::= "'"  /([^'\n]|\\(.|\n))*/ "'"
-	| '"'  /([^"\n]|\\(.|\n))*/ '"'
+  string_value ::= "'" /([^'\n]|\\(.|\n))*/ "'"
+	| '"' /([^"\n]|\\(.|\n))*/ '"'
 
   integer_value ::= @( ( '+' | '-' )? /\d+/ ) unit?
 
@@ -164,9 +165,9 @@ rules:
 
   grid_value ::= '[' _value ( ',' _value )* ']'
 
-  call_expression ::= identifier -> "function_name" arguments
+  call_expression ::= identifier -> function_name arguments
 
-  binary_expression ::=  <0(  _value ( '+' | '-' | '*' | '/' ) _value )
+  binary_expression ::=  <0(  _value ( '+' | '-' | '*' | '/' ) _value ) 
 
   arguments ::= !( '(' ) ( _value+ ( ( ',' | ';' ) _value+ )* )? ')'
 

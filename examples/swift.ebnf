@@ -1,10 +1,11 @@
-; From tree-sitter-swift/src/grammar.json
+; repository: https://github.com/tree-sitter/tree-sitter-swift.git
+; commit: db675450dcc1478ee128c96ecc61c13272431aab
+; json from: tree-sitter-swift/src/grammar.json
+; From /tmp/tslua/swift0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 extras ::= {
@@ -54,7 +55,7 @@ rules:
 
   case_condition ::= 'case' _pattern '=' _expression
 
-  optional_binding_condition ::=  >40(  ( 'let' | 'var' ) optional_binding ( ',' optional_binding ( ',' optional_binding )* )? )
+  optional_binding_condition ::=  >40(  ( 'let' | 'var' ) optional_binding ( ',' optional_binding ( ',' optional_binding )* )? ) 
 
   optional_binding ::= _pattern '=' _expression
 
@@ -99,8 +100,8 @@ rules:
 	| boolean_literal
 	| '(' _build_configuration ')'
 	| '!' _build_configuration
-	|  <60(  _build_configuration '&&' _build_configuration )
-	|  <50(  _build_configuration '||' _build_configuration )
+	|  <60(  _build_configuration '&&' _build_configuration ) 
+	|  <50(  _build_configuration '||' _build_configuration ) 
 
   line_control_statement ::= '#line' ( /[0-9]+/ static_string_literal )?
 
@@ -125,9 +126,9 @@ rules:
 
   constant_declaration ::= modifier* 'let' _pattern_initializer ( ',' _pattern_initializer )*
 
-  _pattern_initializer ::= ( _pattern ):name ( _type_annotation )?:type ( '=' ( _expression ):value )?
+  _pattern_initializer ::= _pattern:name ( _type_annotation:type )? ( '=' _expression:value )?
 
-  variable_declaration ::= _variable_declaration_head ( _pattern_initializer ( ',' _pattern_initializer )* | ( _variable_name ):name ( _type_annotation ):type ( _code_block | _getter_setter_keyword_block ) )
+  variable_declaration ::= _variable_declaration_head ( _pattern_initializer ( ',' _pattern_initializer )* | _variable_name:name _type_annotation:type ( _code_block | _getter_setter_keyword_block ) )
 
   _variable_declaration_head ::= modifier* 'var'
 
@@ -149,7 +150,7 @@ rules:
 
   _function_signature ::= generic_clause? parameter_list ( 'throws' | 'rethrows' )? _function_return_statement?
 
-  parameter_list ::= '(' ( _single_parameter -> "parameter_declaration" ( ',' _single_parameter -> "parameter_declaration" )* )? ')'
+  parameter_list ::= '(' ( _single_parameter -> parameter_declaration ( ',' _single_parameter -> parameter_declaration )* )? ')'
 
   _function_return_statement ::= '->' ( type ( '!' | '?' )? ):return
 
@@ -179,7 +180,7 @@ rules:
 
   generic_clause ::= '<' ( _single_generic_parameter ( ',' _single_generic_parameter )* )? '>'
 
-  _single_generic_parameter ::= ( identifier ):name ( ':' ( _type_declarator ):type )?
+  _single_generic_parameter ::= identifier:name ( ':' _type_declarator:type )?
 
   struct_declaration ::= modifier* 'struct' identifier '{' _declaration* '}'
 
@@ -233,22 +234,22 @@ rules:
 
   value_binding_pattern ::= ( 'var' | 'let' ) _pattern
 
-  enum_case_pattern ::= _type_identifier? '.' identifier _tuple_declaration -> "tuple"?
+  enum_case_pattern ::= _type_identifier? '.' identifier ( _tuple_declaration -> tuple )?
 
-  optional_pattern ::=  20(  _pattern '?' )
+  optional_pattern ::=  20(  _pattern '?' ) 
 
   is_pattern ::= 'is' type
 
-  as_pattern ::=  10(  _pattern 'as' type )
+  as_pattern ::=  10(  _pattern 'as' type ) 
 
   _expression ::= identifier
 	| number
-	| boolean_literal -> "boolean"
+	| boolean_literal -> boolean
 	| nil
-	| static_string_literal -> "string"
-	| _array_declaration -> "array"
-	| _dictionary_declaration -> "dictionary"
-	| _tuple_declaration -> "tuple"
+	| static_string_literal -> string
+	| _array_declaration -> array
+	| _dictionary_declaration -> dictionary
+	| _tuple_declaration -> tuple
 
   boolean_literal ::= 'true'
 	| 'false'
@@ -259,7 +260,7 @@ rules:
 
   nil ::= 'nil'
 
-  type ::= tuple_type -> "tuple"
+  type ::= tuple_type -> tuple
 	| standard_type
 	| _type_identifier
 
@@ -267,7 +268,7 @@ rules:
 	| tuple_type
 	| array_type
 	| dictionary_type
-	| identifier -> "type_identifier"
+	| identifier -> type_identifier
 
   standard_type ::= @( 'Bool' | 'Character' | 'StaticString' | 'String' | 'Void' | 'Double' | 'Float' | 'Int' | 'UInt' | 'UInt8' | 'UInt16' | 'UInt32' | 'UInt64' | 'Int8' | 'Int16' | 'Int32' | 'Int64' | 'Float32' | 'Float64' | 'Float80' )
 
@@ -295,7 +296,7 @@ rules:
 
   _type_annotation ::= ':' ( type | array_type | dictionary_type )
 
-  _type_identifier ::=  <30(  _type_name ( '.' _type_identifier )? )
+  _type_identifier ::=  <30(  _type_name ( '.' _type_identifier )? ) 
 
   _type_name ::= identifier
 

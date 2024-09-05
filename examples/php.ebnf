@@ -1,10 +1,11 @@
-; From tree-sitter-php/php_only/src/grammar.json
+; repository: https://github.com/tree-sitter/tree-sitter-php.git
+; commit: d13c91bc48aedf7db8240c52503eee694134ec53
+; json from: tree-sitter-php/php/src/grammar.json
+; From /tmp/tslua/php0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -25,6 +26,7 @@ externals ::= {
 extras ::= {
 	comment
 	/[\s\u00A0\u200B\u2060\uFEFF]/
+	text_interpolation
 	}
 
 supertypes ::= {
@@ -56,7 +58,7 @@ word ::= name
 
 rules:
 
-  program ::= php_tag? statement* '?>'?
+  program ::= text? ( php_tag statement* )?
 
   php_tag ::= /<\?([pP][hH][pP]|=)?/
 
@@ -94,43 +96,43 @@ rules:
 	| global_declaration
 	| function_static_declaration
 
-  empty_statement ::=  -1(  ';' )
+  empty_statement ::=  -1(  ';' ) 
 
   reference_modifier ::= '&'
 
-  function_static_declaration ::= /static/ -> "static" static_variable_declaration ( ',' static_variable_declaration )* _semicolon
+  function_static_declaration ::= /static/i -> "static" static_variable_declaration ( ',' static_variable_declaration )* _semicolon
 
-  static_variable_declaration ::= ( variable_name ):name ( '=' ( expression ):value )?
+  static_variable_declaration ::= variable_name:name ( '=' expression:value )?
 
-  global_declaration ::= /global/ -> "global" _simple_variable ( ',' _simple_variable )* _semicolon
+  global_declaration ::= /global/i -> "global" _simple_variable ( ',' _simple_variable )* _semicolon
 
-  namespace_definition ::= /namespace/ -> "namespace" ( ( namespace_name ):name _semicolon | ( namespace_name )?:name ( compound_statement ):body )
+  namespace_definition ::= /namespace/i -> "namespace" ( namespace_name:name _semicolon | namespace_name?:name compound_statement:body )
 
-  namespace_use_declaration ::= /use/ -> "use" ( namespace_use_clause ( ',' namespace_use_clause )* | _namespace_use_group ) _semicolon
+  namespace_use_declaration ::= /use/i -> "use" ( namespace_use_clause ( ',' namespace_use_clause )* | _namespace_use_group ) _semicolon
 
-  namespace_use_clause ::= ( _namespace_use_type )?:type _name ( /as/ -> "as" ( name ):alias )?
+  namespace_use_clause ::= _namespace_use_type?:type _name ( /as/i -> "as" name:alias )?
 
-  _namespace_use_type ::= /function/ -> "function"
-	| /const/ -> "const"
+  _namespace_use_type ::= /function/i -> "function"
+	| /const/i -> "const"
 
-  qualified_name ::= ( namespace_name? '\\'  ):prefix name
+  qualified_name ::= ( namespace_name? '\\' ):prefix name
 
   _name ::= _identifier
 	| qualified_name
 
-  namespace_name ::= '\\' ? name ( '\\'  name )*
+  namespace_name ::= '\\'? name ( '\\' name )*
 
-  _namespace_use_group ::= ( _namespace_use_type )?:type namespace_name '\\'  ( namespace_use_group ):body
+  _namespace_use_group ::= _namespace_use_type?:type namespace_name '\\' namespace_use_group:body
 
   namespace_use_group ::= '{' namespace_use_clause ( ',' namespace_use_clause )* '}'
 
-  trait_declaration ::= ( attribute_list )?:attributes /trait/ -> "trait" ( name ):name ( declaration_list ):body
+  trait_declaration ::= ( attribute_list:attributes )? /trait/i -> "trait" name:name declaration_list:body
 
-  interface_declaration ::= ( attribute_list )?:attributes /interface/ -> "interface" ( name ):name base_clause? ( declaration_list ):body
+  interface_declaration ::= ( attribute_list:attributes )? /interface/i -> "interface" name:name base_clause? declaration_list:body
 
-  base_clause ::= /extends/ -> "extends" _name ( ',' _name )*
+  base_clause ::= /extends/i -> "extends" _name ( ',' _name )*
 
-  enum_declaration ::=  >0(  ( attribute_list )?:attributes /enum/ -> "enum" ( name ):name ( ':' ( 'string' | 'int' ) -> "primitive_type" )? class_interface_clause? ( enum_declaration_list ):body )
+  enum_declaration ::=  >0(  ( attribute_list:attributes )? /enum/i -> "enum" name:name ( ':' ( 'string' | 'int' ) -> primitive_type )? class_interface_clause? enum_declaration_list:body ) 
 
   enum_declaration_list ::= '{' _enum_member_declaration* '}'
 
@@ -138,84 +140,84 @@ rules:
 	| method_declaration
 	| use_declaration
 
-  enum_case ::= ( attribute_list )?:attributes /case/ -> "case" ( name ):name ( '=' ( _string | integer ):value )? _semicolon
+  enum_case ::= ( attribute_list:attributes )? /case/i -> "case" name:name ( '=' ( _string | integer ):value )? _semicolon
 
-  class_declaration ::=  >0(  ( attribute_list )?:attributes _modifier* /class/ -> "class" ( name ):name base_clause? class_interface_clause? ( declaration_list ):body )
+  class_declaration ::=  >0(  ( attribute_list:attributes )? _modifier* /class/i -> "class" name:name base_clause? class_interface_clause? declaration_list:body ) 
 
   declaration_list ::= '{' _member_declaration* '}'
 
-  final_modifier ::= /final/ -> "final"
+  final_modifier ::= /final/i -> "final"
 
-  abstract_modifier ::= /abstract/ -> "abstract"
+  abstract_modifier ::= /abstract/i -> "abstract"
 
-  readonly_modifier ::= /readonly/ -> "readonly"
+  readonly_modifier ::= /readonly/i -> "readonly"
 
-  class_interface_clause ::= /implements/ -> "implements" _name ( ',' _name )*
+  class_interface_clause ::= /implements/i -> "implements" _name ( ',' _name )*
 
-  _member_declaration ::= _class_const_declaration -> "const_declaration"
+  _member_declaration ::= _class_const_declaration -> const_declaration
 	| property_declaration
 	| method_declaration
 	| use_declaration
 
   const_declaration ::= _const_declaration
 
-  _class_const_declaration ::= ( attribute_list )?:attributes final_modifier? _const_declaration
+  _class_const_declaration ::= ( attribute_list:attributes )? final_modifier? _const_declaration
 
-  _const_declaration ::= _modifier* /const/ -> "const" ( type )?:type const_element ( ',' const_element )* _semicolon
+  _const_declaration ::= _modifier* /const/i -> "const" ( type:type )? const_element ( ',' const_element )* _semicolon
 
-  property_declaration ::= ( attribute_list )?:attributes _modifier+ ( type )?:type property_element ( ',' property_element )* ( _semicolon | property_hook_list )
+  property_declaration ::= ( attribute_list:attributes )? _modifier+ ( type:type )? property_element ( ',' property_element )* ( _semicolon | property_hook_list )
 
-  _modifier ::=  <0(  var_modifier | visibility_modifier | static_modifier | final_modifier | abstract_modifier | readonly_modifier )
+  _modifier ::=  <0(  var_modifier | visibility_modifier | static_modifier | final_modifier | abstract_modifier | readonly_modifier ) 
 
-  property_element ::= ( variable_name ):name ( '=' ( expression ):default_value )?
+  property_element ::= variable_name:name ( '=' expression:default_value )?
 
   property_hook_list ::= '{' property_hook* '}'
 
-  property_hook ::= ( attribute_list )?:attributes ( final_modifier )?:final ( reference_modifier )?:reference_modifier name ( formal_parameters )?:parameters _property_hook_body
+  property_hook ::= ( attribute_list:attributes )? ( final_modifier:final )? ( reference_modifier:reference_modifier )? name ( formal_parameters:parameters )? _property_hook_body
 
-  _property_hook_body ::= '=>' ( expression ):body _semicolon
-	| ( compound_statement ):body
+  _property_hook_body ::= '=>' expression:body _semicolon
+	| compound_statement:body
 	| _semicolon
 
-  method_declaration ::= ( attribute_list )?:attributes _modifier* _function_definition_header ( ( compound_statement ):body | _semicolon )
+  method_declaration ::= ( attribute_list:attributes )? _modifier* _function_definition_header ( compound_statement:body | _semicolon )
 
-  var_modifier ::= /var/
+  var_modifier ::= /var/i
 
-  static_modifier ::= /static/ -> "static"
+  static_modifier ::= /static/i -> "static"
 
-  use_declaration ::= /use/ -> "use" _name ( ',' _name )* ( use_list | _semicolon )
+  use_declaration ::= /use/i -> "use" _name ( ',' _name )* ( use_list | _semicolon )
 
   use_list ::= '{' ( ( use_instead_of_clause | use_as_clause ) _semicolon )* '}'
 
-  use_instead_of_clause ::=  <0(  class_constant_access_expression /insteadof/ -> "insteadof" name )
+  use_instead_of_clause ::=  <0(  class_constant_access_expression /insteadof/i -> "insteadof" name ) 
 
-  use_as_clause ::= ( class_constant_access_expression | name ) /as/ -> "as" ( visibility_modifier? name | visibility_modifier name? )
+  use_as_clause ::= ( class_constant_access_expression | name ) /as/i -> "as" ( visibility_modifier? name | visibility_modifier name? )
 
-  visibility_modifier ::= /public/ -> "public"
-	| /protected/ -> "protected"
-	| /private/ -> "private"
+  visibility_modifier ::= /public/i -> "public"
+	| /protected/i -> "protected"
+	| /private/i -> "private"
 
-  function_definition ::= ( attribute_list )?:attributes _function_definition_header ( compound_statement ):body
+  function_definition ::= ( attribute_list:attributes )? _function_definition_header compound_statement:body
 
-  _function_definition_header ::= /function/ -> "function" reference_modifier? ( _identifier ):name ( formal_parameters ):parameters _return_type?
+  _function_definition_header ::= /function/i -> "function" reference_modifier? _identifier:name formal_parameters:parameters _return_type?
 
-  anonymous_function ::= _anonymous_function_header ( compound_statement ):body
+  anonymous_function ::= _anonymous_function_header compound_statement:body
 
-  anonymous_function_use_clause ::= /use/ -> "use" '(' ( by_ref | variable_name ) ( ',' ( by_ref | variable_name ) )* ','? ')'
+  anonymous_function_use_clause ::= /use/i -> "use" '(' ( by_ref | variable_name ) ( ',' ( by_ref | variable_name ) )* ','? ')'
 
-  _anonymous_function_header ::= ( attribute_list )?:attributes ( static_modifier )?:static_modifier /function/ -> "function" ( reference_modifier )?:reference_modifier ( formal_parameters ):parameters anonymous_function_use_clause? _return_type?
+  _anonymous_function_header ::= ( attribute_list:attributes )? ( static_modifier:static_modifier )? /function/i -> "function" ( reference_modifier:reference_modifier )? formal_parameters:parameters anonymous_function_use_clause? _return_type?
 
-  _arrow_function_header ::= ( attribute_list )?:attributes ( static_modifier )?:static_modifier /fn/ -> "fn" ( reference_modifier )?:reference_modifier ( formal_parameters ):parameters _return_type?
+  _arrow_function_header ::= ( attribute_list:attributes )? ( static_modifier:static_modifier )? /fn/i -> "fn" ( reference_modifier:reference_modifier )? formal_parameters:parameters _return_type?
 
-  arrow_function ::= _arrow_function_header '=>' ( expression ):body
+  arrow_function ::= _arrow_function_header '=>' expression:body
 
   formal_parameters ::= '(' ( ( simple_parameter | variadic_parameter | property_promotion_parameter ) ( ',' ( simple_parameter | variadic_parameter | property_promotion_parameter ) )* )? ','? ')'
 
-  property_promotion_parameter ::= ( attribute_list )?:attributes ( visibility_modifier ):visibility ( readonly_modifier )?:readonly ( type )?:type ( by_ref | variable_name ):name ( '=' ( expression ):default_value )? property_hook_list?
+  property_promotion_parameter ::= ( attribute_list:attributes )? visibility_modifier:visibility readonly_modifier?:readonly type?:type ( by_ref | variable_name ):name ( '=' expression:default_value )? property_hook_list?
 
-  simple_parameter ::= ( attribute_list )?:attributes ( type )?:type ( reference_modifier )?:reference_modifier ( variable_name ):name ( '=' ( expression ):default_value )?
+  simple_parameter ::= ( attribute_list:attributes )? type?:type ( reference_modifier:reference_modifier )? variable_name:name ( '=' expression:default_value )?
 
-  variadic_parameter ::= ( attribute_list )?:attributes ( type )?:type ( reference_modifier )?:reference_modifier '...' ( variable_name ):name
+  variadic_parameter ::= ( attribute_list:attributes )? type?:type ( reference_modifier:reference_modifier )? '...' variable_name:name
 
   type ::= _types
 	| union_type
@@ -237,10 +239,10 @@ rules:
 
   intersection_type ::= _types ( @( '&' ) _types )*
 
-  disjunctive_normal_form_type ::=  ~-1(  ( '(' intersection_type ')' | _types ) ( '|' ( '(' intersection_type ')' | _types ) )* )
+  disjunctive_normal_form_type ::=  ~-1(  ( '(' intersection_type ')' | _types ) ( '|' ( '(' intersection_type ')' | _types ) )* ) 
 
   primitive_type ::= 'array'
-	| /callable/ -> "callable"
+	| /callable/i -> "callable"
 	| 'iterable'
 	| 'bool'
 	| 'float'
@@ -252,30 +254,30 @@ rules:
 	| 'null'
 	| 'true'
 
-  cast_type ::= /array/
-	| /binary/
-	| /bool/
-	| /boolean/
-	| /double/
-	| /int/
-	| /integer/
-	| /float/
-	| /object/
-	| /real/
-	| /string/
-	| /unset/
+  cast_type ::= /array/i
+	| /binary/i
+	| /bool/i
+	| /boolean/i
+	| /double/i
+	| /int/i
+	| /integer/i
+	| /float/i
+	| /object/i
+	| /real/i
+	| /string/i
+	| /unset/i
 
   _return_type ::= ':' ( type | bottom_type ):return_type
 
   const_element ::= _identifier '=' expression
 
-  echo_statement ::= /echo/ -> "echo" _expressions _semicolon
+  echo_statement ::= /echo/i -> "echo" _expressions _semicolon
 
-  exit_statement ::= /exit/ -> "exit" ( '(' expression? ')' )? _semicolon
+  exit_statement ::= /exit/i -> "exit" ( '(' expression? ')' )? _semicolon
 
   unset_statement ::= 'unset' '(' _variable ( ',' _variable )* ','? ')' _semicolon
 
-  declare_statement ::= /declare/ -> "declare" '(' declare_directive ')' ( statement | _semicolon | ':' statement* /enddeclare/ -> "enddeclare" _semicolon )
+  declare_statement ::= /declare/i -> "declare" '(' declare_directive ')' ( statement | _semicolon | ':' statement* /enddeclare/i -> "enddeclare" _semicolon )
 
   declare_directive ::= ( 'ticks' | 'encoding' | 'strict_types' ) '=' literal
 
@@ -287,38 +289,38 @@ rules:
 
   float ::= /\d*(_\d+)*((\.\d*(_\d+)*)?([eE][\+-]?\d+(_\d+)*)|(\.\d*(_\d+)*)([eE][\+-]?\d+(_\d+)*)?)/
 
-  try_statement ::= /try/ -> "try" ( compound_statement ):body ( catch_clause | finally_clause )+
+  try_statement ::= /try/i -> "try" compound_statement:body ( catch_clause | finally_clause )+
 
-  catch_clause ::= /catch/ -> "catch" '(' ( type_list ):type ( variable_name )?:name ')' ( compound_statement ):body
+  catch_clause ::= /catch/i -> "catch" '(' type_list:type ( variable_name:name )? ')' compound_statement:body
 
   type_list ::= named_type ( '|' named_type )*
 
-  finally_clause ::= /finally/ -> "finally" ( compound_statement ):body
+  finally_clause ::= /finally/i -> "finally" compound_statement:body
 
-  goto_statement ::= /goto/ -> "goto" name _semicolon
+  goto_statement ::= /goto/i -> "goto" name _semicolon
 
-  continue_statement ::= /continue/ -> "continue" expression? _semicolon
+  continue_statement ::= /continue/i -> "continue" expression? _semicolon
 
-  break_statement ::= /break/ -> "break" expression? _semicolon
+  break_statement ::= /break/i -> "break" expression? _semicolon
 
   integer ::= @( /[1-9]\d*(_\d+)*/ | /0[oO]?[0-7]*(_[0-7]+)*/ | /0[xX][0-9a-fA-F]+(_[0-9a-fA-F]+)*/ | /0[bB][01]+(_[01]+)*/ )
 
-  return_statement ::= /return/ -> "return" expression? _semicolon
+  return_statement ::= /return/i -> "return" expression? _semicolon
 
-  throw_expression ::= /throw/ -> "throw" expression
+  throw_expression ::= /throw/i -> "throw" expression
 
-  while_statement ::= /while/ -> "while" ( parenthesized_expression ):condition ( ( statement ):body | ( colon_block ):body /endwhile/ -> "endwhile" _semicolon )
+  while_statement ::= /while/i -> "while" parenthesized_expression:condition ( statement:body | colon_block:body /endwhile/i -> "endwhile" _semicolon )
 
-  do_statement ::= /do/ -> "do" ( statement ):body /while/ -> "while" ( parenthesized_expression ):condition _semicolon
+  do_statement ::= /do/i -> "do" statement:body /while/i -> "while" parenthesized_expression:condition _semicolon
 
-  for_statement ::= /for/ -> "for" '(' ( _expressions )?:initialize ';' ( _expressions )?:condition ';' ( _expressions )?:update ')' ( _semicolon | ( statement ):body | ':' ( statement* ):body /endfor/ -> "endfor" _semicolon )
+  for_statement ::= /for/i -> "for" '(' _expressions?:initialize ';' _expressions?:condition ';' _expressions?:update ')' ( _semicolon | statement:body | ':' statement*:body /endfor/i -> "endfor" _semicolon )
 
   _expressions ::= expression
 	| sequence_expression
 
-  sequence_expression ::=  -1(  expression ',' ( sequence_expression | expression ) )
+  sequence_expression ::=  -1(  expression ',' ( sequence_expression | expression ) ) 
 
-  foreach_statement ::= /foreach/ -> "foreach" '(' expression /as/ -> "as" ( foreach_pair -> "pair" | _foreach_value ) ')' ( _semicolon | ( statement ):body | ( colon_block ):body /endforeach/ -> "endforeach" _semicolon )
+  foreach_statement ::= /foreach/i -> "foreach" '(' expression /as/i -> "as" ( foreach_pair -> pair | _foreach_value ) ')' ( _semicolon | statement:body | colon_block:body /endforeach/i -> "endforeach" _semicolon )
 
   foreach_pair ::= expression '=>' _foreach_value
 
@@ -326,36 +328,36 @@ rules:
 	| expression
 	| list_literal
 
-  if_statement ::= /if/ -> "if" ( parenthesized_expression ):condition ( ( statement ):body ( else_if_clause )*:alternative ( else_clause )?:alternative | ( colon_block ):body ( else_if_clause_2 -> "else_if_clause" )*:alternative ( else_clause_2 -> "else_clause" )?:alternative /endif/ -> "endif" _semicolon )
+  if_statement ::= /if/i -> "if" parenthesized_expression:condition ( statement:body ( else_if_clause:alternative )* ( else_clause:alternative )? | colon_block:body ( ( else_if_clause_2 -> else_if_clause ):alternative )* ( ( else_clause_2 -> else_clause ):alternative )? /endif/i -> "endif" _semicolon )
 
   colon_block ::= ':' statement*
 
-  else_if_clause ::= /elseif/ -> "elseif" ( parenthesized_expression ):condition ( statement ):body
+  else_if_clause ::= /elseif/i -> "elseif" parenthesized_expression:condition statement:body
 
-  else_clause ::= /else/ -> "else" ( statement ):body
+  else_clause ::= /else/i -> "else" statement:body
 
-  else_if_clause_2 ::= /elseif/ -> "elseif" ( parenthesized_expression ):condition ( colon_block ):body
+  else_if_clause_2 ::= /elseif/i -> "elseif" parenthesized_expression:condition colon_block:body
 
-  else_clause_2 ::= /else/ -> "else" ( colon_block ):body
+  else_clause_2 ::= /else/i -> "else" colon_block:body
 
-  match_expression ::= /match/ -> "match" ( parenthesized_expression ):condition ( match_block ):body
+  match_expression ::= /match/i -> "match" parenthesized_expression:condition match_block:body
 
-  match_block ::=  <0(  '{' ( ( match_conditional_expression | match_default_expression ) ( ',' ( match_conditional_expression | match_default_expression ) )* )? ','? '}' )
+  match_block ::=  <0(  '{' ( ( match_conditional_expression | match_default_expression ) ( ',' ( match_conditional_expression | match_default_expression ) )* )? ','? '}' ) 
 
   match_condition_list ::= expression ( ',' expression )* ','?
 
-  match_conditional_expression ::= ( match_condition_list ):conditional_expressions '=>' ( expression ):return_expression
+  match_conditional_expression ::= match_condition_list:conditional_expressions '=>' expression:return_expression
 
-  match_default_expression ::= /default/ -> "default" '=>' ( expression ):return_expression
+  match_default_expression ::= /default/i -> "default" '=>' expression:return_expression
 
-  switch_statement ::= /switch/ -> "switch" ( parenthesized_expression ):condition ( switch_block ):body
+  switch_statement ::= /switch/i -> "switch" parenthesized_expression:condition switch_block:body
 
   switch_block ::= '{' ( case_statement | default_statement )* '}'
-	| ':' ( case_statement | default_statement )* /endswitch/ -> "endswitch" _semicolon
+	| ':' ( case_statement | default_statement )* /endswitch/i -> "endswitch" _semicolon
 
-  case_statement ::= /case/ -> "case" ( expression ):value ( ':' | ';' ) statement*
+  case_statement ::= /case/i -> "case" expression:value ( ':' | ';' ) statement*
 
-  default_statement ::= /default/ -> "default" ( ':' | ';' ) statement*
+  default_statement ::= /default/i -> "default" ( ':' | ';' ) statement*
 
   compound_statement ::= '{' statement* '}'
 
@@ -382,11 +384,11 @@ rules:
 	| unary_op_expression
 	| cast_expression
 
-  unary_op_expression ::=  <19(  ( '+' | '-' | '~' | '!' ):operator ( expression ):argument )
+  unary_op_expression ::=  <19(  ( '+' | '-' | '~' | '!' ):operator expression:argument ) 
 
-  error_suppression_expression ::=  21(  '@' expression )
+  error_suppression_expression ::=  21(  '@' expression ) 
 
-  clone_expression ::= /clone/ -> "clone" primary_expression
+  clone_expression ::= /clone/i -> "clone" primary_expression
 
   primary_expression ::= _variable
 	| literal
@@ -406,163 +408,163 @@ rules:
 
   parenthesized_expression ::= '(' expression ')'
 
-  class_constant_access_expression ::= _scope_resolution_qualifier '::' ( _identifier | '{' expression -> "name" '}' )
+  class_constant_access_expression ::= _scope_resolution_qualifier '::' ( _identifier | '{' expression -> name '}' )
 
-  print_intrinsic ::= /print/ -> "print" expression
+  print_intrinsic ::= /print/i -> "print" expression
 
   object_creation_expression ::= _new_dereferencable_expression
 	| _new_non_dereferencable_expression
 
-  _new_non_dereferencable_expression ::=  >23(  /new/ -> "new" _class_name_reference )
+  _new_non_dereferencable_expression ::=  >23(  /new/i -> "new" _class_name_reference ) 
 
-  _new_dereferencable_expression ::=  >23(  /new/ -> "new" ( _class_name_reference arguments | anonymous_class ) )
+  _new_dereferencable_expression ::=  >23(  /new/i -> "new" ( _class_name_reference arguments | anonymous_class ) ) 
 
   _class_name_reference ::= _name
 	| _new_variable
 	| parenthesized_expression
 
-  anonymous_class ::=  >0(  ( attribute_list )?:attributes _modifier* /class/ -> "class" arguments? base_clause? class_interface_clause? ( declaration_list ):body )
+  anonymous_class ::=  >0(  ( attribute_list:attributes )? _modifier* /class/i -> "class" arguments? base_clause? class_interface_clause? declaration_list:body ) 
 
-  update_expression ::=  <21(  ( '--' | '++' ):operator ( _variable ):argument | ( _variable ):argument ( '--' | '++' ):operator )
+  update_expression ::=  <21(  ( '--' | '++' ):operator _variable:argument | _variable:argument ( '--' | '++' ):operator ) 
 
-  cast_expression ::=  -1(  '(' ( cast_type ):type ')' ( _unary_expression | include_expression | include_once_expression | error_suppression_expression ):value )
+  cast_expression ::=  -1(  '(' cast_type:type ')' ( _unary_expression | include_expression | include_once_expression | error_suppression_expression ):value ) 
 
-  cast_variable ::=  -1(  '(' ( cast_type ):type ')' ( _variable ):value )
+  cast_variable ::=  -1(  '(' cast_type:type ')' _variable:value ) 
 
-  assignment_expression ::=  >4(  ( _variable | list_literal ):left '=' ( expression ):right )
+  assignment_expression ::=  >4(  ( _variable | list_literal ):left '=' expression:right ) 
 
-  reference_assignment_expression ::=  >4(  ( _variable | list_literal ):left '=' '&' ( expression ):right )
+  reference_assignment_expression ::=  >4(  ( _variable | list_literal ):left '=' '&' expression:right ) 
 
-  conditional_expression ::=  <5(  ( expression ):condition '?' ( expression )?:body ':' ( expression ):alternative )
+  conditional_expression ::=  <5(  expression:condition '?' expression?:body ':' expression:alternative ) 
 
-  augmented_assignment_expression ::=  >4(  ( _variable ):left ( '**=' | '*=' | '/=' | '%=' | '+=' | '-=' | '.=' | '<<=' | '>>=' | '&=' | '^=' | '|=' | '??=' ):operator ( expression ):right )
+  augmented_assignment_expression ::=  >4(  _variable:left ( '**=' | '*=' | '/=' | '%=' | '+=' | '-=' | '.=' | '<<=' | '>>=' | '&=' | '^=' | '|=' | '??=' ):operator expression:right ) 
 
-  _variable ::= cast_variable -> "cast_expression"
+  _variable ::= cast_variable -> cast_expression
 	| _new_variable
 	| _callable_variable
 	| scoped_property_access_expression
 	| member_access_expression
 	| nullsafe_member_access_expression
 
-  _variable_member_access_expression ::=  25(  ( _new_variable ):object '->' _member_name )
+  _variable_member_access_expression ::=  25(  _new_variable:object '->' _member_name ) 
 
-  member_access_expression ::=  25(  ( _dereferencable_expression ):object '->' _member_name )
+  member_access_expression ::=  25(  _dereferencable_expression:object '->' _member_name ) 
 
-  _variable_nullsafe_member_access_expression ::=  25(  ( _new_variable ):object '?->' _member_name )
+  _variable_nullsafe_member_access_expression ::=  25(  _new_variable:object '?->' _member_name ) 
 
-  nullsafe_member_access_expression ::=  25(  ( _dereferencable_expression ):object '?->' _member_name )
+  nullsafe_member_access_expression ::=  25(  _dereferencable_expression:object '?->' _member_name ) 
 
-  _variable_scoped_property_access_expression ::=  25(  ( _name | _new_variable ):scope '::' ( _simple_variable ):name )
+  _variable_scoped_property_access_expression ::=  25(  ( _name | _new_variable ):scope '::' _simple_variable:name ) 
 
-  scoped_property_access_expression ::=  25(  ( _scope_resolution_qualifier ):scope '::' ( _simple_variable ):name )
+  scoped_property_access_expression ::=  25(  _scope_resolution_qualifier:scope '::' _simple_variable:name ) 
 
   list_literal ::= _list_destructing
 	| _array_destructing
 
-  _list_destructing ::= /list/ -> "list" '(' ( _list_destructing -> "list_literal" | _variable | by_ref | expression '=>' ( _list_destructing -> "list_literal" | _variable | by_ref ) )? ( ',' ( _list_destructing -> "list_literal" | _variable | by_ref | expression '=>' ( _list_destructing -> "list_literal" | _variable | by_ref ) )? )* ')'
+  _list_destructing ::= /list/i -> "list" '(' ( _list_destructing -> list_literal | _variable | by_ref | expression '=>' ( _list_destructing -> list_literal | _variable | by_ref ) )? ( ',' ( _list_destructing -> list_literal | _variable | by_ref | expression '=>' ( _list_destructing -> list_literal | _variable | by_ref ) )? )* ')'
 
   _array_destructing ::= '[' _array_destructing_element? ( ',' _array_destructing_element? )* ']'
 
-  _array_destructing_element ::= _array_destructing -> "list_literal"
+  _array_destructing_element ::= _array_destructing -> list_literal
 	| _variable
 	| by_ref
-	| expression '=>' ( _array_destructing -> "list_literal" | _variable | by_ref )
+	| expression '=>' ( _array_destructing -> list_literal | _variable | by_ref )
 
-  function_call_expression ::=  24(  ( _name | _callable_expression ):function ( arguments ):arguments )
+  function_call_expression ::=  24(  ( _name | _callable_expression ):function arguments:arguments ) 
 
   _callable_expression ::= _callable_variable
 	| parenthesized_expression
 	| _dereferencable_scalar
-	| _new_dereferencable_expression -> "object_creation_expression"
+	| _new_dereferencable_expression -> object_creation_expression
 
-  scoped_call_expression ::=  24(  ( _scope_resolution_qualifier ):scope '::' _member_name ( arguments ):arguments )
+  scoped_call_expression ::=  24(  _scope_resolution_qualifier:scope '::' _member_name arguments:arguments ) 
 
   _scope_resolution_qualifier ::= relative_scope
 	| _name
 	| _dereferencable_expression
 
-  relative_scope ::=  22(  'self' | 'parent' | /static/ -> "static" )
+  relative_scope ::=  22(  'self' | 'parent' | /static/i -> "static" ) 
 
   variadic_placeholder ::= '...'
 
   arguments ::= '(' ( argument ( ',' argument )* ','? | variadic_placeholder )? ')'
 
-  argument ::= _argument_name? ( reference_modifier )?:reference_modifier ( _reserved_identifier -> "name" | variadic_unpacking | expression )
+  argument ::= _argument_name? ( reference_modifier:reference_modifier )? ( _reserved_identifier -> name | variadic_unpacking | expression )
 
-  _argument_name ::= ( ( name | /array/ | /fn/ | /function/ | /match/ | /namespace/ | /null/ | /static/ | /throw/ | 'parent' | 'self' | /true|false/ ) -> "name" ):name ':'
+  _argument_name ::= ( ( name | /array/i | /fn/i | /function/i | /match/i | /namespace/i | /null/i | /static/i | /throw/i | 'parent' | 'self' | /true|false/i ) -> name ):name ':'
 
-  member_call_expression ::=  24(  ( _dereferencable_expression ):object '->' _member_name ( arguments ):arguments )
+  member_call_expression ::=  24(  _dereferencable_expression:object '->' _member_name arguments:arguments ) 
 
-  nullsafe_member_call_expression ::=  24(  ( _dereferencable_expression ):object '?->' _member_name ( arguments ):arguments )
+  nullsafe_member_call_expression ::=  24(  _dereferencable_expression:object '?->' _member_name arguments:arguments ) 
 
   variadic_unpacking ::= '...' expression
 
   _member_name ::= ( _identifier | _simple_variable ):name
-	| '{' ( expression ):name '}'
+	| '{' expression:name '}'
 
   _variable_subscript_expression ::= _new_variable '[' expression? ']'
 
   _dereferencable_subscript_expression ::= _dereferencable_expression '[' expression? ']'
 
-  _dereferencable_expression ::=  26(  _variable | _new_dereferencable_expression -> "object_creation_expression" | class_constant_access_expression | parenthesized_expression | _dereferencable_scalar | _name )
+  _dereferencable_expression ::=  26(  _variable | _new_dereferencable_expression -> object_creation_expression | class_constant_access_expression | parenthesized_expression | _dereferencable_scalar | _name ) 
 
-  _dereferencable_scalar ::=  26(  array_creation_expression | _string )
+  _dereferencable_scalar ::=  26(  array_creation_expression | _string ) 
 
-  array_creation_expression ::= /array/ -> "array" '(' ( array_element_initializer ( ',' array_element_initializer )* )? ','? ')'
+  array_creation_expression ::= /array/i -> "array" '(' ( array_element_initializer ( ',' array_element_initializer )* )? ','? ')'
 	| '[' ( array_element_initializer ( ',' array_element_initializer )* )? ','? ']'
 
   attribute_group ::= '#[' attribute ( ',' attribute )* ','? ']'
 
   attribute_list ::= attribute_group+
 
-  attribute ::= _name ( arguments )?:parameters
+  attribute ::= _name ( arguments:parameters )?
 
   _complex_string_part ::= '{' expression '}'
 
-  _simple_string_member_access_expression ::=  25(  ( variable_name ):object '->' ( name ):name )
+  _simple_string_member_access_expression ::=  25(  variable_name:object '->' name:name ) 
 
-  _simple_string_subscript_unary_expression ::=  <0(  '-' integer )
+  _simple_string_subscript_unary_expression ::=  <0(  '-' integer ) 
 
   _simple_string_array_access_argument ::= integer
-	| _simple_string_subscript_unary_expression -> "unary_op_expression"
+	| _simple_string_subscript_unary_expression -> unary_op_expression
 	| name
 	| variable_name
 
-  _simple_string_subscript_expression ::=  26(  variable_name '[' _simple_string_array_access_argument ']' )
+  _simple_string_subscript_expression ::=  26(  variable_name '[' _simple_string_array_access_argument ']' ) 
 
-  _simple_string_part ::= _simple_string_member_access_expression -> "member_access_expression"
+  _simple_string_part ::= _simple_string_member_access_expression -> member_access_expression
 	| _simple_variable
-	| _simple_string_subscript_expression -> "subscript_expression"
+	| _simple_string_subscript_expression -> subscript_expression
 
-  escape_sequence ::= !( '\\'  ( 'n' | 'r' | 't' | 'v' | 'e' | 'f' | '\\'  | /\$/ | '"'  | '`' | /[0-7]{1,3}/ | /x[0-9A-Fa-f]{1,2}/ | /u\{[0-9A-Fa-f]+\}/ ) )
+  escape_sequence ::= !( '\\' ( 'n' | 'r' | 't' | 'v' | 'e' | 'f' | '\\' | /\$/ | '"' | '`' | /[0-7]{1,3}/ | /x[0-9A-Fa-f]{1,2}/ | /u\{[0-9A-Fa-f]+\}/ ) )
 
-  _interpolated_string_body ::= ( escape_sequence | variable_name encapsed_string_chars_after_variable -> "string_content" | encapsed_string_chars -> "string_content" | _simple_string_part | _complex_string_part | '\u' -> "string_content" )+
+  _interpolated_string_body ::= ( escape_sequence | variable_name encapsed_string_chars_after_variable -> string_content | encapsed_string_chars -> string_content | _simple_string_part | _complex_string_part | '\\u' -> string_content )+
 
-  _interpolated_string_body_heredoc ::= ( escape_sequence | variable_name encapsed_string_chars_after_variable_heredoc -> "string_content" | encapsed_string_chars_heredoc -> "string_content" | _simple_string_part | _complex_string_part | '\u' -> "string_content" )+
+  _interpolated_string_body_heredoc ::= ( escape_sequence | variable_name encapsed_string_chars_after_variable_heredoc -> string_content | encapsed_string_chars_heredoc -> string_content | _simple_string_part | _complex_string_part | '\\u' -> string_content )+
 
-  encapsed_string ::=  >0(  ( /[bB]"/ | '"'  ) _interpolated_string_body? '"'  )
+  encapsed_string ::=  >0(  ( /[bB]"/ | '"' ) _interpolated_string_body? '"' ) 
 
-  string ::= ( /[bB]'/ | "'"  ) ( @( '\\' | "\'" ) -> "escape_sequence" | string_content )* "'"
+  string ::= ( /[bB]'/ | "'" ) ( @( '\\\\' | "\\'" ) -> escape_sequence | string_content )* "'"
 
-  string_content ::=  >0(  !(  1(  /\\?[^'\\]+/ )  )+ )
+  string_content ::=  >0(  !(  1(  /\\?[^'\\]+/ )  )+ ) 
 
   heredoc_body ::= _new_line  >0(  _new_line? _interpolated_string_body_heredoc ) +
 
-  heredoc ::= @( '<<<' ) '"' ? ( heredoc_start ):identifier !( '"'  )? ( ( heredoc_body ):value _new_line | ( heredoc_body )?:value ) ( heredoc_end ):end_tag
+  heredoc ::= @( '<<<' ) '"'? heredoc_start:identifier !( '"' )? ( heredoc_body:value _new_line | heredoc_body?:value ) heredoc_end:end_tag
 
   _new_line ::= /\r?\n|\r/
 
   nowdoc_body ::= _new_line nowdoc_string+
 
-  nowdoc ::= @( '<<<' ) "'"  ( heredoc_start ):identifier !( "'"  ) ( ( nowdoc_body ):value _new_line | ( nowdoc_body )?:value ) ( heredoc_end ):end_tag
+  nowdoc ::= @( '<<<' ) "'" heredoc_start:identifier !( "'" ) ( nowdoc_body:value _new_line | nowdoc_body?:value ) heredoc_end:end_tag
 
-  _interpolated_execution_operator_body ::= ( escape_sequence | variable_name execution_string_chars_after_variable -> "string_content" | execution_string_chars -> "string_content" | _simple_string_part | _complex_string_part | '\u' -> "string_content" )+
+  _interpolated_execution_operator_body ::= ( escape_sequence | variable_name execution_string_chars_after_variable -> string_content | execution_string_chars -> string_content | _simple_string_part | _complex_string_part | '\\u' -> string_content )+
 
   shell_command_expression ::= '`' _interpolated_execution_operator_body? '`'
 
-  boolean ::= /true|false/
+  boolean ::= /true|false/i
 
-  null ::= /null/
+  null ::= /null/i
 
   _string ::= encapsed_string
 	| string
@@ -575,10 +577,10 @@ rules:
   _simple_variable ::= variable_name
 	| dynamic_variable_name
 
-  _new_variable ::=  1(  _simple_variable | _variable_subscript_expression -> "subscript_expression" | _variable_member_access_expression -> "member_access_expression" | _variable_nullsafe_member_access_expression -> "nullsafe_member_access_expression" | _variable_scoped_property_access_expression -> "scoped_property_access_expression" )
+  _new_variable ::=  1(  _simple_variable | _variable_subscript_expression -> subscript_expression | _variable_member_access_expression -> member_access_expression | _variable_nullsafe_member_access_expression -> nullsafe_member_access_expression | _variable_scoped_property_access_expression -> scoped_property_access_expression ) 
 
   _callable_variable ::= _simple_variable
-	| _dereferencable_subscript_expression -> "subscript_expression"
+	| _dereferencable_subscript_expression -> subscript_expression
 	| member_call_expression
 	| nullsafe_member_call_expression
 	| function_call_expression
@@ -588,56 +590,56 @@ rules:
 
   by_ref ::= '&' _variable
 
-  yield_expression ::=  >0(  /yield/ -> "yield" ( array_element_initializer | /from/ -> "from" expression )? )
+  yield_expression ::=  >0(  /yield/i -> "yield" ( array_element_initializer | /from/i -> "from" expression )? ) 
 
-  array_element_initializer ::=  >0(  by_ref | expression | expression '=>' ( by_ref | expression ) | variadic_unpacking )
+  array_element_initializer ::=  >0(  by_ref | expression | expression '=>' ( by_ref | expression ) | variadic_unpacking ) 
 
-  binary_expression ::=  20(  ( _unary_expression ):left ( /instanceof/ -> "instanceof" ):operator ( _class_name_reference ):right )
-	|  >6(  ( expression ):left ( '??' ):operator ( expression ):right )
-	|  >18(  ( expression ):left ( '**' ):operator ( expression ):right )
-	|  <3(  ( expression ):left ( /and/ -> "and" ):operator ( expression ):right )
-	|  <1(  ( expression ):left ( /or/ -> "or" ):operator ( expression ):right )
-	|  <2(  ( expression ):left ( /xor/ -> "xor" ):operator ( expression ):right )
-	|  <7(  ( expression ):left ( '||' ):operator ( expression ):right )
-	|  <8(  ( expression ):left ( '&&' ):operator ( expression ):right )
-	|  <9(  ( expression ):left ( '|' ):operator ( expression ):right )
-	|  <10(  ( expression ):left ( '^' ):operator ( expression ):right )
-	|  <11(  ( expression ):left ( '&' ):operator ( expression ):right )
-	|  <12(  ( expression ):left ( '==' ):operator ( expression ):right )
-	|  <12(  ( expression ):left ( '!=' ):operator ( expression ):right )
-	|  <12(  ( expression ):left ( '<>' ):operator ( expression ):right )
-	|  <12(  ( expression ):left ( '===' ):operator ( expression ):right )
-	|  <12(  ( expression ):left ( '!==' ):operator ( expression ):right )
-	|  <13(  ( expression ):left ( '<' ):operator ( expression ):right )
-	|  <13(  ( expression ):left ( '>' ):operator ( expression ):right )
-	|  <13(  ( expression ):left ( '<=' ):operator ( expression ):right )
-	|  <13(  ( expression ):left ( '>=' ):operator ( expression ):right )
-	|  <12(  ( expression ):left ( '<=>' ):operator ( expression ):right )
-	|  <15(  ( expression ):left ( '<<' ):operator ( expression ):right )
-	|  <15(  ( expression ):left ( '>>' ):operator ( expression ):right )
-	|  <16(  ( expression ):left ( '+' ):operator ( expression ):right )
-	|  <16(  ( expression ):left ( '-' ):operator ( expression ):right )
-	|  <14(  ( expression ):left ( '.' ):operator ( expression ):right )
-	|  <17(  ( expression ):left ( '*' ):operator ( expression ):right )
-	|  <17(  ( expression ):left ( '/' ):operator ( expression ):right )
-	|  <17(  ( expression ):left ( '%' ):operator ( expression ):right )
+  binary_expression ::=  20(  _unary_expression:left ( /instanceof/i -> "instanceof" ):operator _class_name_reference:right ) 
+	|  >6(  expression:left '??':operator expression:right ) 
+	|  >18(  expression:left '**':operator expression:right ) 
+	|  <3(  expression:left ( /and/i -> "and" ):operator expression:right ) 
+	|  <1(  expression:left ( /or/i -> "or" ):operator expression:right ) 
+	|  <2(  expression:left ( /xor/i -> "xor" ):operator expression:right ) 
+	|  <7(  expression:left '||':operator expression:right ) 
+	|  <8(  expression:left '&&':operator expression:right ) 
+	|  <9(  expression:left '|':operator expression:right ) 
+	|  <10(  expression:left '^':operator expression:right ) 
+	|  <11(  expression:left '&':operator expression:right ) 
+	|  <12(  expression:left '==':operator expression:right ) 
+	|  <12(  expression:left '!=':operator expression:right ) 
+	|  <12(  expression:left '<>':operator expression:right ) 
+	|  <12(  expression:left '===':operator expression:right ) 
+	|  <12(  expression:left '!==':operator expression:right ) 
+	|  <13(  expression:left '<':operator expression:right ) 
+	|  <13(  expression:left '>':operator expression:right ) 
+	|  <13(  expression:left '<=':operator expression:right ) 
+	|  <13(  expression:left '>=':operator expression:right ) 
+	|  <12(  expression:left '<=>':operator expression:right ) 
+	|  <15(  expression:left '<<':operator expression:right ) 
+	|  <15(  expression:left '>>':operator expression:right ) 
+	|  <16(  expression:left '+':operator expression:right ) 
+	|  <16(  expression:left '-':operator expression:right ) 
+	|  <14(  expression:left '.':operator expression:right ) 
+	|  <17(  expression:left '*':operator expression:right ) 
+	|  <17(  expression:left '/':operator expression:right ) 
+	|  <17(  expression:left '%':operator expression:right ) 
 
-  include_expression ::= /include/ -> "include" expression
+  include_expression ::= /include/i -> "include" expression
 
-  include_once_expression ::= /include_once/ -> "include_once" expression
+  include_once_expression ::= /include_once/i -> "include_once" expression
 
-  require_expression ::= /require/ -> "require" expression
+  require_expression ::= /require/i -> "require" expression
 
-  require_once_expression ::= /require_once/ -> "require_once" expression
+  require_once_expression ::= /require_once/i -> "require_once" expression
 
   name ::= /[_a-zA-Z\u0080-\u009f\u00a1-\u200a\u200c-\u205f\u2061-\ufefe\uff00-\uffff][_a-zA-Z\u0080-\u009f\u00a1-\u200a\u200c-\u205f\u2061-\ufefe\uff00-\uffff\d]*/
 
   _reserved_identifier ::= 'self'
 	| 'parent'
-	| /static/ -> "static"
+	| /static/i -> "static"
 
   _identifier ::= name
-	| _reserved_identifier -> "name"
+	| _reserved_identifier -> name
 
   comment ::= @( ( '//' | /#[^?\[?\r?\n]/ ) /[^?\r?\n]|\?[^>\r\n]/* /\?\r?\n/? | '#' | '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/' )
 

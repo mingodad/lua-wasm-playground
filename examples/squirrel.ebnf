@@ -1,10 +1,11 @@
-; From tree-sitter-squirrel/src/grammar.json
+; repository: https://github.com/tree-sitter-grammars/tree-sitter-squirrel.git
+; commit: 072c969749e66f000dba35a33c387650e203e96e
+; json from: tree-sitter-squirrel/src/grammar.json
+; From /tmp/tslua/squirrel0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -56,41 +57,41 @@ rules:
 	| enum_declaration
 	| expression_statement
 
-  expression_statement ::=  >0(  expression ';'? | ';' )
+  expression_statement ::=  >0(  expression ';'? | ';' ) 
 
   block ::= '{' _statement* '}'
 
-  if_statement ::=  >1(  'if' ( parenthesized_expression ):condition ( _statement ):consequence else_statement? )
+  if_statement ::=  >1(  'if' parenthesized_expression:condition _statement:consequence else_statement? ) 
 
-  else_statement ::=  >1(  'else' ( _statement ):alternative )
+  else_statement ::=  >1(  'else' _statement:alternative ) 
 
-  while_statement ::=  >0(  'while' '(' expression ')' _statement? )
+  while_statement ::=  >0(  'while' '(' expression ')' _statement? ) 
 
-  do_while_statement ::=  >0(  'do' _statement 'while' '(' expression ')' )
+  do_while_statement ::=  >0(  'do' _statement 'while' '(' expression ')' ) 
 
   switch_statement ::= 'switch' '(' expression ')' '{' case_statement* default_statement? '}'
 
-  case_statement ::= 'case' ( expression ):case ':' _statement*
+  case_statement ::= 'case' expression:case ':' _statement*
 
   default_statement ::= 'default' ':' _statement*
 
-  for_statement ::= 'for' '(' ( expression | local_declaration )?:initial ';' ( expression )?:condition ';' ( expression )?:increment ')' _statement
+  for_statement ::= 'for' '(' ( expression | local_declaration )?:initial ';' expression?:condition ';' expression?:increment ')' _statement
 
-  foreach_statement ::= 'foreach' '(' ( ( identifier ):index ',' )? ( identifier ):value 'in' ( expression ):collection ')' _statement
+  foreach_statement ::= 'foreach' '(' ( identifier:index ',' )? identifier:value 'in' expression:collection ')' _statement
 
   break ::= 'break' ';'
 
   continue ::= 'continue' ';'
 
-  return ::=  >0(  'return' ( expression | table )? ';'? )
+  return ::=  >0(  'return' ( expression | table )? ';'? ) 
 
-  yield ::= 'yield' expression? ( ';' | '\n'  )
+  yield ::= 'yield' expression? ( ';' | '\n' )
 
   resume_expression ::= 'resume' expression
 
-  local_declaration ::=  <0(  'local' _initz ';'? )
+  local_declaration ::=  <0(  'local' _initz ';'? ) 
 
-  _initz ::=  >0(  identifier ( ( '=' | '<-' ) ( expression | table ) )? ( ',' _initz )? )
+  _initz ::=  >0(  identifier ( ( '=' | '<-' ) ( expression | table ) )? ( ',' _initz )? ) 
 
   function_declaration ::= 'function' identifier ( '::' identifier )* '(' parameters? ')' _statement
 
@@ -107,9 +108,9 @@ rules:
 
   catch_statement ::= 'catch' '(' identifier ')' _statement
 
-  throw_statement ::=  >0(  'throw' expression ';'? )
+  throw_statement ::=  >0(  'throw' expression ';'? ) 
 
-  const_declaration ::= 'const' identifier '=' const_value ( ';' | '\n'  )
+  const_declaration ::= 'const' identifier '=' const_value ( ';' | '\n' )
 
   const_value ::= array
 	| table
@@ -124,9 +125,9 @@ rules:
 	| identifier
 	| global_variable
 
-  enum_declaration ::=  >0(  'enum' identifier attribute_declaration? '{' identifier ( '=' const_value )? ( ',' identifier ( '=' const_value )? )* '}' ';'? )
+  enum_declaration ::=  >0(  'enum' identifier attribute_declaration? '{' identifier ( '=' const_value )? ( ',' identifier ( '=' const_value )? )* '}' ';'? ) 
 
-  attribute_declaration ::= '</' ( identifier ):left ( '=' ):operator ( const_value ):right ( ',' ( identifier ):left ( '=' ):operator ( const_value ):right )* '/>'
+  attribute_declaration ::= '</' identifier:left '=':operator const_value:right ( ',' identifier:left '=':operator const_value:right )* '/>'
 
   expression ::= delete_expression
 	| clone_expression
@@ -136,40 +137,40 @@ rules:
 	| resume_expression
 	| primary_expression
 
-  primary_expression ::=  >0(  unary_expression | binary_expression | ternary_expression | anonymous_function | deref_expression | index_expression | call_expression | lambda_expression | parenthesized_expression | integer | float | string | verbatim_string | char | bool | null | identifier | global_variable )
+  primary_expression ::=  >0(  unary_expression | binary_expression | ternary_expression | anonymous_function | deref_expression | index_expression | call_expression | lambda_expression | parenthesized_expression | integer | float | string | verbatim_string | char | bool | null | identifier | global_variable ) 
 
-  unary_expression ::=  <13(  ( '-' | '~' | '!' | 'typeof' | '++' | '--' ):operator ( expression | table ):operand ';'? | ( expression ):operand ( '++' | '--' ):operator ';'? )
+  unary_expression ::=  <13(  ( '-' | '~' | '!' | 'typeof' | '++' | '--' ):operator ( expression | table ):operand ';'? | expression:operand ( '++' | '--' ):operator ';'? ) 
 
-  binary_expression ::=  <11(  ( expression ):left ( '+' ):operator ( expression ):right ';'? )
-	|  <11(  ( expression ):left ( '-' ):operator ( expression ):right ';'? )
-	|  <12(  ( expression ):left ( '*' ):operator ( expression ):right ';'? )
-	|  <12(  ( expression ):left ( '/' ):operator ( expression ):right ';'? )
-	|  <12(  ( expression ):left ( '%' ):operator ( expression ):right ';'? )
-	|  <3(  ( expression ):left ( '||' ):operator ( expression ):right ';'? )
-	|  <4(  ( expression ):left ( '&&' ):operator ( expression ):right ';'? )
-	|  <4(  ( expression ):left ( 'in' ):operator ( expression ):right ';'? )
-	|  <5(  ( expression ):left ( '|' ):operator ( expression ):right ';'? )
-	|  <6(  ( expression ):left ( '^' ):operator ( expression ):right ';'? )
-	|  <7(  ( expression ):left ( '&' ):operator ( expression ):right ';'? )
-	|  <8(  ( expression ):left ( '==' ):operator ( expression ):right ';'? )
-	|  <8(  ( expression ):left ( '!=' ):operator ( expression ):right ';'? )
-	|  <9(  ( expression ):left ( '<=>' ):operator ( expression ):right ';'? )
-	|  <9(  ( expression ):left ( '>' ):operator ( expression ):right ';'? )
-	|  <9(  ( expression ):left ( '>=' ):operator ( expression ):right ';'? )
-	|  <9(  ( expression ):left ( '<=' ):operator ( expression ):right ';'? )
-	|  <9(  ( expression ):left ( '<' ):operator ( expression ):right ';'? )
-	|  <9(  ( expression ):left ( 'instanceof' ):operator ( expression ):right ';'? )
-	|  <10(  ( expression ):left ( '<<' ):operator ( expression ):right ';'? )
-	|  <10(  ( expression ):left ( '>>' ):operator ( expression ):right ';'? )
-	|  <10(  ( expression ):left ( '>>>' ):operator ( expression ):right ';'? )
+  binary_expression ::=  <11(  expression:left '+':operator expression:right ';'? ) 
+	|  <11(  expression:left '-':operator expression:right ';'? ) 
+	|  <12(  expression:left '*':operator expression:right ';'? ) 
+	|  <12(  expression:left '/':operator expression:right ';'? ) 
+	|  <12(  expression:left '%':operator expression:right ';'? ) 
+	|  <3(  expression:left '||':operator expression:right ';'? ) 
+	|  <4(  expression:left '&&':operator expression:right ';'? ) 
+	|  <4(  expression:left 'in':operator expression:right ';'? ) 
+	|  <5(  expression:left '|':operator expression:right ';'? ) 
+	|  <6(  expression:left '^':operator expression:right ';'? ) 
+	|  <7(  expression:left '&':operator expression:right ';'? ) 
+	|  <8(  expression:left '==':operator expression:right ';'? ) 
+	|  <8(  expression:left '!=':operator expression:right ';'? ) 
+	|  <9(  expression:left '<=>':operator expression:right ';'? ) 
+	|  <9(  expression:left '>':operator expression:right ';'? ) 
+	|  <9(  expression:left '>=':operator expression:right ';'? ) 
+	|  <9(  expression:left '<=':operator expression:right ';'? ) 
+	|  <9(  expression:left '<':operator expression:right ';'? ) 
+	|  <9(  expression:left 'instanceof':operator expression:right ';'? ) 
+	|  <10(  expression:left '<<':operator expression:right ';'? ) 
+	|  <10(  expression:left '>>':operator expression:right ';'? ) 
+	|  <10(  expression:left '>>>':operator expression:right ';'? ) 
 
-  ternary_expression ::=  >2(  ( expression ):condition '?' ( expression | table ):consequence ':' ( expression | table ):alternative )
+  ternary_expression ::=  >2(  expression:condition '?' ( expression | table ):consequence ':' ( expression | table ):alternative ) 
 
-  assignment_expression ::=  >1(  ( expression ):left ( '=' ):operator ( expression | table ):right )
+  assignment_expression ::=  >1(  expression:left '=':operator ( expression | table ):right ) 
 
-  update_expression ::=  >1(  ( expression ):left ( '<-' | '+=' | '-=' | '*=' | '/=' | '%=' ):operator ( expression | table ):right )
+  update_expression ::=  >1(  expression:left ( '<-' | '+=' | '-=' | '*=' | '/=' | '%=' ):operator ( expression | table ):right ) 
 
-  table ::=  >0(  '{' table_slots? '}' ( '.' expression )? )
+  table ::=  >0(  '{' table_slots? '}' ( '.' expression )? ) 
 
   table_slots ::= table_slot ( ','? table_slot )* ','?
 
@@ -178,15 +179,15 @@ rules:
 	| expression ':' ( expression | table )
 	| function_declaration
 
-  delete_expression ::= 'delete' expression ( ';' | '\n'  )
+  delete_expression ::= 'delete' expression ( ';' | '\n' )
 
   var_statement ::= 'var' identifier '=' expression
 
-  deref_expression ::=  15(  expression '.' identifier )
+  deref_expression ::=  15(  expression '.' identifier ) 
 
-  index_expression ::=  <15(  ( expression ):object '[' ( expression ):index ']' )
+  index_expression ::=  <15(  expression:object '[' expression:index ']' ) 
 
-  call_expression ::=  <14(  ( ( expression ):function | 'rawcall' ) '(' call_args? ')' )
+  call_expression ::=  <14(  ( expression:function | 'rawcall' ) '(' call_args? ')' ) 
 
   call_args ::= ( expression | table ) ( ',' ( expression | table ) )*
 
@@ -194,11 +195,11 @@ rules:
 
   lambda_expression ::= '@' '(' parameters? ')' expression
 
-  parenthesized_expression ::=  -1(  '(' expression ')' )
+  parenthesized_expression ::=  -1(  '(' expression ')' ) 
 
-  clone_expression ::=  >0(  'clone' expression )
+  clone_expression ::=  >0(  'clone' expression ) 
 
-  array ::=  >0(  '[' ( expression ( ',' expression )* )? ','? ']' )
+  array ::=  >0(  '[' ( expression ( ',' expression )* )? ','? ']' ) 
 
   identifier ::= /[a-zA-Z_][a-zA-Z0-9_]*/
 
@@ -208,17 +209,17 @@ rules:
 
   float ::= @( /-?[0-9]+\.[0-9]+/ | /[0-9]+\.[eE][+-]?[0-9]+/ )
 
-  string ::= '"'  ( string_content | _escape_sequence )* '"'
+  string ::= '"' ( string_content | _escape_sequence )* '"'
 
   string_content ::= !(  1(  /[^"\\]+/ )  )
 
-  char ::= "'"  ( escape_sequence | /[^\\']/ ) "'"
+  char ::= "'" ( escape_sequence | /[^\\']/ ) "'"
 	| "'#'"
 
-  _escape_sequence ::=  2(  !( '\\'  /[^abfnrtvxu'\"\\\?]/ ) )
-	|  1(  escape_sequence )
+  _escape_sequence ::=  2(  !( '\\' /[^abfnrtvxu'\"\\\?]/ ) ) 
+	|  1(  escape_sequence ) 
 
-  escape_sequence ::= !( '\\'  ( /[^xu0-7]/ | /[0-7]{1,3}/ | /x[0-9a-fA-F]{2}/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F]+\}/ ) )
+  escape_sequence ::= !( '\\' ( /[^xu0-7]/ | /[0-7]{1,3}/ | /x[0-9a-fA-F]{2}/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F]+\}/ ) )
 
   bool ::= 'true'
 	| 'false'

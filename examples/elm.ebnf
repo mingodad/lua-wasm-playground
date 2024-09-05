@@ -1,10 +1,11 @@
-; From tree-sitter-elm/src/grammar.json
+; repository: https://github.com/elm-tooling/tree-sitter-elm.git
+; commit: 09dbf221d7491dc8d8839616b27c21b9c025c457
+; json from: tree-sitter-elm/src/grammar.json
+; From /tmp/tslua/elm0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -33,19 +34,19 @@ word ::= lower_case_identifier
 
 rules:
 
-  file ::= ( ( module_declaration ):moduleDeclaration _virtual_end_decl )? _import_list? _top_decl_list?
+  file ::= ( module_declaration:moduleDeclaration _virtual_end_decl )? _import_list? _top_decl_list?
 
-  block_comment ::=  1(  '{-' _block_comment_content '-}' )
+  block_comment ::=  1(  '{-' _block_comment_content '-}' ) 
 
   line_comment ::= @(  1(  /--/ /[^\n]/* )  )
 
-  module_declaration ::=  <0(  port? module ( upper_case_qid ):name ( exposing_list ):exposing | effect module ( upper_case_qid ):name where record_expr ( exposing_list ):exposing )
+  module_declaration ::=  <0(  port? module upper_case_qid:name exposing_list:exposing | effect module upper_case_qid:name where record_expr exposing_list:exposing ) 
 
   _import_list ::= ( import_clause _virtual_end_decl )+
 
   _top_decl_list ::= ( ( value_declaration | type_alias_declaration | type_declaration | type_annotation | port_annotation | infix_declaration ) _virtual_end_decl )+
 
-  exposing_list ::= exposing '(' ( ( double_dot ):doubleDot | ( exposed_value | exposed_type | exposed_operator ) ( ',' ( exposed_value | exposed_type | exposed_operator ) )* ) ')'
+  exposing_list ::= exposing '(' ( double_dot:doubleDot | ( exposed_value | exposed_type | exposed_operator ) ( ',' ( exposed_value | exposed_type | exposed_operator ) )* ) ')'
 
   exposed_value ::= lower_case_identifier
 
@@ -63,30 +64,30 @@ rules:
 
   _dot_without_leading_whitespace ::= !( '.' )
 
-  upper_case_qid ::=  >0(  upper_case_identifier ( _dot_without_leading_whitespace -> "dot" _upper_case_identifier_without_leading_whitespace -> "upper_case_identifier" )* )
+  upper_case_qid ::=  >0(  upper_case_identifier ( _dot_without_leading_whitespace -> dot _upper_case_identifier_without_leading_whitespace -> upper_case_identifier )* ) 
 
   value_qid ::= lower_case_identifier
-	| upper_case_identifier _dot_without_leading_whitespace -> "dot" ( _upper_case_identifier_without_leading_whitespace -> "upper_case_identifier" _dot_without_leading_whitespace -> "dot" )* _lower_case_identifier_without_leading_whitespace -> "lower_case_identifier"
+	| upper_case_identifier _dot_without_leading_whitespace -> dot ( _upper_case_identifier_without_leading_whitespace -> upper_case_identifier _dot_without_leading_whitespace -> dot )* _lower_case_identifier_without_leading_whitespace -> lower_case_identifier
 
-  field_accessor_function_expr ::= dot _lower_case_identifier_without_leading_whitespace -> "lower_case_identifier"
+  field_accessor_function_expr ::= dot _lower_case_identifier_without_leading_whitespace -> lower_case_identifier
 
-  import_clause ::= import ( upper_case_qid ):moduleName ( as_clause )?:asClause ( exposing_list )?:exposing
+  import_clause ::= import upper_case_qid:moduleName as_clause?:asClause exposing_list?:exposing
 
-  as_clause ::= as ( upper_case_identifier ):name
+  as_clause ::= as upper_case_identifier:name
 
-  value_declaration ::= ( ( function_declaration_left ):functionDeclarationLeft | ( pattern ):pattern ) eq ( _expression ):body
+  value_declaration ::= ( function_declaration_left:functionDeclarationLeft | pattern:pattern ) eq _expression:body
 
-  function_declaration_left ::=  1(  lower_case_identifier ( ( anything_pattern | lower_pattern | tuple_pattern | unit_expr | list_pattern | record_pattern | _literal_expr_group | _parenthesized_pattern )* ):pattern )
+  function_declaration_left ::=  1(  lower_case_identifier ( anything_pattern | lower_pattern | tuple_pattern | unit_expr | list_pattern | record_pattern | _literal_expr_group | _parenthesized_pattern )*:pattern ) 
 
-  type_declaration ::=  <0(  type ( upper_case_identifier ):name ( lower_type_name* ):typeName eq ( union_variant ):unionVariant _more_union_variants* )
+  type_declaration ::=  <0(  type upper_case_identifier:name lower_type_name*:typeName eq union_variant:unionVariant _more_union_variants* ) 
 
   lower_type_name ::= lower_case_identifier
 
-  union_variant ::=  <0(  ( upper_case_identifier ):name ( line_comment | _single_type_expression )* )
+  union_variant ::=  <0(  upper_case_identifier:name ( line_comment | _single_type_expression )* ) 
 
-  _more_union_variants ::= '|' ( union_variant ):unionVariant
+  _more_union_variants ::= '|' union_variant:unionVariant
 
-  type_alias_declaration ::= type alias ( upper_case_identifier ):name ( lower_type_name* ):typeVariable eq ( type_expression ):typeExpression
+  type_alias_declaration ::= type alias upper_case_identifier:name lower_type_name*:typeVariable eq type_expression:typeExpression
 
   type_expression ::= _type_expression_inner ( arrow _type_expression_inner )*
 
@@ -95,42 +96,42 @@ rules:
 
   type_ref ::= upper_case_qid _single_type_expression+
 
-  _single_type_expression ::= ( type_ref_without_args -> "type_ref" ):part
-	| ( type_variable ):part
-	| ( record_type ):part
-	| ( tuple_type ):part
-	| '(' ( type_expression ):part ')'
+  _single_type_expression ::= ( type_ref_without_args -> type_ref ):part
+	| type_variable:part
+	| record_type:part
+	| tuple_type:part
+	| '(' type_expression:part ')'
 
   type_ref_without_args ::= upper_case_qid
 
   type_variable ::= lower_case_identifier
 
-  record_type ::= '{' ( _record_base? ( field_type ):fieldType ( ',' ( field_type ):fieldType )* )? '}'
+  record_type ::= '{' ( _record_base? field_type:fieldType ( ',' field_type:fieldType )* )? '}'
 
-  field_type ::= ( lower_case_identifier ):name colon ( type_expression ):typeExpression
+  field_type ::= lower_case_identifier:name colon type_expression:typeExpression
 
-  tuple_type ::= ( unit_expr ):unitExpr
-	| '(' ( type_expression ):typeExpression ( ',' ( type_expression ):typeExpression )+ ')'
+  tuple_type ::= unit_expr:unitExpr
+	| '(' type_expression:typeExpression ( ',' type_expression:typeExpression )+ ')'
 
-  type_annotation ::= ( lower_case_identifier ):name colon ( type_expression ):typeExpression
+  type_annotation ::= lower_case_identifier:name colon type_expression:typeExpression
 
-  port_annotation ::= port ( lower_case_identifier ):name colon ( type_expression ):typeExpression
+  port_annotation ::= port lower_case_identifier:name colon type_expression:typeExpression
 
   _expression ::= bin_op_expr
 	| _call_or_atom
 
-  bin_op_expr ::= (  1(  _call_or_atom  >0(  ( operator _call_or_atom )+ )  )  ):part
+  bin_op_expr ::=  1(  _call_or_atom  >0(  ( operator _call_or_atom )+ )  ) :part
 
   operator ::= operator_identifier
 
   operator_as_function_expr ::= _operator_as_function_inner
 
-  _operator_as_function_inner ::= '(' ( operator_identifier ):operator ')'
+  _operator_as_function_inner ::= '(' operator_identifier:operator ')'
 
   _call_or_atom ::= function_call_expr
 	| _atom
 
-  function_call_expr ::=  ~10(  ( _function_call_target ):target ( _atom+ ):arg )
+  function_call_expr ::=  ~10(  _function_call_target:target _atom+:arg ) 
 
   _function_call_target ::= field_access_expr
 	| value_expr
@@ -155,70 +156,70 @@ rules:
 	| anonymous_function_expr
 	| glsl_code_expr
 
-  field_access_expr ::=  <0(  ( _field_access_start ):target _field_access_segment+ )
+  field_access_expr ::=  <0(  _field_access_start:target _field_access_segment+ ) 
 
-  _field_access_start ::=  1(  field_access_expr | value_expr | parenthesized_expr | record_expr )
+  _field_access_start ::=  1(  field_access_expr | value_expr | parenthesized_expr | record_expr ) 
 
-  _field_access_segment ::=  <0(  _dot_without_leading_whitespace -> "dot" _lower_case_identifier_without_leading_whitespace -> "lower_case_identifier" )
+  _field_access_segment ::=  <0(  _dot_without_leading_whitespace -> dot _lower_case_identifier_without_leading_whitespace -> lower_case_identifier ) 
 
-  negate_expr ::= minus_without_trailing_whitespace -> "operator_identifier" _atom
+  negate_expr ::= minus_without_trailing_whitespace -> operator_identifier _atom
 
-  parenthesized_expr ::= '(' ( _expression ):expression ')'
+  parenthesized_expr ::= '(' _expression:expression ')'
 
   _literal_expr_group ::= char_constant_expr
 	| number_constant_expr
 	| string_constant_expr
 
-  char_constant_expr ::= "'"  -> "open_char" ( @( /[^\\\n']/ ) -> "regular_string_part" | string_escape | invalid_string_escape ) "'"  -> "close_char"
+  char_constant_expr ::= "'" -> open_char ( @( /[^\\\n']/ ) -> regular_string_part | string_escape | invalid_string_escape ) "'" -> close_char
 
   number_constant_expr ::= number_literal
 
-  string_constant_expr ::= '"""' -> "open_quote" ( !(  2(  ( /[^\\"]/ | /"[^"]/ | /""[^"]/ )+ )  ) -> "regular_string_part" | string_escape | invalid_string_escape )* '"""' -> "close_quote"
-	| '"'  -> "open_quote" ( !(  2(  /[^\\"\n]/+ )  ) -> "regular_string_part" | string_escape | invalid_string_escape )* '"'  -> "close_quote"
+  string_constant_expr ::= '"""' -> open_quote ( !(  2(  ( /[^\\"]/ | /"[^"]/ | /""[^"]/ )+ )  ) -> regular_string_part | string_escape | invalid_string_escape )* '"""' -> close_quote
+	| '"' -> open_quote ( !(  2(  /[^\\"\n]/+ )  ) -> regular_string_part | string_escape | invalid_string_escape )* '"' -> close_quote
 
-  anonymous_function_expr ::= backslash ( pattern+ ):param arrow ( _expression ):expr
+  anonymous_function_expr ::= backslash pattern+:param arrow _expression:expr
 
   value_expr ::= ( value_qid | upper_case_qid ):name
 
-  tuple_expr ::= '(' ( _expression ):expr ( ',' ( _expression ):expr )+ ')'
+  tuple_expr ::= '(' _expression:expr ( ',' _expression:expr )+ ')'
 
   unit_expr ::= '(' ')'
 
-  list_expr ::= '[' ( ( _expression ):exprList ( ',' ( _expression ):exprList )* )? ']'
+  list_expr ::= '[' ( _expression:exprList ( ',' _expression:exprList )* )? ']'
 
   record_expr ::= '{' _record_inner? '}'
 
   record_base_identifier ::= lower_case_identifier
 
-  _record_base ::= ( record_base_identifier ):baseRecord '|'
+  _record_base ::= record_base_identifier:baseRecord '|'
 
-  _record_inner ::= _record_base? ( field ):field ( ',' ( field ):field )*
+  _record_inner ::= _record_base? field:field ( ',' field:field )*
 
-  field ::= ( lower_case_identifier ):name eq ( _expression ):expression
+  field ::= lower_case_identifier:name eq _expression:expression
 
   if_else_expr ::= _if _then  <0(  'else' _if _then ) * _else
 
-  _if ::= 'if' ( _expression ):exprList
+  _if ::= 'if' _expression:exprList
 
-  _then ::= 'then' ( _expression ):exprList
+  _then ::= 'then' _expression:exprList
 
-  _else ::= 'else' ( _expression ):exprList
+  _else ::= 'else' _expression:exprList
 
-  case_of_expr ::= '(' case ( _expression ):expr of _virtual_open_section ( case_of_branch ):branch _more_case_of_branches? _virtual_end_section? ')'
-	| case ( _expression ):expr of _virtual_open_section ( case_of_branch ):branch _more_case_of_branches? _virtual_end_section
+  case_of_expr ::= '(' case _expression:expr of _virtual_open_section case_of_branch:branch _more_case_of_branches? _virtual_end_section? ')'
+	| case _expression:expr of _virtual_open_section case_of_branch:branch _more_case_of_branches? _virtual_end_section
 
-  _more_case_of_branches ::=  ~6(  ( _virtual_end_decl ( case_of_branch ):branch )+ )
+  _more_case_of_branches ::=  ~6(  ( _virtual_end_decl case_of_branch:branch )+ ) 
 
-  case_of_branch ::= ( pattern ):pattern arrow ( _expression ):expr
+  case_of_branch ::= pattern:pattern arrow _expression:expr
 
-  let_in_expr ::= 'let' _virtual_open_section _inner_declaration ( _virtual_end_decl _inner_declaration )+? _virtual_end_section 'in' ( _expression ):body
+  let_in_expr ::= 'let' _virtual_open_section _inner_declaration ( _virtual_end_decl _inner_declaration )+? _virtual_end_section 'in' _expression:body
 
-  _inner_declaration ::= ( value_declaration ):valueDeclaration
+  _inner_declaration ::= value_declaration:valueDeclaration
 	| type_annotation
 
-  pattern ::= ( ( cons_pattern ):child | _single_pattern ) ( as ( lower_pattern ):patternAs )?
+  pattern ::= ( cons_pattern:child | _single_pattern ) ( as lower_pattern:patternAs )?
 
-  cons_pattern ::= ( _single_pattern_cons ):part '::' ( cons_pattern | _single_pattern_cons ):part
+  cons_pattern ::= _single_pattern_cons:part '::' ( cons_pattern | _single_pattern_cons ):part
 
   _single_pattern_cons ::= _parenthesized_pattern
 	| anything_pattern
@@ -230,25 +231,25 @@ rules:
 	| record_pattern
 	| _literal_expr_group
 
-  _single_pattern ::= '(' ( pattern ):child ')'
-	| ( anything_pattern ):child
-	| ( lower_pattern ):child
-	| ( union_pattern ):child
-	| ( tuple_pattern ):child
-	| ( unit_expr ):child
-	| ( list_pattern ):child
-	| ( record_pattern ):child
-	| ( _literal_expr_group ):child
+  _single_pattern ::= '(' pattern:child ')'
+	| anything_pattern:child
+	| lower_pattern:child
+	| union_pattern:child
+	| tuple_pattern:child
+	| unit_expr:child
+	| list_pattern:child
+	| record_pattern:child
+	| _literal_expr_group:child
 
   lower_pattern ::= lower_case_identifier
 
   anything_pattern ::= underscore
 
-  record_pattern ::= '{' ( lower_pattern ):patternList ( ',' ( lower_pattern ):patternList )* '}'
+  record_pattern ::= '{' lower_pattern:patternList ( ',' lower_pattern:patternList )* '}'
 
-  list_pattern ::= '[' ( ( pattern ):part ( ',' ( pattern ):part )* )? ']'
+  list_pattern ::= '[' ( pattern:part ( ',' pattern:part )* )? ']'
 
-  union_pattern ::=  <0(  ( upper_case_qid ):constructor ( _union_argument_pattern* ):argPattern )
+  union_pattern ::=  <0(  upper_case_qid:constructor _union_argument_pattern*:argPattern ) 
 
   nullary_constructor_argument_pattern ::= upper_case_qid
 
@@ -262,13 +263,13 @@ rules:
 	| _literal_expr_group
 	| _parenthesized_pattern
 
-  tuple_pattern ::= '(' ( pattern ):pattern ',' ( pattern ):pattern ( ',' ( pattern ):pattern )* ')'
+  tuple_pattern ::= '(' pattern:pattern ',' pattern:pattern ( ',' pattern:pattern )* ')'
 
   _parenthesized_pattern ::= '(' pattern ')'
 
-  infix_declaration ::= infix ( ( 'left' | 'right' | 'non' ) -> "lower_case_identifier" ):associativity ( number_literal ):precedence _operator_as_function_inner eq value_expr
+  infix_declaration ::= infix ( ( 'left' | 'right' | 'non' ) -> lower_case_identifier ):associativity number_literal:precedence _operator_as_function_inner eq value_expr
 
-  glsl_code_expr ::= _glsl_begin ( glsl_content ):content _glsl_end
+  glsl_code_expr ::= _glsl_begin glsl_content:content _glsl_end
 
   _glsl_begin ::= '[glsl|'
 

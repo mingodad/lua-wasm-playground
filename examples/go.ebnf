@@ -1,10 +1,11 @@
-; From tree-sitter-go/src/grammar.json
+; repository: https://github.com/tree-sitter/tree-sitter-go.git
+; commit: 81a11f8252998ee6b98d59e6da91fc307491e53d
+; json from: tree-sitter-go/src/grammar.json
+; From /tmp/tslua/go0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 extras ::= {
@@ -45,7 +46,7 @@ word ::= identifier
 
 rules:
 
-  source_file ::= ( _statement ( /\n/ | ';' | '\0'  ) | _top_level_declaration ( /\n/ | ';' | '\0'  ) )* _top_level_declaration?
+  source_file ::= ( _statement ( /\n/ | ';' | '\0' ) | _top_level_declaration ( /\n/ | ';' | '\0' ) )* _top_level_declaration?
 
   _top_level_declaration ::= package_clause
 	| function_declaration
@@ -56,47 +57,47 @@ rules:
 
   import_declaration ::= 'import' ( import_spec | import_spec_list )
 
-  import_spec ::= ( dot | blank_identifier | _package_identifier )?:name ( _string_literal ):path
+  import_spec ::= ( ( dot | blank_identifier | _package_identifier ):name )? _string_literal:path
 
   dot ::= '.'
 
   blank_identifier ::= '_'
 
-  import_spec_list ::= '(' ( import_spec ( ( /\n/ | ';' | '\0'  ) import_spec )* ( /\n/ | ';' | '\0'  )? )? ')'
+  import_spec_list ::= '(' ( import_spec ( ( /\n/ | ';' | '\0' ) import_spec )* ( /\n/ | ';' | '\0' )? )? ')'
 
   _declaration ::= const_declaration
 	| type_declaration
 	| var_declaration
 
-  const_declaration ::= 'const' ( const_spec | '(' ( const_spec ( /\n/ | ';' | '\0'  ) )* ')' )
+  const_declaration ::= 'const' ( const_spec | '(' ( const_spec ( /\n/ | ';' | '\0' ) )* ')' )
 
-  const_spec ::=  <0(  ( identifier ( ',' identifier )* ):name ( ( _type )?:type '=' ( expression_list ):value )? )
+  const_spec ::=  <0(  ( identifier ( ',' identifier )* ):name ( ( _type:type )? '=' expression_list:value )? ) 
 
   var_declaration ::= 'var' ( var_spec | var_spec_list )
 
-  var_spec ::= ( identifier ):name ( ',' ( identifier ):name )* ( ( _type ):type ( '=' ( expression_list ):value )? | '=' ( expression_list ):value )
+  var_spec ::= identifier:name ( ',' identifier:name )* ( _type:type ( '=' expression_list:value )? | '=' expression_list:value )
 
-  var_spec_list ::= '(' ( var_spec ( /\n/ | ';' | '\0'  ) )* ')'
+  var_spec_list ::= '(' ( var_spec ( /\n/ | ';' | '\0' ) )* ')'
 
-  function_declaration ::=  >1(  'func' ( identifier ):name ( type_parameter_list )?:type_parameters ( parameter_list ):parameters ( parameter_list | _simple_type )?:result ( block )?:body )
+  function_declaration ::=  >1(  'func' identifier:name type_parameter_list?:type_parameters parameter_list:parameters ( parameter_list | _simple_type )?:result block?:body ) 
 
-  method_declaration ::=  >1(  'func' ( parameter_list ):receiver ( _field_identifier ):name ( parameter_list ):parameters ( parameter_list | _simple_type )?:result ( block )?:body )
+  method_declaration ::=  >1(  'func' parameter_list:receiver _field_identifier:name parameter_list:parameters ( parameter_list | _simple_type )?:result block?:body ) 
 
   type_parameter_list ::= '[' type_parameter_declaration ( ',' type_parameter_declaration )* ','? ']'
 
-  type_parameter_declaration ::= ( identifier ):name ( ',' ( identifier ):name )* ( type_elem -> "type_constraint" ):type
+  type_parameter_declaration ::= identifier:name ( ',' identifier:name )* ( type_elem -> type_constraint ):type
 
   parameter_list ::= '(' ( ( ( parameter_declaration | variadic_parameter_declaration ) ( ',' ( parameter_declaration | variadic_parameter_declaration ) )* )? ','? )? ')'
 
-  parameter_declaration ::=  <0(  ( ( identifier ):name ( ',' ( identifier ):name )* )? ( _type ):type )
+  parameter_declaration ::=  <0(  ( identifier:name ( ',' identifier:name )* )? _type:type ) 
 
-  variadic_parameter_declaration ::= ( identifier )?:name '...' ( _type ):type
+  variadic_parameter_declaration ::= identifier?:name '...' _type:type
 
-  type_alias ::= ( _type_identifier ):name '=' ( _type ):type
+  type_alias ::= _type_identifier:name '=' _type:type
 
-  type_declaration ::= 'type' ( type_spec | type_alias | '(' ( ( type_spec | type_alias ) ( /\n/ | ';' | '\0'  ) )* ')' )
+  type_declaration ::= 'type' ( type_spec | type_alias | '(' ( ( type_spec | type_alias ) ( /\n/ | ';' | '\0' ) )* ')' )
 
-  type_spec ::= ( _type_identifier ):name ( type_parameter_list )?:type_parameters ( _type ):type
+  type_spec ::= _type_identifier:name type_parameter_list?:type_parameters _type:type
 
   field_name_list ::= _field_identifier ( ',' _field_identifier )*
 
@@ -107,7 +108,7 @@ rules:
 
   parenthesized_type ::= '(' _type ')'
 
-  _simple_type ::=  ~-1(  _type_identifier )
+  _simple_type ::=  ~-1(  _type_identifier ) 
 	| generic_type
 	| qualified_type
 	| pointer_type
@@ -120,45 +121,45 @@ rules:
 	| function_type
 	| negated_type
 
-  generic_type ::=  ~1(  ( _type_identifier | qualified_type | negated_type ):type ( type_arguments ):type_arguments )
+  generic_type ::=  ~1(  ( _type_identifier | qualified_type | negated_type ):type type_arguments:type_arguments ) 
 
-  type_arguments ::=  ~2(  '[' type_elem ( ',' type_elem )* ','? ']' )
+  type_arguments ::=  ~2(  '[' type_elem ( ',' type_elem )* ','? ']' ) 
 
-  pointer_type ::=  6(  '*' _type )
+  pointer_type ::=  6(  '*' _type ) 
 
-  array_type ::=  >0(  '[' ( _expression ):length ']' ( _type ):element )
+  array_type ::=  >0(  '[' _expression:length ']' _type:element ) 
 
-  implicit_length_array_type ::= '[' '...' ']' ( _type ):element
+  implicit_length_array_type ::= '[' '...' ']' _type:element
 
-  slice_type ::=  >0(  '[' ']' ( _type ):element )
+  slice_type ::=  >0(  '[' ']' _type:element ) 
 
   struct_type ::= 'struct' field_declaration_list
 
-  negated_type ::=  <0(  '~' _type )
+  negated_type ::=  <0(  '~' _type ) 
 
-  field_declaration_list ::= '{' ( field_declaration ( ( /\n/ | ';' | '\0'  ) field_declaration )* ( /\n/ | ';' | '\0'  )? )? '}'
+  field_declaration_list ::= '{' ( field_declaration ( ( /\n/ | ';' | '\0' ) field_declaration )* ( /\n/ | ';' | '\0' )? )? '}'
 
-  field_declaration ::= ( ( _field_identifier ):name ( ',' ( _field_identifier ):name )* ( _type ):type | '*'? ( _type_identifier | qualified_type | generic_type ):type ) ( _string_literal )?:tag
+  field_declaration ::= ( _field_identifier:name ( ',' _field_identifier:name )* _type:type | '*'? ( _type_identifier | qualified_type | generic_type ):type ) _string_literal?:tag
 
-  interface_type ::= 'interface' '{' ( _interface_elem ( ( /\n/ | ';' | '\0'  ) _interface_elem )* ( /\n/ | ';' | '\0'  )? )? '}'
+  interface_type ::= 'interface' '{' ( _interface_elem ( ( /\n/ | ';' | '\0' ) _interface_elem )* ( /\n/ | ';' | '\0' )? )? '}'
 
   _interface_elem ::= method_elem
 	| type_elem
 
-  method_elem ::= ( _field_identifier ):name ( parameter_list ):parameters ( parameter_list | _simple_type )?:result
+  method_elem ::= _field_identifier:name parameter_list:parameters ( parameter_list | _simple_type )?:result
 
   type_elem ::= _type ( '|' _type )*
 
-  map_type ::=  >0(  'map' '[' ( _type ):key ']' ( _type ):value )
+  map_type ::=  >0(  'map' '[' _type:key ']' _type:value ) 
 
-  channel_type ::=  <0(  'chan' ( _type ):value | 'chan' '<-' ( _type ):value |  6(  '<-' 'chan' ( _type ):value )  )
+  channel_type ::=  <0(  'chan' _type:value | 'chan' '<-' _type:value |  6(  '<-' 'chan' _type:value )  ) 
 
-  function_type ::=  >0(  'func' ( parameter_list ):parameters ( parameter_list | _simple_type )?:result )
+  function_type ::=  >0(  'func' parameter_list:parameters ( parameter_list | _simple_type )?:result ) 
 
   block ::= '{' _statement_list? '}'
 
-  _statement_list ::= _statement ( ( /\n/ | ';' | '\0'  ) _statement )* ( ( /\n/ | ';' | '\0'  ) empty_labeled_statement -> "labeled_statement"? )?
-	| empty_labeled_statement -> "labeled_statement"
+  _statement_list ::= _statement ( ( /\n/ | ';' | '\0' ) _statement )* ( ( /\n/ | ';' | '\0' ) ( empty_labeled_statement -> labeled_statement )? )?
+	| empty_labeled_statement -> labeled_statement
 
   _statement ::= _declaration
 	| _simple_statement
@@ -189,29 +190,29 @@ rules:
 
   expression_statement ::= _expression
 
-  send_statement ::= ( _expression ):channel '<-' ( _expression ):value
+  send_statement ::= _expression:channel '<-' _expression:value
 
-  receive_statement ::= ( ( expression_list ):left ( '=' | ':=' ) )? ( _expression ):right
+  receive_statement ::= ( expression_list:left ( '=' | ':=' ) )? _expression:right
 
   inc_statement ::= _expression '++'
 
   dec_statement ::= _expression '--'
 
-  assignment_statement ::= ( expression_list ):left ( '*=' | '/=' | '%=' | '<<=' | '>>=' | '&=' | '&^=' | '+=' | '-=' | '|=' | '^=' | '=' ):operator ( expression_list ):right
+  assignment_statement ::= expression_list:left ( '*=' | '/=' | '%=' | '<<=' | '>>=' | '&=' | '&^=' | '+=' | '-=' | '|=' | '^=' | '=' ):operator expression_list:right
 
-  short_var_declaration ::= ( expression_list ):left ':=' ( expression_list ):right
+  short_var_declaration ::= expression_list:left ':=' expression_list:right
 
-  labeled_statement ::= ( identifier -> "label_name" ):label ':' _statement
+  labeled_statement ::= ( identifier -> label_name ):label ':' _statement
 
-  empty_labeled_statement ::= ( identifier -> "label_name" ):label ':'
+  empty_labeled_statement ::= ( identifier -> label_name ):label ':'
 
-  fallthrough_statement ::=  <0(  'fallthrough' )
+  fallthrough_statement ::=  <0(  'fallthrough' ) 
 
-  break_statement ::= 'break' identifier -> "label_name"?
+  break_statement ::= 'break' ( identifier -> label_name )?
 
-  continue_statement ::= 'continue' identifier -> "label_name"?
+  continue_statement ::= 'continue' ( identifier -> label_name )?
 
-  goto_statement ::= 'goto' identifier -> "label_name"
+  goto_statement ::= 'goto' identifier -> label_name
 
   return_statement ::= 'return' expression_list?
 
@@ -219,23 +220,23 @@ rules:
 
   defer_statement ::= 'defer' _expression
 
-  if_statement ::= 'if' ( ( _simple_statement ):initializer ';' )? ( _expression ):condition ( block ):consequence ( 'else' ( block | if_statement ):alternative )?
+  if_statement ::= 'if' ( _simple_statement:initializer ';' )? _expression:condition block:consequence ( 'else' ( block | if_statement ):alternative )?
 
-  for_statement ::= 'for' ( _expression | for_clause | range_clause )? ( block ):body
+  for_statement ::= 'for' ( _expression | for_clause | range_clause )? block:body
 
-  for_clause ::= ( _simple_statement )?:initializer ';' ( _expression )?:condition ';' ( _simple_statement )?:update
+  for_clause ::= _simple_statement?:initializer ';' _expression?:condition ';' _simple_statement?:update
 
-  range_clause ::= ( ( expression_list ):left ( '=' | ':=' ) )? 'range' ( _expression ):right
+  range_clause ::= ( expression_list:left ( '=' | ':=' ) )? 'range' _expression:right
 
-  expression_switch_statement ::= 'switch' ( ( _simple_statement ):initializer ';' )? ( _expression )?:value '{' ( expression_case | default_case )* '}'
+  expression_switch_statement ::= 'switch' ( _simple_statement:initializer ';' )? _expression?:value '{' ( expression_case | default_case )* '}'
 
-  expression_case ::= 'case' ( expression_list ):value ':' _statement_list?
+  expression_case ::= 'case' expression_list:value ':' _statement_list?
 
   default_case ::= 'default' ':' _statement_list?
 
   type_switch_statement ::= 'switch' _type_switch_header '{' ( type_case | default_case )* '}'
 
-  _type_switch_header ::= ( ( _simple_statement ):initializer ';' )? ( ( expression_list ):alias ':=' )? ( _expression ):value '.' '(' 'type' ')'
+  _type_switch_header ::= ( _simple_statement:initializer ';' )? ( expression_list:alias ':=' )? _expression:value '.' '(' 'type' ')'
 
   type_case ::= 'case' ( _type ( ',' _type )* ):type ':' _statement_list?
 
@@ -253,7 +254,7 @@ rules:
 	| type_conversion_expression
 	| type_instantiation_expression
 	| identifier
-	| ( 'new' | 'make' ) -> "identifier"
+	| ( 'new' | 'make' ) -> identifier
 	| composite_literal
 	| func_literal
 	| _string_literal
@@ -269,27 +270,27 @@ rules:
 
   parenthesized_expression ::= '(' _expression ')'
 
-  call_expression ::=  7(  ( ( 'new' | 'make' ) -> "identifier" ):function ( special_argument_list -> "argument_list" ):arguments | ( _expression ):function ( type_arguments )?:type_arguments ( argument_list ):arguments )
+  call_expression ::=  7(  ( ( 'new' | 'make' ) -> identifier ):function ( special_argument_list -> argument_list ):arguments | _expression:function type_arguments?:type_arguments argument_list:arguments ) 
 
-  variadic_argument ::=  >0(  _expression '...' )
+  variadic_argument ::=  >0(  _expression '...' ) 
 
   special_argument_list ::= '(' ( _type ( ',' _expression )* ','? )? ')'
 
   argument_list ::= '(' ( ( _expression | variadic_argument ) ( ',' ( _expression | variadic_argument ) )* ','? )? ')'
 
-  selector_expression ::=  7(  ( _expression ):operand '.' ( _field_identifier ):field )
+  selector_expression ::=  7(  _expression:operand '.' _field_identifier:field ) 
 
-  index_expression ::=  7(  ( _expression ):operand '[' ( _expression ):index ']' )
+  index_expression ::=  7(  _expression:operand '[' _expression:index ']' ) 
 
-  slice_expression ::=  7(  ( _expression ):operand '[' ( ( _expression )?:start ':' ( _expression )?:end | ( _expression )?:start ':' ( _expression ):end ':' ( _expression ):capacity ) ']' )
+  slice_expression ::=  7(  _expression:operand '[' ( _expression?:start ':' _expression?:end | _expression?:start ':' _expression:end ':' _expression:capacity ) ']' ) 
 
-  type_assertion_expression ::=  7(  ( _expression ):operand '.' '(' ( _type ):type ')' )
+  type_assertion_expression ::=  7(  _expression:operand '.' '(' _type:type ')' ) 
 
-  type_conversion_expression ::=  ~-1(  ( _type ):type '(' ( _expression ):operand ','? ')' )
+  type_conversion_expression ::=  ~-1(  _type:type '(' _expression:operand ','? ')' ) 
 
-  type_instantiation_expression ::=  ~-1(  ( _type ):type '[' _type ( ',' _type )* ','? ']' )
+  type_instantiation_expression ::=  ~-1(  _type:type '[' _type ( ',' _type )* ','? ']' ) 
 
-  composite_literal ::=  -1(  ( map_type | slice_type | array_type | implicit_length_array_type | struct_type | _type_identifier | generic_type | qualified_type ):type ( literal_value ):body )
+  composite_literal ::=  -1(  ( map_type | slice_type | array_type | implicit_length_array_type | struct_type | _type_identifier | generic_type | qualified_type ):type literal_value:body ) 
 
   literal_value ::= '{' ( ( ( literal_element | keyed_element ) ( ',' ( literal_element | keyed_element ) )* )? ','? )? '}'
 
@@ -298,36 +299,36 @@ rules:
 
   keyed_element ::= literal_element ':' literal_element
 
-  func_literal ::= 'func' ( parameter_list ):parameters ( parameter_list | _simple_type )?:result ( block ):body
+  func_literal ::= 'func' parameter_list:parameters ( parameter_list | _simple_type )?:result block:body
 
-  unary_expression ::=  6(  ( '+' | '-' | '!' | '^' | '*' | '&' | '<-' ):operator ( _expression ):operand )
+  unary_expression ::=  6(  ( '+' | '-' | '!' | '^' | '*' | '&' | '<-' ):operator _expression:operand ) 
 
-  binary_expression ::=  <5(  ( _expression ):left ( '*' | '/' | '%' | '<<' | '>>' | '&' | '&^' ):operator ( _expression ):right )
-	|  <4(  ( _expression ):left ( '+' | '-' | '|' | '^' ):operator ( _expression ):right )
-	|  <3(  ( _expression ):left ( '==' | '!=' | '<' | '<=' | '>' | '>=' ):operator ( _expression ):right )
-	|  <2(  ( _expression ):left ( '&&' ):operator ( _expression ):right )
-	|  <1(  ( _expression ):left ( '||' ):operator ( _expression ):right )
+  binary_expression ::=  <5(  _expression:left ( '*' | '/' | '%' | '<<' | '>>' | '&' | '&^' ):operator _expression:right ) 
+	|  <4(  _expression:left ( '+' | '-' | '|' | '^' ):operator _expression:right ) 
+	|  <3(  _expression:left ( '==' | '!=' | '<' | '<=' | '>' | '>=' ):operator _expression:right ) 
+	|  <2(  _expression:left '&&':operator _expression:right ) 
+	|  <1(  _expression:left '||':operator _expression:right ) 
 
-  qualified_type ::= ( _package_identifier ):package '.' ( _type_identifier ):name
+  qualified_type ::= _package_identifier:package '.' _type_identifier:name
 
   identifier ::= /[_\p{XID_Start}][_\p{XID_Continue}]*/
 
-  _type_identifier ::= identifier -> "type_identifier"
+  _type_identifier ::= identifier -> type_identifier
 
-  _field_identifier ::= identifier -> "field_identifier"
+  _field_identifier ::= identifier -> field_identifier
 
-  _package_identifier ::= identifier -> "package_identifier"
+  _package_identifier ::= identifier -> package_identifier
 
   _string_literal ::= raw_string_literal
 	| interpreted_string_literal
 
   raw_string_literal ::= @( '`' /[^`]/* '`' )
 
-  interpreted_string_literal ::= '"'  ( _interpreted_string_literal_basic_content | escape_sequence )* !( '"'  )
+  interpreted_string_literal ::= '"' ( _interpreted_string_literal_basic_content | escape_sequence )* !( '"' )
 
   _interpreted_string_literal_basic_content ::= !(  1(  /[^"\n\\]+/ )  )
 
-  escape_sequence ::= !( '\\'  ( /[^xuU]/ | /\d{2,3}/ | /x[0-9a-fA-F]{2,}/ | /u[0-9a-fA-F]{4}/ | /U[0-9a-fA-F]{8}/ ) )
+  escape_sequence ::= !( '\\' ( /[^xuU]/ | /\d{2,3}/ | /x[0-9a-fA-F]{2,}/ | /u[0-9a-fA-F]{4}/ | /U[0-9a-fA-F]{8}/ ) )
 
   int_literal ::= @( '0' ( 'b' | 'B' ) '_'? /[01]/ ( '_'? /[01]/ )* | '0' | /[1-9]/ ( '_'? /[0-9]/ ( '_'? /[0-9]/ )* )? | '0' ( 'o' | 'O' )? '_'? /[0-7]/ ( '_'? /[0-7]/ )* | '0' ( 'x' | 'X' ) '_'? /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* )
 
@@ -335,7 +336,7 @@ rules:
 
   imaginary_literal ::= @( ( /[0-9]/ ( '_'? /[0-9]/ )* | '0' ( 'b' | 'B' ) '_'? /[01]/ ( '_'? /[01]/ )* | '0' | /[1-9]/ ( '_'? /[0-9]/ ( '_'? /[0-9]/ )* )? | '0' ( 'o' | 'O' )? '_'? /[0-7]/ ( '_'? /[0-7]/ )* | '0' ( 'x' | 'X' ) '_'? /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* | /[0-9]/ ( '_'? /[0-9]/ )* '.' ( /[0-9]/ ( '_'? /[0-9]/ )* )? ( ( 'e' | 'E' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* )? | /[0-9]/ ( '_'? /[0-9]/ )* ( 'e' | 'E' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* | '.' /[0-9]/ ( '_'? /[0-9]/ )* ( ( 'e' | 'E' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* )? | '0' ( 'x' | 'X' ) ( '_'? /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* '.' ( /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* )? | '_'? /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* | '.' /[0-9a-fA-F]/ ( '_'? /[0-9a-fA-F]/ )* ) ( 'p' | 'P' ) ( '+' | '-' )? /[0-9]/ ( '_'? /[0-9]/ )* ) 'i' )
 
-  rune_literal ::= @( "'"  ( /[^'\\]/ | '\\'  ( 'x' /[0-9a-fA-F]/ /[0-9a-fA-F]/ | /[0-7]/ /[0-7]/ /[0-7]/ | 'u' /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ | 'U' /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ | ( 'a' | 'b' | 'f' | 'n' | 'r' | 't' | 'v' | '\\'  | "'"  | '"'  ) ) ) "'"  )
+  rune_literal ::= @( "'" ( /[^'\\]/ | '\\' ( 'x' /[0-9a-fA-F]/ /[0-9a-fA-F]/ | /[0-7]/ /[0-7]/ /[0-7]/ | 'u' /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ | 'U' /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ /[0-9a-fA-F]/ | ( 'a' | 'b' | 'f' | 'n' | 'r' | 't' | 'v' | '\\' | "'" | '"' ) ) ) "'" )
 
   nil ::= 'nil'
 

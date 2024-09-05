@@ -1,10 +1,11 @@
-; From tree-sitter-vimdoc/src/grammar.json
+; repository: https://github.com/neovim/tree-sitter-vimdoc.git
+; commit: 2249c44ecd3f5cf22da3dcccfb74f816ddb29245
+; json from: tree-sitter-vimdoc/src/grammar.json
+; From /tmp/tslua/vimdoc0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 extras ::= {
@@ -26,7 +27,7 @@ rules:
   word ::= @(  -1(  /[^,(\[\n\t ]+/ )  )
 	| _word_common
 
-  _atom_noli ::= word_noli -> "word"
+  _atom_noli ::= word_noli -> word
 	| _atom_common
 
   word_noli ::= @(  -1(  /[^-•\n\t ][^(\[\n\t ]*/ )  )
@@ -44,9 +45,9 @@ rules:
 
   _word_common ::= '*'
 	| "'"
-	| "'"  !( /[^'\n\t ]/ )
-	| "'"  !( /[a-z]*[^'a-z\n\t ][a-z]*/ ) !( "'"  )?
-	| "'"  !( /[^'\n\t ]/ ) !( "'"  )
+	| "'" !( /[^'\n\t ]/ )
+	| "'" !( /[a-z]*[^'a-z\n\t ][a-z]*/ ) !( "'" )?
+	| "'" !( /[^'\n\t ]/ ) !( "'" )
 	| /\|\|+/
 	| '|'
 	| '{'
@@ -77,13 +78,13 @@ rules:
 
   uppercase_name ::= !( /[A-Z0-9.()][-A-Z0-9.()_]+/ ) /[A-Z0-9.()][-A-Z0-9.()_]+/*
 
-  _uppercase_words ::=  <-1(  !( /[A-Z0-9.()][-A-Z0-9.()_]+/ ) -> "word" /[A-Z0-9.()][-A-Z0-9.()_]+/* -> "word" )
+  _uppercase_words ::=  <-1(  !( /[A-Z0-9.()][-A-Z0-9.()_]+/ ) -> word /[A-Z0-9.()][-A-Z0-9.()_]+/* -> word ) 
 
   block ::= ( line+ | line_li+ | line+ line_li+ ) ( !( '<' ) | _blank ) _blank*
 
-  codeblock ::=  >0(  '>' ( !( /[a-z0-9]+\n/ ) -> "language" | !( /\n/ ) ) line_code -> "line"+ -> "code" )
+  codeblock ::=  >0(  '>' ( !( /[a-z0-9]+\n/ ) -> language | !( /\n/ ) ) ( line_code -> line )+ -> code ) 
 
-  _blank ::= ( /\n/ ):blank
+  _blank ::= /\n/:blank
 
   line ::= column_heading
 	| h1
@@ -92,7 +93,7 @@ rules:
 	| codeblock
 	| _line_noli
 
-  line_li ::=  >1(  !( '<' )? /[-•][ ]+/ ( ( _atom+ /\n/ ) -> "line" | _atom+ -> "line" codeblock ) _line_noli -> "line"* )
+  line_li ::=  >1(  !( '<' )? /[-•][ ]+/ ( ( _atom+ /\n/ ) -> line | _atom+ -> line codeblock ) ( _line_noli -> line )* ) 
 
   line_code ::= /\n/
 	| /[\t ]+[^\n]+\n/
@@ -101,27 +102,27 @@ rules:
 
   modeline ::= @(  2(  /vim:[^\n]+\n/ )  )
 
-  column_heading ::= _column_heading -> "heading" '~' -> "delimiter" !( /\n/ )
+  column_heading ::= _column_heading -> heading '~' -> delimiter !( /\n/ )
 
-  _column_heading ::=  ~1(  ( _atom_noli | _uppercase_words ) _atom* )
+  _column_heading ::=  ~1(  ( _atom_noli | _uppercase_words ) _atom* ) 
 
-  h1 ::=  1(  !( /============+[\t ]*\n/ ) -> "delimiter" _atom+ -> "heading" ( tag _atom* )? /\n/ )
+  h1 ::=  1(  !( /============+[\t ]*\n/ ) -> delimiter _atom+ -> heading ( tag _atom* )? /\n/ ) 
 
-  h2 ::=  1(  !( /------------+[\t ]*\n/ ) -> "delimiter" _atom+ -> "heading" ( tag _atom* )? /\n/ )
+  h2 ::=  1(  !( /------------+[\t ]*\n/ ) -> delimiter _atom+ -> heading ( tag _atom* )? /\n/ ) 
 
-  h3 ::= uppercase_name -> "heading" ( tag _atom* )? /\n/
+  h3 ::= uppercase_name -> heading ( tag _atom* )? /\n/
 
-  tag ::= '*' ( !(  1(  /[^*\n\t ]+/ )  ) -> "word" ):text !( '*' )
+  tag ::= '*' ( !(  1(  /[^*\n\t ]+/ )  ) -> word ):text !( '*' )
 
   url_word ::= /https?:[^\n\t)\] ]+/
 
-  url ::= ( url_word -> "word" ):text
+  url ::= ( url_word -> word ):text
 
-  optionlink ::= "'"  ( !( /[a-z][a-z]+/ ) -> "word" ):text !( "'"  )
+  optionlink ::= "'" ( !( /[a-z][a-z]+/ ) -> word ):text !( "'" )
 
-  taglink ::= '|' ( !(  1(  /[^|\n\t ]+/ )  ) -> "word" ):text !( '|' )
+  taglink ::= '|' ( !(  1(  /[^|\n\t ]+/ )  ) -> word ):text !( '|' )
 
-  codespan ::= '`' ( !( /[^``\n]+/ ) -> "word" ):text !( '`' )
+  codespan ::= '`' ( !( /[^``\n]+/ ) -> word ):text !( '`' )
 
-  argument ::= '{' ( !( /[^}\n\t ]+/ ) -> "word" ):text !( '}' ) !( '?' )?
+  argument ::= '{' ( !( /[^}\n\t ]+/ ) -> word ):text !( '}' ) !( '?' )?
 

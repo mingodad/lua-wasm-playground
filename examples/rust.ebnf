@@ -1,10 +1,11 @@
-; From tree-sitter-rust/src/grammar.json
+; repository: https://github.com/tree-sitter/tree-sitter-rust.git
+; commit: 6b7d1fc73ded57f73b1619bcf4371618212208b1
+; json from: tree-sitter-rust/src/grammar.json
+; From /tmp/tslua/rust0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -70,7 +71,7 @@ rules:
   empty_statement ::= ';'
 
   expression_statement ::= _expression ';'
-	|  1(  _expression_ending_with_block )
+	|  1(  _expression_ending_with_block ) 
 
   _declaration_statement ::= const_item
 	| macro_invocation
@@ -96,7 +97,7 @@ rules:
 
   macro_definition ::= 'macro_rules!' ( identifier | _reserved_identifier ):name ( '(' ( macro_rule ';' )* macro_rule? ')' ';' | '[' ( macro_rule ';' )* macro_rule? ']' ';' | '{' ( macro_rule ';' )* macro_rule? '}' )
 
-  macro_rule ::= ( token_tree_pattern ):left '=>' ( token_tree ):right
+  macro_rule ::= token_tree_pattern:left '=>' token_tree:right
 
   _token_pattern ::= token_tree_pattern
 	| token_repetition_pattern
@@ -108,7 +109,7 @@ rules:
 	| '[' _token_pattern* ']'
 	| '{' _token_pattern* '}'
 
-  token_binding_pattern ::=  1(  ( metavariable ):name ':' ( fragment_specifier ):type )
+  token_binding_pattern ::=  1(  metavariable:name ':' fragment_specifier:type ) 
 
   token_repetition_pattern ::= '$' '(' _token_pattern* ')' /[^+*?]+/? ( '+' | '*' | '?' )
 
@@ -143,8 +144,8 @@ rules:
 	| self
 	| super
 	| crate
-	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> "primitive_type"
-	|  >0(  ( '+' | '-' | '*' | '/' | '%' | '^' | '!' | '&' | '|' | '&&' | '||' | '<<' | '>>' | '+=' | '-=' | '*=' | '/=' | '%=' | '^=' | '&=' | '|=' | '<<=' | '>>=' | '=' | '==' | '!=' | '>' | '<' | '>=' | '<=' | '@' | '_' | '.' | '..' | '...' | '..=' | ',' | ';' | ':' | '::' | '->' | '=>' | '#' | '?' )+ )
+	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> primitive_type
+	|  >0(  ( '+' | '-' | '*' | '/' | '%' | '^' | '!' | '&' | '|' | '&&' | '||' | '<<' | '>>' | '+=' | '-=' | '*=' | '/=' | '%=' | '^=' | '&=' | '|=' | '<<=' | '>>=' | '=' | '==' | '!=' | '>' | '<' | '>=' | '<=' | '@' | '_' | '.' | '..' | '...' | '..=' | ',' | ';' | ':' | '::' | '->' | '=>' | '#' | '?' )+ ) 
 	| "'"
 	| 'as'
 	| 'async'
@@ -178,71 +179,71 @@ rules:
 
   inner_attribute_item ::= '#' '!' '[' attribute ']'
 
-  attribute ::= _path ( '=' ( _expression ):value | ( delim_token_tree -> "token_tree" ):arguments )?
+  attribute ::= _path ( '=' _expression:value | ( delim_token_tree -> token_tree ):arguments )?
 
-  mod_item ::= visibility_modifier? 'mod' ( identifier ):name ( ';' | ( declaration_list ):body )
+  mod_item ::= visibility_modifier? 'mod' identifier:name ( ';' | declaration_list:body )
 
-  foreign_mod_item ::= visibility_modifier? extern_modifier ( ';' | ( declaration_list ):body )
+  foreign_mod_item ::= visibility_modifier? extern_modifier ( ';' | declaration_list:body )
 
   declaration_list ::= '{' _declaration_statement* '}'
 
-  struct_item ::= visibility_modifier? 'struct' ( _type_identifier ):name ( type_parameters )?:type_parameters ( where_clause? ( field_declaration_list ):body | ( ordered_field_declaration_list ):body where_clause? ';' | ';' )
+  struct_item ::= visibility_modifier? 'struct' _type_identifier:name type_parameters?:type_parameters ( where_clause? field_declaration_list:body | ordered_field_declaration_list:body where_clause? ';' | ';' )
 
-  union_item ::= visibility_modifier? 'union' ( _type_identifier ):name ( type_parameters )?:type_parameters where_clause? ( field_declaration_list ):body
+  union_item ::= visibility_modifier? 'union' _type_identifier:name type_parameters?:type_parameters where_clause? field_declaration_list:body
 
-  enum_item ::= visibility_modifier? 'enum' ( _type_identifier ):name ( type_parameters )?:type_parameters where_clause? ( enum_variant_list ):body
+  enum_item ::= visibility_modifier? 'enum' _type_identifier:name type_parameters?:type_parameters where_clause? enum_variant_list:body
 
   enum_variant_list ::= '{' ( attribute_item* enum_variant ( ',' attribute_item* enum_variant )* )? ','? '}'
 
-  enum_variant ::= visibility_modifier? ( identifier ):name ( field_declaration_list | ordered_field_declaration_list )?:body ( '=' ( _expression ):value )?
+  enum_variant ::= visibility_modifier? identifier:name ( field_declaration_list | ordered_field_declaration_list )?:body ( '=' _expression:value )?
 
   field_declaration_list ::= '{' ( attribute_item* field_declaration ( ',' attribute_item* field_declaration )* )? ','? '}'
 
-  field_declaration ::= visibility_modifier? ( _field_identifier ):name ':' ( _type ):type
+  field_declaration ::= visibility_modifier? _field_identifier:name ':' _type:type
 
-  ordered_field_declaration_list ::= '(' ( attribute_item* visibility_modifier? ( _type ):type ( ',' attribute_item* visibility_modifier? ( _type ):type )* )? ','? ')'
+  ordered_field_declaration_list ::= '(' ( attribute_item* visibility_modifier? _type:type ( ',' attribute_item* visibility_modifier? _type:type )* )? ','? ')'
 
-  extern_crate_declaration ::= visibility_modifier? 'extern' crate ( identifier ):name ( 'as' ( identifier ):alias )? ';'
+  extern_crate_declaration ::= visibility_modifier? 'extern' crate identifier:name ( 'as' identifier:alias )? ';'
 
-  const_item ::= visibility_modifier? 'const' ( identifier ):name ':' ( _type ):type ( '=' ( _expression ):value )? ';'
+  const_item ::= visibility_modifier? 'const' identifier:name ':' _type:type ( '=' _expression:value )? ';'
 
-  static_item ::= visibility_modifier? 'static' 'ref'? mutable_specifier? ( identifier ):name ':' ( _type ):type ( '=' ( _expression ):value )? ';'
+  static_item ::= visibility_modifier? 'static' 'ref'? mutable_specifier? identifier:name ':' _type:type ( '=' _expression:value )? ';'
 
-  type_item ::= visibility_modifier? 'type' ( _type_identifier ):name ( type_parameters )?:type_parameters '=' ( _type ):type where_clause? ';'
+  type_item ::= visibility_modifier? 'type' _type_identifier:name type_parameters?:type_parameters '=' _type:type where_clause? ';'
 
-  function_item ::= visibility_modifier? function_modifiers? 'fn' ( identifier | metavariable ):name ( type_parameters )?:type_parameters ( parameters ):parameters ( '->' ( _type ):return_type )? where_clause? ( block ):body
+  function_item ::= visibility_modifier? function_modifiers? 'fn' ( identifier | metavariable ):name type_parameters?:type_parameters parameters:parameters ( '->' _type:return_type )? where_clause? block:body
 
-  function_signature_item ::= visibility_modifier? function_modifiers? 'fn' ( identifier | metavariable ):name ( type_parameters )?:type_parameters ( parameters ):parameters ( '->' ( _type ):return_type )? where_clause? ';'
+  function_signature_item ::= visibility_modifier? function_modifiers? 'fn' ( identifier | metavariable ):name type_parameters?:type_parameters parameters:parameters ( '->' _type:return_type )? where_clause? ';'
 
   function_modifiers ::= ( 'async' | 'default' | 'const' | 'unsafe' | extern_modifier )+
 
-  where_clause ::=  >0(  'where' where_predicate ( ',' where_predicate )* ','? )
+  where_clause ::=  >0(  'where' where_predicate ( ',' where_predicate )* ','? ) 
 
-  where_predicate ::= ( lifetime | _type_identifier | scoped_type_identifier | generic_type | reference_type | pointer_type | tuple_type | array_type | higher_ranked_trait_bound | ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> "primitive_type" ):left ( trait_bounds ):bounds
+  where_predicate ::= ( lifetime | _type_identifier | scoped_type_identifier | generic_type | reference_type | pointer_type | tuple_type | array_type | higher_ranked_trait_bound | ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> primitive_type ):left trait_bounds:bounds
 
-  impl_item ::= 'unsafe'? 'impl' ( type_parameters )?:type_parameters ( '!'? ( _type_identifier | scoped_type_identifier | generic_type ):trait 'for' )? ( _type ):type where_clause? ( ( declaration_list ):body | ';' )
+  impl_item ::= 'unsafe'? 'impl' type_parameters?:type_parameters ( '!'? ( _type_identifier | scoped_type_identifier | generic_type ):trait 'for' )? _type:type where_clause? ( declaration_list:body | ';' )
 
-  trait_item ::= visibility_modifier? 'unsafe'? 'trait' ( _type_identifier ):name ( type_parameters )?:type_parameters ( trait_bounds )?:bounds where_clause? ( declaration_list ):body
+  trait_item ::= visibility_modifier? 'unsafe'? 'trait' _type_identifier:name type_parameters?:type_parameters trait_bounds?:bounds where_clause? declaration_list:body
 
-  associated_type ::= 'type' ( _type_identifier ):name ( type_parameters )?:type_parameters ( trait_bounds )?:bounds where_clause? ';'
+  associated_type ::= 'type' _type_identifier:name type_parameters?:type_parameters trait_bounds?:bounds where_clause? ';'
 
   trait_bounds ::= ':' ( _type | lifetime | higher_ranked_trait_bound ) ( '+' ( _type | lifetime | higher_ranked_trait_bound ) )*
 
-  higher_ranked_trait_bound ::= 'for' ( type_parameters ):type_parameters ( _type ):type
+  higher_ranked_trait_bound ::= 'for' type_parameters:type_parameters _type:type
 
   removed_trait_bound ::= '?' _type
 
-  type_parameters ::=  1(  '<' attribute_item* ( lifetime | metavariable | _type_identifier | constrained_type_parameter | optional_type_parameter | const_parameter ) ( ',' attribute_item* ( lifetime | metavariable | _type_identifier | constrained_type_parameter | optional_type_parameter | const_parameter ) )* ','? '>' )
+  type_parameters ::=  1(  '<' attribute_item* ( lifetime | metavariable | _type_identifier | constrained_type_parameter | optional_type_parameter | const_parameter ) ( ',' attribute_item* ( lifetime | metavariable | _type_identifier | constrained_type_parameter | optional_type_parameter | const_parameter ) )* ','? '>' ) 
 
-  const_parameter ::= 'const' ( identifier ):name ':' ( _type ):type
+  const_parameter ::= 'const' identifier:name ':' _type:type
 
-  constrained_type_parameter ::= ( lifetime | _type_identifier ):left ( trait_bounds ):bounds
+  constrained_type_parameter ::= ( lifetime | _type_identifier ):left trait_bounds:bounds
 
-  optional_type_parameter ::= ( _type_identifier | constrained_type_parameter ):name '=' ( _type ):default_type
+  optional_type_parameter ::= ( _type_identifier | constrained_type_parameter ):name '=' _type:default_type
 
-  let_declaration ::= 'let' mutable_specifier? ( _pattern ):pattern ( ':' ( _type ):type )? ( '=' ( _expression ):value )? ( 'else' ( block ):alternative )? ';'
+  let_declaration ::= 'let' mutable_specifier? _pattern:pattern ( ':' _type:type )? ( '=' _expression:value )? ( 'else' block:alternative )? ';'
 
-  use_declaration ::= visibility_modifier? 'use' ( _use_clause ):argument ';'
+  use_declaration ::= visibility_modifier? 'use' _use_clause:argument ';'
 
   _use_clause ::= _path
 	| use_as_clause
@@ -250,11 +251,11 @@ rules:
 	| scoped_use_list
 	| use_wildcard
 
-  scoped_use_list ::= ( _path )?:path '::' ( use_list ):list
+  scoped_use_list ::= _path?:path '::' use_list:list
 
   use_list ::= '{' ( ( _use_clause ) ( ',' ( _use_clause ) )* )? ','? '}'
 
-  use_as_clause ::= ( _path ):path 'as' ( identifier ):alias
+  use_as_clause ::= _path:path 'as' identifier:alias
 
   use_wildcard ::= ( _path '::' )? '*'
 
@@ -262,9 +263,9 @@ rules:
 
   self_parameter ::= '&'? lifetime? mutable_specifier? self
 
-  variadic_parameter ::= mutable_specifier? ( ( _pattern ):pattern ':' )? '...'
+  variadic_parameter ::= mutable_specifier? ( _pattern:pattern ':' )? '...'
 
-  parameter ::= mutable_specifier? ( _pattern | self ):pattern ':' ( _type ):type
+  parameter ::= mutable_specifier? ( _pattern | self ):pattern ':' _type:type
 
   extern_modifier ::= 'extern' string_literal?
 
@@ -287,39 +288,39 @@ rules:
 	| dynamic_type
 	| bounded_type
 	| removed_trait_bound
-	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> "primitive_type"
+	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> primitive_type
 
   bracketed_type ::= '<' ( _type | qualified_type ) '>'
 
-  qualified_type ::= ( _type ):type 'as' ( _type ):alias
+  qualified_type ::= _type:type 'as' _type:alias
 
-  lifetime ::=  1(  "'"  identifier )
+  lifetime ::=  1(  "'" identifier ) 
 
-  array_type ::= '[' ( _type ):element ( ';' ( _expression ):length )? ']'
+  array_type ::= '[' _type:element ( ';' _expression:length )? ']'
 
   for_lifetimes ::= 'for' '<' lifetime ( ',' lifetime )* ','? '>'
 
-  function_type ::= for_lifetimes?  15(  ( ( _type_identifier | scoped_type_identifier ):trait | function_modifiers? 'fn' ) ( parameters ):parameters )  ( '->' ( _type ):return_type )?
+  function_type ::= for_lifetimes?  15(  ( ( _type_identifier | scoped_type_identifier ):trait | function_modifiers? 'fn' ) parameters:parameters )  ( '->' _type:return_type )?
 
   tuple_type ::= '(' _type ( ',' _type )* ','? ')'
 
   unit_type ::= '(' ')'
 
-  generic_function ::=  1(  ( identifier | scoped_identifier | field_expression ):function '::' ( type_arguments ):type_arguments )
+  generic_function ::=  1(  ( identifier | scoped_identifier | field_expression ):function '::' type_arguments:type_arguments ) 
 
-  generic_type ::=  1(  ( _type_identifier | _reserved_identifier | scoped_type_identifier ):type ( type_arguments ):type_arguments )
+  generic_type ::=  1(  ( _type_identifier | _reserved_identifier | scoped_type_identifier ):type type_arguments:type_arguments ) 
 
-  generic_type_with_turbofish ::= ( _type_identifier | scoped_identifier ):type '::' ( type_arguments ):type_arguments
+  generic_type_with_turbofish ::= ( _type_identifier | scoped_identifier ):type '::' type_arguments:type_arguments
 
-  bounded_type ::=  <-1(  lifetime '+' _type | _type '+' _type | _type '+' lifetime )
+  bounded_type ::=  <-1(  lifetime '+' _type | _type '+' _type | _type '+' lifetime ) 
 
   type_arguments ::= @(  1(  '<' )  ) ( _type | type_binding | lifetime | _literal | block ) trait_bounds? ( ',' ( _type | type_binding | lifetime | _literal | block ) trait_bounds? )* ','? '>'
 
-  type_binding ::= ( _type_identifier ):name ( type_arguments )?:type_arguments '=' ( _type ):type
+  type_binding ::= _type_identifier:name type_arguments?:type_arguments '=' _type:type
 
-  reference_type ::= '&' lifetime? mutable_specifier? ( _type ):type
+  reference_type ::= '&' lifetime? mutable_specifier? _type:type
 
-  pointer_type ::= '*' ( 'const' | mutable_specifier ) ( _type ):type
+  pointer_type ::= '*' ( 'const' | mutable_specifier ) _type:type
 
   never_type ::= '!'
 
@@ -340,9 +341,9 @@ rules:
 	| return_expression
 	| yield_expression
 	| _literal
-	|  <0(  identifier )
-	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> "identifier"
-	|  <0(  _reserved_identifier )
+	|  <0(  identifier ) 
+	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> identifier
+	|  <0(  _reserved_identifier ) 
 	| self
 	| scoped_identifier
 	| generic_function
@@ -350,7 +351,7 @@ rules:
 	| field_expression
 	| array_expression
 	| tuple_expression
-	|  1(  macro_invocation )
+	|  1(  macro_invocation ) 
 	| unit_expression
 	| break_expression
 	| continue_expression
@@ -375,59 +376,59 @@ rules:
 	| for_expression
 	| const_block
 
-  macro_invocation ::= ( scoped_identifier | identifier | _reserved_identifier ):macro '!' delim_token_tree -> "token_tree"
+  macro_invocation ::= ( scoped_identifier | identifier | _reserved_identifier ):macro '!' delim_token_tree -> token_tree
 
   delim_token_tree ::= '(' _delim_tokens* ')'
 	| '[' _delim_tokens* ']'
 	| '{' _delim_tokens* '}'
 
   _delim_tokens ::= _non_delim_token
-	| delim_token_tree -> "token_tree"
+	| delim_token_tree -> token_tree
 
   _non_delim_token ::= _non_special_token
 	| '$'
 
-  scoped_identifier ::= ( _path | bracketed_type | generic_type_with_turbofish -> "generic_type" )?:path '::' ( identifier | super ):name
+  scoped_identifier ::= ( _path | bracketed_type | generic_type_with_turbofish -> generic_type )?:path '::' ( identifier | super ):name
 
-  scoped_type_identifier_in_expression_position ::=  -2(  ( _path | generic_type_with_turbofish -> "generic_type" )?:path '::' ( _type_identifier ):name )
+  scoped_type_identifier_in_expression_position ::=  -2(  ( _path | generic_type_with_turbofish -> generic_type )?:path '::' _type_identifier:name ) 
 
-  scoped_type_identifier ::= ( _path | generic_type_with_turbofish -> "generic_type" | bracketed_type | generic_type )?:path '::' ( _type_identifier ):name
+  scoped_type_identifier ::= ( _path | generic_type_with_turbofish -> generic_type | bracketed_type | generic_type )?:path '::' _type_identifier:name
 
-  range_expression ::=  <1(  _expression ( '..' | '...' | '..=' ) _expression | _expression '..' | '..' _expression | '..' )
+  range_expression ::=  <1(  _expression ( '..' | '...' | '..=' ) _expression | _expression '..' | '..' _expression | '..' ) 
 
-  unary_expression ::=  12(  ( '-' | '*' | '!' ) _expression )
+  unary_expression ::=  12(  ( '-' | '*' | '!' ) _expression ) 
 
-  try_expression ::=  13(  _expression '?' )
+  try_expression ::=  13(  _expression '?' ) 
 
-  reference_expression ::=  12(  '&' mutable_specifier? ( _expression ):value )
+  reference_expression ::=  12(  '&' mutable_specifier? _expression:value ) 
 
-  binary_expression ::=  <3(  ( _expression ):left ( '&&' ):operator ( _expression ):right )
-	|  <2(  ( _expression ):left ( '||' ):operator ( _expression ):right )
-	|  <7(  ( _expression ):left ( '&' ):operator ( _expression ):right )
-	|  <5(  ( _expression ):left ( '|' ):operator ( _expression ):right )
-	|  <6(  ( _expression ):left ( '^' ):operator ( _expression ):right )
-	|  <4(  ( _expression ):left ( '==' | '!=' | '<' | '<=' | '>' | '>=' ):operator ( _expression ):right )
-	|  <8(  ( _expression ):left ( '<<' | '>>' ):operator ( _expression ):right )
-	|  <9(  ( _expression ):left ( '+' | '-' ):operator ( _expression ):right )
-	|  <10(  ( _expression ):left ( '*' | '/' | '%' ):operator ( _expression ):right )
+  binary_expression ::=  <3(  _expression:left '&&':operator _expression:right ) 
+	|  <2(  _expression:left '||':operator _expression:right ) 
+	|  <7(  _expression:left '&':operator _expression:right ) 
+	|  <5(  _expression:left '|':operator _expression:right ) 
+	|  <6(  _expression:left '^':operator _expression:right ) 
+	|  <4(  _expression:left ( '==' | '!=' | '<' | '<=' | '>' | '>=' ):operator _expression:right ) 
+	|  <8(  _expression:left ( '<<' | '>>' ):operator _expression:right ) 
+	|  <9(  _expression:left ( '+' | '-' ):operator _expression:right ) 
+	|  <10(  _expression:left ( '*' | '/' | '%' ):operator _expression:right ) 
 
-  assignment_expression ::=  <0(  ( _expression ):left '=' ( _expression ):right )
+  assignment_expression ::=  <0(  _expression:left '=' _expression:right ) 
 
-  compound_assignment_expr ::=  <0(  ( _expression ):left ( '+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' | '<<=' | '>>=' ):operator ( _expression ):right )
+  compound_assignment_expr ::=  <0(  _expression:left ( '+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' | '<<=' | '>>=' ):operator _expression:right ) 
 
-  type_cast_expression ::=  <11(  ( _expression ):value 'as' ( _type ):type )
+  type_cast_expression ::=  <11(  _expression:value 'as' _type:type ) 
 
-  return_expression ::=  <0(  'return' _expression )
-	|  -1(  'return' )
+  return_expression ::=  <0(  'return' _expression ) 
+	|  -1(  'return' ) 
 
-  yield_expression ::=  <0(  'yield' _expression )
-	|  -1(  'yield' )
+  yield_expression ::=  <0(  'yield' _expression ) 
+	|  -1(  'yield' ) 
 
-  call_expression ::=  15(  ( _expression_except_range ):function ( arguments ):arguments )
+  call_expression ::=  15(  _expression_except_range:function arguments:arguments ) 
 
   arguments ::= '(' ( attribute_item* _expression ( ',' attribute_item* _expression )* )? ','? ')'
 
-  array_expression ::= '[' attribute_item* ( _expression ';' ( _expression ):length | ( attribute_item* _expression ( ',' attribute_item* _expression )* )? ','? ) ']'
+  array_expression ::= '[' attribute_item* ( _expression ';' _expression:length | ( attribute_item* _expression ( ',' attribute_item* _expression )* )? ','? ) ']'
 
   parenthesized_expression ::= '(' _expression ')'
 
@@ -435,61 +436,61 @@ rules:
 
   unit_expression ::= '(' ')'
 
-  struct_expression ::= ( _type_identifier | scoped_type_identifier_in_expression_position -> "scoped_type_identifier" | generic_type_with_turbofish ):name ( field_initializer_list ):body
+  struct_expression ::= ( _type_identifier | scoped_type_identifier_in_expression_position -> scoped_type_identifier | generic_type_with_turbofish ):name field_initializer_list:body
 
   field_initializer_list ::= '{' ( ( shorthand_field_initializer | field_initializer | base_field_initializer ) ( ',' ( shorthand_field_initializer | field_initializer | base_field_initializer ) )* )? ','? '}'
 
   shorthand_field_initializer ::= attribute_item* identifier
 
-  field_initializer ::= attribute_item* ( _field_identifier | integer_literal ):field ':' ( _expression ):value
+  field_initializer ::= attribute_item* ( _field_identifier | integer_literal ):field ':' _expression:value
 
   base_field_initializer ::= '..' _expression
 
-  if_expression ::=  >0(  'if' ( _condition ):condition ( block ):consequence ( else_clause )?:alternative )
+  if_expression ::=  >0(  'if' _condition:condition block:consequence ( else_clause:alternative )? ) 
 
-  let_condition ::= 'let' ( _pattern ):pattern '=' (  <3(  _expression )  ):value
+  let_condition ::= 'let' _pattern:pattern '='  <3(  _expression ) :value
 
-  _let_chain ::=  <3(  _let_chain '&&' let_condition | _let_chain '&&' _expression | let_condition '&&' _expression | let_condition '&&' let_condition | _expression '&&' let_condition )
+  _let_chain ::=  <3(  _let_chain '&&' let_condition | _let_chain '&&' _expression | let_condition '&&' _expression | let_condition '&&' let_condition | _expression '&&' let_condition ) 
 
   _condition ::= _expression
 	| let_condition
-	| _let_chain -> "let_chain"
+	| _let_chain -> let_chain
 
   else_clause ::= 'else' ( block | if_expression )
 
-  match_expression ::= 'match' ( _expression ):value ( match_block ):body
+  match_expression ::= 'match' _expression:value match_block:body
 
-  match_block ::= '{' ( match_arm* last_match_arm -> "match_arm" )? '}'
+  match_block ::= '{' ( match_arm* last_match_arm -> match_arm )? '}'
 
-  match_arm ::=  >0(  ( attribute_item | inner_attribute_item )* ( match_pattern ):pattern '=>' ( ( _expression ):value ',' | (  1(  _expression_ending_with_block )  ):value ) )
+  match_arm ::=  >0(  ( attribute_item | inner_attribute_item )* match_pattern:pattern '=>' ( _expression:value ',' |  1(  _expression_ending_with_block ) :value ) ) 
 
-  last_match_arm ::= ( attribute_item | inner_attribute_item )* ( match_pattern ):pattern '=>' ( _expression ):value ','?
+  last_match_arm ::= ( attribute_item | inner_attribute_item )* match_pattern:pattern '=>' _expression:value ','?
 
-  match_pattern ::= _pattern ( 'if' ( _condition ):condition )?
+  match_pattern ::= _pattern ( 'if' _condition:condition )?
 
-  while_expression ::= ( label ':' )? 'while' ( _condition ):condition ( block ):body
+  while_expression ::= ( label ':' )? 'while' _condition:condition block:body
 
-  loop_expression ::= ( label ':' )? 'loop' ( block ):body
+  loop_expression ::= ( label ':' )? 'loop' block:body
 
-  for_expression ::= ( label ':' )? 'for' ( _pattern ):pattern 'in' ( _expression ):value ( block ):body
+  for_expression ::= ( label ':' )? 'for' _pattern:pattern 'in' _expression:value block:body
 
-  const_block ::= 'const' ( block ):body
+  const_block ::= 'const' block:body
 
-  closure_expression ::=  -1(  'static'? 'move'? ( closure_parameters ):parameters ( ( '->' ( _type ):return_type )? ( block ):body | ( _expression | '_' ):body ) )
+  closure_expression ::=  -1(  'static'? 'move'? closure_parameters:parameters ( ( '->' _type:return_type )? block:body | ( _expression | '_' ):body ) ) 
 
   closure_parameters ::= '|' ( ( _pattern | parameter ) ( ',' ( _pattern | parameter ) )* )? '|'
 
-  label ::= "'"  identifier
+  label ::= "'" identifier
 
-  break_expression ::=  <0(  'break' label? _expression? )
+  break_expression ::=  <0(  'break' label? _expression? ) 
 
-  continue_expression ::=  <0(  'continue' label? )
+  continue_expression ::=  <0(  'continue' label? ) 
 
-  index_expression ::=  15(  _expression '[' _expression ']' )
+  index_expression ::=  15(  _expression '[' _expression ']' ) 
 
-  await_expression ::=  14(  _expression '.' 'await' )
+  await_expression ::=  14(  _expression '.' 'await' ) 
 
-  field_expression ::=  14(  ( _expression ):value '.' ( _field_identifier | integer_literal ):field )
+  field_expression ::=  14(  _expression:value '.' ( _field_identifier | integer_literal ):field ) 
 
   unsafe_block ::= 'unsafe' block
 
@@ -500,7 +501,7 @@ rules:
   block ::= ( label ':' )? '{' _statement* _expression? '}'
 
   _pattern ::= _literal_pattern
-	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> "identifier"
+	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> identifier
 	| identifier
 	| scoped_identifier
 	| tuple_pattern
@@ -523,15 +524,15 @@ rules:
 
   slice_pattern ::= '[' ( _pattern ( ',' _pattern )* )? ','? ']'
 
-  tuple_struct_pattern ::= ( identifier | scoped_identifier | generic_type_with_turbofish -> "generic_type" ):type '(' ( _pattern ( ',' _pattern )* )? ','? ')'
+  tuple_struct_pattern ::= ( identifier | scoped_identifier | generic_type_with_turbofish -> generic_type ):type '(' ( _pattern ( ',' _pattern )* )? ','? ')'
 
   struct_pattern ::= ( _type_identifier | scoped_type_identifier ):type '{' ( ( field_pattern | remaining_field_pattern ) ( ',' ( field_pattern | remaining_field_pattern ) )* )? ','? '}'
 
-  field_pattern ::= 'ref'? mutable_specifier? ( ( identifier -> "shorthand_field_identifier" ):name | ( _field_identifier ):name ':' ( _pattern ):pattern )
+  field_pattern ::= 'ref'? mutable_specifier? ( ( identifier -> shorthand_field_identifier ):name | _field_identifier:name ':' _pattern:pattern )
 
   remaining_field_pattern ::= '..'
 
-  mut_pattern ::=  -1(  mutable_specifier _pattern )
+  mut_pattern ::=  -1(  mutable_specifier _pattern ) 
 
   range_pattern ::= ( _literal_pattern | _path ) ( ( '...' | '..=' | '..' ) ( _literal_pattern | _path ) | '..' )
 
@@ -541,7 +542,7 @@ rules:
 
   reference_pattern ::= '&' mutable_specifier? _pattern
 
-  or_pattern ::=  <-2(  _pattern '|' _pattern | '|' _pattern )
+  or_pattern ::=  <-2(  _pattern '|' _pattern | '|' _pattern ) 
 
   _literal ::= string_literal
 	| raw_string_literal
@@ -562,13 +563,13 @@ rules:
 
   integer_literal ::= @( ( /[0-9][0-9_]*/ | /0x[0-9a-fA-F_]+/ | /0b[01_]+/ | /0o[0-7_]+/ ) ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' )? )
 
-  string_literal ::= /[bc]?"/ -> '"' ( escape_sequence | string_content )* !( '"'  )
+  string_literal ::= /[bc]?"/ -> '"' ( escape_sequence | string_content )* !( '"' )
 
-  raw_string_literal ::= _raw_string_literal_start raw_string_literal_content -> "string_content" _raw_string_literal_end
+  raw_string_literal ::= _raw_string_literal_start raw_string_literal_content -> string_content _raw_string_literal_end
 
-  char_literal ::= @( 'b'? "'"  ( '\\'  ( /[^xu]/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F]+\}/ | /x[0-9a-fA-F]{2}/ ) | /[^\\']/ )? "'"  )
+  char_literal ::= @( 'b'? "'" ( '\\' ( /[^xu]/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F]+\}/ | /x[0-9a-fA-F]{2}/ ) | /[^\\']/ )? "'" )
 
-  escape_sequence ::= !( '\\'  ( /[^xu]/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F]+\}/ | /x[0-9a-fA-F]{2}/ ) )
+  escape_sequence ::= !( '\\' ( /[^xu]/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F]+\}/ | /x[0-9a-fA-F]{2}/ ) )
 
   boolean_literal ::= 'true'
 	| 'false'
@@ -576,22 +577,22 @@ rules:
   comment ::= line_comment
 	| block_comment
 
-  line_comment ::= '//' ( !(  2(  /\/\// )  ) /.*/ | _line_doc_comment_marker ( _line_doc_content -> "doc_comment" ):doc | !(  1(  /.*/ )  ) )
+  line_comment ::= '//' ( !(  2(  /\/\// )  ) /.*/ | _line_doc_comment_marker ( _line_doc_content -> doc_comment ):doc | !(  1(  /.*/ )  ) )
 
-  _line_doc_comment_marker ::= ( _outer_line_doc_comment_marker -> "outer_doc_comment_marker" ):outer
-	| ( _inner_line_doc_comment_marker -> "inner_doc_comment_marker" ):inner
+  _line_doc_comment_marker ::= ( _outer_line_doc_comment_marker -> outer_doc_comment_marker ):outer
+	| ( _inner_line_doc_comment_marker -> inner_doc_comment_marker ):inner
 
   _inner_line_doc_comment_marker ::= !(  2(  '!' )  )
 
   _outer_line_doc_comment_marker ::= !(  2(  '/' )  )
 
-  block_comment ::= '/*' ( _block_doc_comment_marker ( _block_comment_content -> "doc_comment" )?:doc | _block_comment_content )? '*/'
+  block_comment ::= '/*' ( _block_doc_comment_marker ( ( _block_comment_content -> doc_comment ):doc )? | _block_comment_content )? '*/'
 
-  _block_doc_comment_marker ::= ( _outer_block_doc_comment_marker -> "outer_doc_comment_marker" ):outer
-	| ( _inner_block_doc_comment_marker -> "inner_doc_comment_marker" ):inner
+  _block_doc_comment_marker ::= ( _outer_block_doc_comment_marker -> outer_doc_comment_marker ):outer
+	| ( _inner_block_doc_comment_marker -> inner_doc_comment_marker ):inner
 
   _path ::= self
-	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> "identifier"
+	| ( 'u8' | 'i8' | 'u16' | 'i16' | 'u32' | 'i32' | 'u64' | 'i64' | 'u128' | 'i128' | 'isize' | 'usize' | 'f32' | 'f64' | 'bool' | 'str' | 'char' ) -> identifier
 	| metavariable
 	| super
 	| crate
@@ -603,11 +604,11 @@ rules:
 
   shebang ::= /#![\s]*[^\[].+/
 
-  _reserved_identifier ::= ( 'default' | 'union' ) -> "identifier"
+  _reserved_identifier ::= ( 'default' | 'union' ) -> identifier
 
-  _type_identifier ::= identifier -> "type_identifier"
+  _type_identifier ::= identifier -> type_identifier
 
-  _field_identifier ::= identifier -> "field_identifier"
+  _field_identifier ::= identifier -> field_identifier
 
   self ::= 'self'
 

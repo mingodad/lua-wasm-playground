@@ -1,10 +1,11 @@
-; From tree-sitter-vim/src/grammar.json
+; repository: https://github.com/tree-sitter-grammars/tree-sitter-vim.git
+; commit: f3cd62d8bd043ef20507e84bb6b4b53731ccf3a7
+; json from: tree-sitter-vim/src/grammar.json
+; From /tmp/tslua/vim0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -146,7 +147,7 @@ rules:
 
   _statement ::= ':'* ( function_definition | let_statement | unlet_statement | const_statement | set_statement | setlocal_statement | return_statement | normal_statement | while_loop | for_loop | if_statement | lua_statement | range_statement | ruby_statement | python_statement | perl_statement | call_statement | execute_statement | echo_statement | echon_statement | echohl_statement | echomsg_statement | echoerr_statement | try_statement | throw_statement | autocmd_statement | silent_statement | vertical_statement | belowright_statement | aboveleft_statement | topleft_statement | botright_statement | register_statement | map_statement | augroup_statement | bang_filter_statement | highlight_statement | syntax_statement | setfiletype_statement | options_statement | startinsert_statement | stopinsert_statement | scriptencoding_statement | source_statement | global_statement | colorscheme_statement | command_statement | comclear_statement | delcommand_statement | filetype_statement | runtime_statement | wincmd_statement | sign_statement | break_statement | continue_statement | cnext_statement | cprevious_statement | unknown_builtin_statement | edit_statement | enew_statement | find_statement | ex_statement | visual_statement | view_statement | eval_statement | user_command )
 
-  unknown_builtin_statement ::= unknown_command_name bang? command_argument* -> "arguments"
+  unknown_builtin_statement ::= unknown_command_name bang? command_argument* -> arguments
 
   return_statement ::= _return -> "return" _expression?
 
@@ -157,15 +158,15 @@ rules:
   scope_dict ::= _scope_dict
 	| 'a:'
 
-  normal_statement ::= ( ( _range -> "range" ):range ':'? )? _normal -> "normal" bang? / .*/ -> "commands"
+  normal_statement ::= ( ( _range -> range ):range ':'? )? _normal -> "normal" bang? / .*/ -> commands
 
   filetype ::= /[a-zA-Z][a-zA-Z_-]*/
 
-  _filetype_immediate ::= !( /[a-zA-Z][a-zA-Z_-]*/ ) -> "filetype"
+  _filetype_immediate ::= !( /[a-zA-Z][a-zA-Z_-]*/ ) -> filetype
 
   filetypes ::= filetype ( !( '.' ) _filetype_immediate )*
 
-  setfiletype_statement ::= _setfiletype -> "setfiletype" 'FALLBACK' -> "fallback"? filetypes
+  setfiletype_statement ::= _setfiletype -> "setfiletype" ( 'FALLBACK' -> fallback )? filetypes
 
   options_statement ::= _browse -> "browse" _set -> "set"
 	| _options -> "options"
@@ -178,7 +179,7 @@ rules:
 	| 'unix'
 	| 'mac'
 
-  _immediate_file_format ::= ( !( 'dos' ) | !( 'unix' ) | !( 'mac' ) ) -> "file_format"
+  _immediate_file_format ::= ( !( 'dos' ) | !( 'unix' ) | !( 'mac' ) ) -> file_format
 
   encoding ::= 'latin1'
 	| 'iso'
@@ -240,7 +241,7 @@ rules:
 	| 'utf-32le'
 	| 'default'
 
-  _immediate_encoding ::= ( !( 'latin1' ) | !( 'iso' ) | !( 'koi8' ) | !( 'koi8' ) | !( 'macroman' ) | !( 'cp437' ) | !( 'cp737' ) | !( 'cp775' ) | !( 'cp850' ) | !( 'cp852' ) | !( 'cp855' ) | !( 'cp857' ) | !( 'cp860' ) | !( 'cp861' ) | !( 'cp862' ) | !( 'cp863' ) | !( 'cp865' ) | !( 'cp866' ) | !( 'cp869' ) | !( 'cp874' ) | !( 'cp1250' ) | !( 'cp1251' ) | !( 'cp1253' ) | !( 'cp1254' ) | !( 'cp1255' ) | !( 'cp1256' ) | !( 'cp1257' ) | !( 'cp1258' ) | !( 'cp932' ) | !( 'euc-jp' ) | !( 'sjis' ) | !( 'cp949' ) | !( 'euc-kr' ) | !( 'cp936' ) | !( 'euc-cn' ) | !( 'cp950' ) | !( 'big5' ) | !( 'euc-tw' ) | !( 'utf-8' ) | !( 'ucs-2' ) | !( 'ucs-21e' ) | !( 'utf-16' ) | !( 'utf-16le' ) | !( 'ucs-4' ) | !( 'ucs-4le' ) | !( 'ansi' ) | !( 'japan' ) | !( 'korea' ) | !( 'prc' ) | !( 'chinese' ) | !( 'taiwan' ) | !( 'utf8' ) | !( 'unicode' ) | !( 'ucs2be' ) | !( 'ucs-2be' ) | !( 'ucs-4be' ) | !( 'utf-32' ) | !( 'utf-32le' ) | !( 'default' ) ) -> "encoding"
+  _immediate_encoding ::= ( !( 'latin1' ) | !( 'iso' ) | !( 'koi8' ) | !( 'koi8' ) | !( 'macroman' ) | !( 'cp437' ) | !( 'cp737' ) | !( 'cp775' ) | !( 'cp850' ) | !( 'cp852' ) | !( 'cp855' ) | !( 'cp857' ) | !( 'cp860' ) | !( 'cp861' ) | !( 'cp862' ) | !( 'cp863' ) | !( 'cp865' ) | !( 'cp866' ) | !( 'cp869' ) | !( 'cp874' ) | !( 'cp1250' ) | !( 'cp1251' ) | !( 'cp1253' ) | !( 'cp1254' ) | !( 'cp1255' ) | !( 'cp1256' ) | !( 'cp1257' ) | !( 'cp1258' ) | !( 'cp932' ) | !( 'euc-jp' ) | !( 'sjis' ) | !( 'cp949' ) | !( 'euc-kr' ) | !( 'cp936' ) | !( 'euc-cn' ) | !( 'cp950' ) | !( 'big5' ) | !( 'euc-tw' ) | !( 'utf-8' ) | !( 'ucs-2' ) | !( 'ucs-21e' ) | !( 'utf-16' ) | !( 'utf-16le' ) | !( 'ucs-4' ) | !( 'ucs-4le' ) | !( 'ansi' ) | !( 'japan' ) | !( 'korea' ) | !( 'prc' ) | !( 'chinese' ) | !( 'taiwan' ) | !( 'utf8' ) | !( 'unicode' ) | !( 'ucs2be' ) | !( 'ucs-2be' ) | !( 'ucs-4be' ) | !( 'utf-32' ) | !( 'utf-32le' ) | !( 'default' ) ) -> encoding
 
   scriptencoding_statement ::= _scriptencoding -> "scriptencoding" encoding?
 
@@ -253,28 +254,28 @@ rules:
 	| 'PACK'
 	| 'ALL'
 
-  runtime_statement ::= _runtime -> "runtime" bang? _runtime_where -> "where"? filename+ -> "filenames"
+  runtime_statement ::= _runtime -> "runtime" bang? ( _runtime_where -> where )? filename+ -> filenames
 
-  wincmd_statement ::= integer_literal? _wincmd -> "wincmd" ( /[a-zA-Z=<>]/ ):action
+  wincmd_statement ::= integer_literal? _wincmd -> "wincmd" /[a-zA-Z=<>]/:action
 
-  source_statement ::= ( ( _range -> "range" ):range ':'? )? _source -> "source" bang? ( filename )?:file
+  source_statement ::= ( ( _range -> range ):range ':'? )? _source -> "source" bang? ( filename:file )?
 
-  global_statement ::= ( ( _range -> "range" ):range ':'? )? _global -> "global" bang? _separator_first pattern _separator _statement
+  global_statement ::= ( ( _range -> range ):range ':'? )? _global -> "global" bang? _separator_first pattern _separator _statement
 
   _filetype_state ::= 'on'
 	| 'off'
 
-  _filetype_enable ::= ( _filetype_state ):sub
+  _filetype_enable ::= _filetype_state:sub
 
-  _filetype_detect ::= ( 'detect' ):sub
+  _filetype_detect ::= 'detect':sub
 
-  _filetype_plugin ::= ( 'plugin' ):sub 'indent'? _filetype_state
+  _filetype_plugin ::= 'plugin':sub 'indent'? _filetype_state
 
-  _filetype_indent ::= ( 'indent' ):sub 'plugin'? _filetype_state
+  _filetype_indent ::= 'indent':sub 'plugin'? _filetype_state
 
   filetype_statement ::= _filetype -> "filetype" ( _filetype_enable | _filetype_detect | _filetype_plugin | _filetype_indent )?
 
-  colorscheme_statement ::= _colorscheme -> "colorscheme" filename -> "name"?
+  colorscheme_statement ::= _colorscheme -> "colorscheme" ( filename -> name )?
 
   lua_statement ::= _lua -> "lua" ( chunk | script )
 
@@ -288,51 +289,51 @@ rules:
 
   _heredoc_line ::= /[^\n]*\n/
 
-  script ::= '<<' ( _script_heredoc_marker -> "marker_definition" | '\n'  ) _heredoc_line* -> "body" _heredoc_end -> "endmarker"
+  script ::= '<<' ( _script_heredoc_marker -> marker_definition | '\n' ) _heredoc_line* -> body _heredoc_end -> endmarker
 
-  for_loop ::= _for -> "for" ( _ident | list_assignment ):variable 'in' ( _expression ):iter _cmd_separator _separated_statements? -> "body" _endfor -> "endfor"
+  for_loop ::= _for -> "for" ( _ident | list_assignment ):variable 'in' _expression:iter _cmd_separator _separated_statements? -> body _endfor -> "endfor"
 
-  while_loop ::= _while -> "while" ( _expression ):condition _cmd_separator _separated_statements? -> "body" _endwhile -> "endwhile"
+  while_loop ::= _while -> "while" _expression:condition _cmd_separator _separated_statements? -> body _endwhile -> "endwhile"
 
-  if_statement ::= _if -> "if" ( _expression ):condition _cmd_separator _separated_statements? -> "body" elseif_statement* else_statement? _endif -> "endif"
+  if_statement ::= _if -> "if" _expression:condition _cmd_separator _separated_statements? -> body elseif_statement* else_statement? _endif -> "endif"
 
-  elseif_statement ::= _elseif -> "elseif" ( _expression ):condition _cmd_separator _separated_statements? -> "body"
+  elseif_statement ::= _elseif -> "elseif" _expression:condition _cmd_separator _separated_statements? -> body
 
-  else_statement ::= _else -> "else" _separated_statements? -> "body"
+  else_statement ::= _else -> "else" _separated_statements? -> body
 
-  try_statement ::= _try -> "try" _cmd_separator _separated_statements? -> "body" catch_statement* finally_statement? _endtry -> "endtry"
+  try_statement ::= _try -> "try" _cmd_separator _separated_statements? -> body catch_statement* finally_statement? _endtry -> "endtry"
 
   _au_pattern ::= /\/.*\//
 	| /\?.*\?/
 
-  catch_statement ::= _catch -> "catch" _au_pattern -> "pattern"? _cmd_separator _separated_statements? -> "body"
+  catch_statement ::= _catch -> "catch" ( _au_pattern -> pattern )? _cmd_separator _separated_statements? -> body
 
-  finally_statement ::= _finally -> "finally" _separated_statements? -> "body"
+  finally_statement ::= _finally -> "finally" _separated_statements? -> body
 
   throw_statement ::= _throw -> "throw" _expression
 
   _bang_filter_bangs ::= bang bang?
 
-  _bang_filter_command_argument ::= ( /\S/ | '\\'  /./ ) ( !( /\S/ ) | !( '\\'  /./ ) )*
+  _bang_filter_command_argument ::= ( /\S/ | '\\' /./ ) ( !( /\S/ ) | !( '\\' /./ ) )*
 	| string_literal
 
-  _bang_filter_command ::= ( filename -> "filter_command" ):filter bang? _bang_filter_command_argument -> "command_argument"*
+  _bang_filter_command ::= ( filename -> filter_command ):filter bang? ( _bang_filter_command_argument -> command_argument )*
 
-  bang_filter_statement ::= ( _range -> "range" ):range _bang_filter_bangs -> "bangs" _bang_filter_command -> "command"
+  bang_filter_statement ::= ( _range -> range ):range _bang_filter_bangs -> bangs _bang_filter_command -> command
 
   scoped_identifier ::= scope identifier
 
-  argument ::= 'a:' ( !( /[a-zA-Z_](\w|#)*/ ) -> "identifier" | !( /[0-9]+/ ) -> "integer_literal" )
+  argument ::= 'a:' ( !( /[a-zA-Z_](\w|#)*/ ) -> identifier | !( /[0-9]+/ ) -> integer_literal )
 
   _curly_braces_name_expression ::= '{' _expression '}'
 
   _immediate_curly_braces_name_expression ::= !( '{' ) _expression '}'
 
-  identifier ::= ( /[a-zA-Z_]+/ | _curly_braces_name_expression -> "curly_braces_name" ) ( !( /(\w|#)+/ ) | _immediate_curly_braces_name_expression -> "curly_braces_name" )*
+  identifier ::= ( /[a-zA-Z_]+/ | _curly_braces_name_expression -> curly_braces_name ) ( !( /(\w|#)+/ ) | _immediate_curly_braces_name_expression -> curly_braces_name )*
 
-  _immediate_identifier ::= ( !( /[a-zA-Z_]+/ ) | _immediate_curly_braces_name_expression -> "curly_braces_name" ) ( !( /(\w|#)+/ ) | _immediate_curly_braces_name_expression -> "curly_braces_name" )*
+  _immediate_identifier ::= ( !( /[a-zA-Z_]+/ ) | _immediate_curly_braces_name_expression -> curly_braces_name ) ( !( /(\w|#)+/ ) | _immediate_curly_braces_name_expression -> curly_braces_name )*
 
-  _ident ::=  ~1(  scoped_identifier | identifier | argument )
+  _ident ::=  ~1(  scoped_identifier | identifier | argument ) 
 
   keyword ::= /[a-zA-Z_](\w|#)*/
 
@@ -348,15 +349,15 @@ rules:
   _assignment_variable ::= identifier
 	| scope_dict
 
-  _let_assignment ::= ( _ident | env_variable | register | option | index_expression | field_expression | list_assignment ) ( _let_operator _expression | _let_heredoc -> "heredoc" )
+  _let_assignment ::= ( _ident | env_variable | register | option | index_expression | field_expression | list_assignment ) ( _let_operator _expression | _let_heredoc -> heredoc )
 
   let_statement ::= _let -> "let" ( _let_assignment | _assignment_variable* )
 
-  _const_assignment ::= ( _ident | list_assignment ) ( '=' _expression | _let_heredoc -> "heredoc" )
+  _const_assignment ::= ( _ident | list_assignment ) ( '=' _expression | _let_heredoc -> heredoc )
 
   const_statement ::= _const -> "const" ( _const_assignment | _assignment_variable* )
 
-  _let_heredoc ::= '=<<' _let_heredoc_parameter -> "parameter"* _let_heredoc_marker -> "marker_definition" comment? '\n'  _heredoc_line* -> "body" _heredoc_end -> "endmarker"
+  _let_heredoc ::= '=<<' ( _let_heredoc_parameter -> parameter )* _let_heredoc_marker -> marker_definition comment? '\n' _heredoc_line* -> body _heredoc_end -> endmarker
 
   _let_heredoc_parameter ::= 'trim'
 	| 'eval'
@@ -387,9 +388,9 @@ rules:
 
   set_value ::= !( /([^ \n\t]|\\[\t ])+/ )
 
-  _set_rhs ::= _set_operator ( set_value )?:value
+  _set_rhs ::= _set_operator ( set_value:value )?
 
-  set_item ::= ( _set_option ):option _set_rhs?
+  set_item ::= _set_option:option _set_rhs?
 
   set_statement ::= _set -> "set" set_item ( ' ' set_item )*
 
@@ -397,7 +398,7 @@ rules:
 
   unlet_statement ::= _unlet -> "unlet" bang? _expression+
 
-  call_statement ::= ( ( _range -> "range" ):range ':'? )? _call -> "call" ( call_expression | method_expression )
+  call_statement ::= ( ( _range -> range ):range ':'? )? _call -> "call" ( call_expression | method_expression )
 
   echo_statement ::= _echo -> "echo" _expression*
 
@@ -423,18 +424,18 @@ rules:
 
   belowright_statement ::= ( _rightbelow -> "rightbelow" | _belowright -> "belowright" ) _statement
 
-  user_command ::= command_name bang? command_argument* -> "arguments"
+  user_command ::= command_name bang? command_argument* -> arguments
 
   command_argument ::= string_literal
 	| /\S+/
 
-  function_definition ::= _function -> "function" bang? function_declaration ( 'dict' | 'range' | 'abort' | 'closure' )* _cmd_separator _separated_statements? -> "body" _endfunction -> "endfunction"
+  function_definition ::= _function -> "function" bang? function_declaration ( 'dict' | 'range' | 'abort' | 'closure' )* _cmd_separator _separated_statements? -> body _endfunction -> "endfunction"
 
-  function_declaration ::=  8(  ( _ident | field_expression ):name ( parameters ):parameters )
+  function_declaration ::=  8(  ( _ident | field_expression ):name parameters:parameters ) 
 
   parameters ::= '(' ( spread | ( default_parameter ( ',' default_parameter )* )? ( ',' spread )? | ( identifier ( ',' identifier )* )? ( ',' ( default_parameter ( ',' default_parameter )* )? )? ( ',' spread )? ) ')'
 
-  default_parameter ::= ( identifier ):name '=' ( _expression ):value
+  default_parameter ::= identifier:name '=' _expression:value
 
   bang ::= !( '!' )
 
@@ -448,10 +449,10 @@ rules:
 
   range_statement ::= _range
 
-  _range ::= '%' -> "file"
+  _range ::= '%' -> file
 	| _range_explicit
 
-  _range_explicit ::= ( _range_marker ):start ( ( ',' | ';' ) ( _range_marker ):end )?
+  _range_explicit ::= _range_marker:start ( ( ',' | ';' ) _range_marker:end )?
 
   _range_marker ::= integer_literal
 	| current_line
@@ -468,16 +469,16 @@ rules:
 
   last_line ::= '$'
 
-  previous_pattern ::= '\/'
-	| '\?'
-	| '\&'
+  previous_pattern ::= '\\/'
+	| '\\?'
+	| '\\&'
 
   register_statement ::= register
 
   map_statement ::= ( _map -> "map" | _nmap -> "nmap" | _vmap -> "vmap" | _xmap -> "xmap" | _smap -> "smap" | _omap -> "omap" | _imap -> "imap" | _lmap -> "lmap" | _cmap -> "cmap" | _tmap -> "tmap" | _noremap -> "noremap" | _vnoremap -> "vnoremap" | _nnoremap -> "nnoremap" | _xnoremap -> "xnoremap" | _snoremap -> "snoremap" | _onoremap -> "onoremap" | _inoremap -> "inoremap" | _lnoremap -> "lnoremap" | _cnoremap -> "cnoremap" | _tnoremap -> "tnoremap" ):cmd ( '<buffer>' | '<nowait>' | '<silent>' | '<unique>' | '<script>' )* _map_definition
 
-  _map_definition ::= '<expr>' ( '<buffer>' | '<nowait>' | '<silent>' | '<unique>' | '<script>' )* ( _map_lhs -> "map_side" ):lhs ( _expression ):rhs
-	| ( _map_lhs -> "map_side" ):lhs ( _map_rhs -> "map_side" ):rhs
+  _map_definition ::= '<expr>' ( '<buffer>' | '<nowait>' | '<silent>' | '<unique>' | '<script>' )* ( _map_lhs -> map_side ):lhs _expression:rhs
+	| ( _map_lhs -> map_side ):lhs ( _map_rhs -> map_side ):rhs
 
   _keycode_modifier ::= !( /([SsCcMmAaDd]|[Aa][lL][tT])-/ )
 
@@ -530,11 +531,11 @@ rules:
 
   keycode ::= '<' _keycode_in !( '>' )
 
-  _map_lhs ::= ( /\S/ | '<' | '\\'  /./ | keycode ) ( !( /\S/ ) | !( '<' ) | !( '\\'  ) !( /./ ) | _immediate_keycode -> "keycode" )*
+  _map_lhs ::= ( /\S/ | '<' | '\\' /./ | keycode ) ( !( /\S/ ) | !( '<' ) | !( '\\' ) !( /./ ) | _immediate_keycode -> keycode )*
 
-  _map_rhs_statement ::= /<[Cc][Mm][Dd]>/ -> "keycode" _statement ( ( '\|' | /<[Bb][Aa][Rr]>/ -> "keycode" ) _statement )* /<[Cc][Rr]>/ -> "keycode"
+  _map_rhs_statement ::= /<[Cc][Mm][Dd]>/ -> keycode _statement ( ( '\\|' | /<[Bb][Aa][Rr]>/ -> keycode ) _statement )* /<[Cc][Rr]>/ -> keycode
 
-  _map_rhs ::= ( /[^\s|]/ | '<' | '\\'  /./ | keycode ) ( !( /[^|\n]/ ) | !( '<' ) | !( '\\'  ) !( /./ ) | _immediate_keycode -> "keycode" )*
+  _map_rhs ::= ( /[^\s|]/ | '<' | '\\' /./ | keycode ) ( !( /[^|\n]/ ) | !( '<' ) | !( '\\' ) !( /./ ) | _immediate_keycode -> keycode )*
 	| _map_rhs_statement
 
   _sign_name ::= integer_literal
@@ -542,57 +543,57 @@ rules:
 
   _sign_define_arg_text ::= _printable _printable?
 
-  _sign_define_argument ::= ( 'icon' ):name !( '=' ) ( filename )?:val
-	| ( 'linehl' ):name !( '=' ) ( hl_group )?:val
-	| ( 'numhl' ):name !( '=' ) ( hl_group )?:val
-	| ( 'text' ):name !( '=' ) ( _sign_define_arg_text -> "text" )?:val
-	| ( 'texthl' ):name !( '=' ) ( hl_group )?:val
-	| ( 'culhl' ):name !( '=' ) ( hl_group )?:val
+  _sign_define_argument ::= 'icon':name !( '=' ) filename?:val
+	| 'linehl':name !( '=' ) hl_group?:val
+	| 'numhl':name !( '=' ) hl_group?:val
+	| 'text':name !( '=' ) ( _sign_define_arg_text -> text )?:val
+	| 'texthl':name !( '=' ) hl_group?:val
+	| 'culhl':name !( '=' ) hl_group?:val
 
-  _sign_define ::= ( 'define' ):sub ( _sign_name ):name _sign_define_argument -> "sign_argument"*
+  _sign_define ::= 'define':sub _sign_name:name ( _sign_define_argument -> sign_argument )*
 
-  _sign_undefine ::= ( 'undefine' ):sub ( _sign_name ):name
+  _sign_undefine ::= 'undefine':sub _sign_name:name
 
-  _sign_list ::= ( 'list' ):sub ( _sign_name )?:name
+  _sign_list ::= 'list':sub ( _sign_name:name )?
 
-  _sign_place_place_argument ::= ( 'line' ):name !( '=' ) ( integer_literal ):val
-	| ( 'name' ):name !( '=' ) ( _sign_name ):val
-	| ( 'buffer' ):name !( '=' ) ( integer_literal ):val
-	| ( 'group' ):name !( '=' ) ( hl_group ):val
-	| ( 'priority' ):name !( '=' ) ( integer_literal ):val
-	| ( 'file' ):name !( '=' ) ( filename ):val
+  _sign_place_place_argument ::= 'line':name !( '=' ) integer_literal:val
+	| 'name':name !( '=' ) _sign_name:val
+	| 'buffer':name !( '=' ) integer_literal:val
+	| 'group':name !( '=' ) hl_group:val
+	| 'priority':name !( '=' ) integer_literal:val
+	| 'file':name !( '=' ) filename:val
 
-  _sign_place_place ::= ( integer_literal ):id _sign_place_place_argument -> "sign_argument"+
+  _sign_place_place ::= integer_literal:id ( _sign_place_place_argument -> sign_argument )+
 
-  _sign_place_list_argument ::= ( 'file' ):name !( '=' ) ( filename ):val
-	| ( 'buffer' ):name !( '=' ) ( integer_literal ):val
-	| ( 'group' ):name !( '=' ) ( hl_group | !( '*' ) -> "wildcard" ):val
+  _sign_place_list_argument ::= 'file':name !( '=' ) filename:val
+	| 'buffer':name !( '=' ) integer_literal:val
+	| 'group':name !( '=' ) ( hl_group | !( '*' ) -> wildcard ):val
 
-  _sign_place_list ::= _sign_place_list_argument -> "sign_argument"+
+  _sign_place_list ::= ( _sign_place_list_argument -> sign_argument )+
 
-  _sign_place ::= ( 'place' ):sub ( _sign_place_place | _sign_place_list )
+  _sign_place ::= 'place':sub ( _sign_place_place | _sign_place_list )
 
-  _sign_unplace_cursor_argument ::= ( 'group' ):name !( '=' ) ( hl_group | !( '*' ) -> "wildcard" ):val
+  _sign_unplace_cursor_argument ::= 'group':name !( '=' ) ( hl_group | !( '*' ) -> wildcard ):val
 
-  _sign_unplace_cursor ::= _sign_unplace_cursor_argument -> "sign_argument"
+  _sign_unplace_cursor ::= _sign_unplace_cursor_argument -> sign_argument
 
-  _sign_unplace_id_argument ::= ( 'file' ):name !( '=' ) ( filename ):val
-	| ( 'buffer' ):name !( '=' ) ( integer_literal ):val
-	| ( 'group' ):name !( '=' ) ( hl_group | !( '*' ) -> "wildcard" ):val
+  _sign_unplace_id_argument ::= 'file':name !( '=' ) filename:val
+	| 'buffer':name !( '=' ) integer_literal:val
+	| 'group':name !( '=' ) ( hl_group | !( '*' ) -> wildcard ):val
 
-  _sign_unplace_id ::= ( integer_literal | '*' -> "wildcard" ):id _sign_unplace_id_argument -> "sign_argument"*
+  _sign_unplace_id ::= ( integer_literal | '*' -> wildcard ):id ( _sign_unplace_id_argument -> sign_argument )*
 
-  _sign_unplace ::= ( 'unplace' ):sub ( _sign_unplace_cursor | _sign_unplace_id )?
+  _sign_unplace ::= 'unplace':sub ( _sign_unplace_cursor | _sign_unplace_id )?
 
-  _sign_jump_argument ::= ( 'file' ):name !( '=' ) ( filename ):val
-	| ( 'buffer' ):name !( '=' ) ( integer_literal ):val
-	| ( 'group' ):name !( '=' ) ( hl_group ):val
+  _sign_jump_argument ::= 'file':name !( '=' ) filename:val
+	| 'buffer':name !( '=' ) integer_literal:val
+	| 'group':name !( '=' ) hl_group:val
 
-  _sign_jump ::= ( 'jump' ):sub ( integer_literal | '*' -> "wildcard" ):id _sign_jump_argument -> "sign_argument"*
+  _sign_jump ::= 'jump':sub ( integer_literal | '*' -> wildcard ):id ( _sign_jump_argument -> sign_argument )*
 
   sign_statement ::= _sign -> "sign" ( _sign_define | _sign_undefine | _sign_list | _sign_place | _sign_unplace | _sign_jump )
 
-  _variable ::=  <0(  scope_dict | _ident | string_literal | float_literal | integer_literal | list | env_variable | register | option | lambda_expression | dictionnary | literal_dictionary )
+  _variable ::=  <0(  scope_dict | _ident | string_literal | float_literal | integer_literal | list | env_variable | register | option | lambda_expression | dictionnary | literal_dictionary ) 
 
   _expression ::= _variable
 	| ternary_expression
@@ -605,32 +606,32 @@ rules:
 	| call_expression
 	| method_expression
 
-  ternary_expression ::=  <1(  ( _expression ):condition '?' ( _expression ):left ':' ( _expression ):right )
+  ternary_expression ::=  <1(  _expression:condition '?' _expression:left ':' _expression:right ) 
 
   match_case ::= '#'
 	| '?'
 
-  binary_operation ::=  <2(  ( _expression ):left '||' ( _expression ):right )
-	|  <3(  ( _expression ):left '&&' ( _expression ):right )
-	|  <5(  ( _expression ):left '+' ( _expression ):right )
-	|  <5(  ( _expression ):left '-' ( _expression ):right )
-	|  <6(  ( _expression ):left '*' ( _expression ):right )
-	|  <6(  ( _expression ):left '/' ( _expression ):right )
-	|  <6(  ( _expression ):left '%' ( _expression ):right )
-	|  <5(  ( _expression ):left '..' ( _expression ):right )
-	|  <5(  ( _expression ):left '.' ( _expression ):right )
-	|  <4(  ( _expression ):left '==' match_case? ( _expression ):right )
-	|  <4(  ( _expression ):left '!=' match_case? ( _expression ):right )
-	|  <4(  ( _expression ):left '>' match_case? ( _expression ):right )
-	|  <4(  ( _expression ):left '>=' match_case? ( _expression ):right )
-	|  <4(  ( _expression ):left '<' match_case? ( _expression ):right )
-	|  <4(  ( _expression ):left '<=' match_case? ( _expression ):right )
-	|  <4(  ( _expression ):left '=~' match_case? ( _expression ):right )
-	|  <4(  ( _expression ):left '!~' match_case? ( _expression ):right )
-	|  <4(  ( _expression ):left 'is' match_case? ( _expression ):right )
-	|  <4(  ( _expression ):left 'isnot' match_case? ( _expression ):right )
+  binary_operation ::=  <2(  _expression:left '||' _expression:right ) 
+	|  <3(  _expression:left '&&' _expression:right ) 
+	|  <5(  _expression:left '+' _expression:right ) 
+	|  <5(  _expression:left '-' _expression:right ) 
+	|  <6(  _expression:left '*' _expression:right ) 
+	|  <6(  _expression:left '/' _expression:right ) 
+	|  <6(  _expression:left '%' _expression:right ) 
+	|  <5(  _expression:left '..' _expression:right ) 
+	|  <5(  _expression:left '.' _expression:right ) 
+	|  <4(  _expression:left '==' match_case? _expression:right ) 
+	|  <4(  _expression:left '!=' match_case? _expression:right ) 
+	|  <4(  _expression:left '>' match_case? _expression:right ) 
+	|  <4(  _expression:left '>=' match_case? _expression:right ) 
+	|  <4(  _expression:left '<' match_case? _expression:right ) 
+	|  <4(  _expression:left '<=' match_case? _expression:right ) 
+	|  <4(  _expression:left '=~' match_case? _expression:right ) 
+	|  <4(  _expression:left '!~' match_case? _expression:right ) 
+	|  <4(  _expression:left 'is' match_case? _expression:right ) 
+	|  <4(  _expression:left 'isnot' match_case? _expression:right ) 
 
-  unary_operation ::=  <7(  ( '-' | '!' | '+' ) _expression )
+  unary_operation ::=  <7(  ( '-' | '!' | '+' ) _expression ) 
 
   float_literal ::= @( /[+-]?/ /[0-9]+/ '.' /[0-9]+/ ( /[eE]/ /[+-]?/ /[0-9]+/ )? )
 
@@ -640,38 +641,38 @@ rules:
 
   list_assignment ::= '[' ( _expression ( ',' _expression )* )? ( ';' _expression )? ']'
 
-  index_expression ::=  8(  ( _expression ):value '[' ( _expression ):index ']' )
+  index_expression ::=  8(  _expression:value '[' _expression:index ']' ) 
 
-  slice_expression ::=  8(  ( _expression ):value '[' ( _expression )?:start ':' ( _expression )?:stop ']' )
+  slice_expression ::=  8(  _expression:value '[' ( _expression:start )? ':' ( _expression:stop )? ']' ) 
 
-  field_expression ::=  <8(  ( _expression ):value '.' ( identifier ):field )
+  field_expression ::=  <8(  _expression:value '.' identifier:field ) 
 
-  call_expression ::=  8(  ( _expression ):function '(' ( _expression ( ',' _expression )* )? ')' )
+  call_expression ::=  8(  _expression:function '(' ( _expression ( ',' _expression )* )? ')' ) 
 
   eval_statement ::= _eval -> "eval" _expression
 
-  _method_call_expression ::= ( _immediate_identifier -> "identifier" | _immediate_lambda_expression -> "lambda_expression" ):function !( '(' ) ( _expression ( ',' _expression )* )? ')'
+  _method_call_expression ::= ( _immediate_identifier -> identifier | _immediate_lambda_expression -> lambda_expression ):function !( '(' ) ( _expression ( ',' _expression )* )? ')'
 
-  method_expression ::=  8(  ( _expression ):value '->' _method_call_expression -> "call_expression" )
+  method_expression ::=  8(  _expression:value '->' _method_call_expression -> call_expression ) 
 
-  filename ::= ( /[A-Za-z0-9]/ | /[/._+,#$%~=-]/ | /[\\{}\[\]:@!]/ | /[*]/ | '\\'  /./ ) ( !( /[A-Za-z0-9]/ ) | !( /[/._+,#$%~=-]/ ) | !( /[\\{}\[\]:@!]/ ) | !( /[*]/ ) | !( '\\'  /./ ) )*
+  filename ::= ( /[A-Za-z0-9]/ | /[/._+,#$%~=-]/ | /[\\{}\[\]:@!]/ | /[*]/ | '\\' /./ ) ( !( /[A-Za-z0-9]/ ) | !( /[/._+,#$%~=-]/ ) | !( /[\\{}\[\]:@!]/ ) | !( /[*]/ ) | !( '\\' /./ ) )*
 
   pattern_multi ::= '*'
 	| /\\[+=?]/
 	| /\\@[!>=]|<[=!]/
 	| /\\\{-?[0-9]*,?[0-9]*}/
 
-  _pattern_ordinary_atom ::= ( '[' ( '\\'  /./ | /[^\]\n\\]/ )* ']' | '\\'  /./ | /[^\\\[\n]/ )+
+  _pattern_ordinary_atom ::= ( '[' ( '\\' /./ | /[^\]\n\\]/ )* ']' | '\\' /./ | /[^\\\[\n]/ )+
 
-  _pattern_atom ::=  <0(  _pattern_ordinary_atom | '\(' pattern '\)' | '\%(' pattern '\)' | '\z(' pattern '\)' )
+  _pattern_atom ::=  <0(  _pattern_ordinary_atom | '\\(' pattern '\\)' | '\\%(' pattern '\\)' | '\\z(' pattern '\\)' ) 
 
   _pattern_piece ::= _pattern_atom pattern_multi?
 
   _pattern_concat ::= _pattern_piece+
 
-  _pattern_branch ::= _pattern_concat ( '\&' _pattern_concat )*
+  _pattern_branch ::= _pattern_concat ( '\\&' _pattern_concat )*
 
-  pattern ::=  <0(  _pattern_branch ( '\|' _pattern_branch )* )
+  pattern ::=  <0(  _pattern_branch ( '\\|' _pattern_branch )* ) 
 
   env_variable ::= '$' identifier
 
@@ -679,11 +680,11 @@ rules:
 
   option ::= '&' scope? option_name
 
-  dictionnary_entry ::= ( _expression ):key ':' ( _expression ):value
+  dictionnary_entry ::= _expression:key ':' _expression:value
 
   dictionnary ::= '{' ( dictionnary_entry ( ',' dictionnary_entry )* )? ','? '}'
 
-  _literal_dictionary_entry ::= ( literal_key ):key ':' ( _expression ):value
+  _literal_dictionary_entry ::= literal_key:key ':' _expression:value
 
   literal_key ::= /[0-9a-zA-Z_-]+/
 
@@ -697,15 +698,15 @@ rules:
 	| !( 'keep' )
 	| !( 'drop' )
 
-  plus_plus_opt ::= '++' ( ( !( 'ff' ) | !( 'fileformat' ) ):name !( '=' ) ( _immediate_file_format ):val | ( !( 'enc' ) | !( 'encoding' ) ):name !( '=' ) ( _immediate_encoding ):val | ( !( 'bin' ) | !( 'binary' ) ):name | ( !( 'nobin' ) | !( 'nobinary' ) ):name | ( !( 'bad' ) ):name !( '=' ) ( _plus_plus_opt_bad ):val | ( !( 'edit' ) ):name )
+  plus_plus_opt ::= '++' ( ( !( 'ff' ) | !( 'fileformat' ) ):name !( '=' ) _immediate_file_format:val | ( !( 'enc' ) | !( 'encoding' ) ):name !( '=' ) _immediate_encoding:val | ( !( 'bin' ) | !( 'binary' ) ):name | ( !( 'nobin' ) | !( 'nobinary' ) ):name | !( 'bad' ):name !( '=' ) _plus_plus_opt_bad:val | !( 'edit' ):name )
 
-  _plus_cmd_arg ::= ( !( '\\'  ) !( /./ ) | !( /[^ \n]/ ) )+
+  _plus_cmd_arg ::= ( !( '\\' ) !( /./ ) | !( /[^ \n]/ ) )+
 
-  _plus_cmd_number ::=  2(  !( /[0-9]+/ ) -> "integer_literal" )
+  _plus_cmd_number ::=  2(  !( /[0-9]+/ ) -> integer_literal ) 
 
-  _plus_cmd_command ::=  1(  _plus_cmd_arg -> "command" )
+  _plus_cmd_command ::=  1(  _plus_cmd_arg -> command ) 
 
-  _plus_cmd_pattern ::= '/' _plus_cmd_arg -> "pattern"
+  _plus_cmd_pattern ::= '/' _plus_cmd_arg -> pattern
 
   plus_cmd ::= '+' ( _plus_cmd_number | _plus_cmd_pattern | _plus_cmd_command )?
 
@@ -713,15 +714,15 @@ rules:
 
   au_event_list ::= au_event ( ',' au_event )*
 
-  _augroup_name ::= identifier -> "augroup_name"
+  _augroup_name ::= identifier -> augroup_name
 
-  _autocmd_pattern ::= /[^ \t\n,]+/ -> "pattern" ( ',' /[^ \t\n,]+/ -> "pattern" )*
+  _autocmd_pattern ::= /[^ \t\n,]+/ -> pattern ( ',' /[^ \t\n,]+/ -> pattern )*
 
   au_once ::= '++once'
 
   au_nested ::= '++nested'
 
-  _autocmd_command ::= au_event_list _autocmd_pattern au_once? au_nested? ( _statement ):command
+  _autocmd_command ::= au_event_list _autocmd_pattern au_once? au_nested? _statement:command
 
   _autocmd_define ::= _autocmd -> "autocmd" _augroup_name? _autocmd_command
 
@@ -733,76 +734,76 @@ rules:
 	| _autocmd_remove
 	| _autocmd_list
 
-  augroup_statement ::= _augroup -> "augroup" bang? identifier -> "augroup_name"
+  augroup_statement ::= _augroup -> "augroup" bang? identifier -> augroup_name
 
   command_name ::= /[A-Z][A-Za-z0-9]*/
 
-  _command_attribute_completion_behavior ::= ( !( 'arglist' ) ):name
-	| ( !( 'augroup' ) ):name
-	| ( !( 'buffer' ) ):name
-	| ( !( 'behave' ) ):name
-	| ( !( 'color' ) ):name
-	| ( !( 'command' ) ):name
-	| ( !( 'compiler' ) ):name
-	| ( !( 'dir' ) ):name
-	| ( !( 'environment' ) ):name
-	| ( !( 'even' ) ):name
-	| ( !( 'expression' ) ):name
-	| ( !( 'file' ) ):name
-	| ( !( 'file_in_path' ) ):name
-	| ( !( 'filetype' ) ):name
-	| ( !( 'function' ) ):name
-	| ( !( 'help' ) ):name
-	| ( !( 'highlight' ) ):name
-	| ( !( 'history' ) ):name
-	| ( !( 'local' ) ):name
-	| ( !( 'lua' ) ):name
-	| ( !( 'mapclear' ) ):name
-	| ( !( 'mapping' ) ):name
-	| ( !( 'menu' ) ):name
-	| ( !( 'messages' ) ):name
-	| ( !( 'option' ) ):name
-	| ( !( 'packadd' ) ):name
-	| ( !( 'shellcmd' ) ):name
-	| ( !( 'sign' ) ):name
-	| ( !( 'syntax' ) ):name
-	| ( !( 'syntime' ) ):name
-	| ( !( 'tag' ) ):name
-	| ( !( 'tag_listfiles' ) ):name
-	| ( !( 'user' ) ):name
-	| ( !( 'var' ) ):name
-	| ( !( 'custom' ) ):name !( ',' ) ( _ident ):val
-	| ( !( 'customlist' ) ):name !( ',' ) ( _ident ):val
+  _command_attribute_completion_behavior ::= !( 'arglist' ):name
+	| !( 'augroup' ):name
+	| !( 'buffer' ):name
+	| !( 'behave' ):name
+	| !( 'color' ):name
+	| !( 'command' ):name
+	| !( 'compiler' ):name
+	| !( 'dir' ):name
+	| !( 'environment' ):name
+	| !( 'even' ):name
+	| !( 'expression' ):name
+	| !( 'file' ):name
+	| !( 'file_in_path' ):name
+	| !( 'filetype' ):name
+	| !( 'function' ):name
+	| !( 'help' ):name
+	| !( 'highlight' ):name
+	| !( 'history' ):name
+	| !( 'local' ):name
+	| !( 'lua' ):name
+	| !( 'mapclear' ):name
+	| !( 'mapping' ):name
+	| !( 'menu' ):name
+	| !( 'messages' ):name
+	| !( 'option' ):name
+	| !( 'packadd' ):name
+	| !( 'shellcmd' ):name
+	| !( 'sign' ):name
+	| !( 'syntax' ):name
+	| !( 'syntime' ):name
+	| !( 'tag' ):name
+	| !( 'tag_listfiles' ):name
+	| !( 'user' ):name
+	| !( 'var' ):name
+	| !( 'custom' ):name !( ',' ) _ident:val
+	| !( 'customlist' ):name !( ',' ) _ident:val
 
-  _command_attribute_address_behavior ::= ( !( 'lines' ) ):name
-	| ( !( 'arguments' ) ):name
-	| ( !( 'buffers' ) ):name
-	| ( !( 'loaded_buffers' ) ):name
-	| ( !( 'windows' ) ):name
-	| ( !( 'tabs' ) ):name
-	| ( !( 'quickfix' ) ):name
-	| ( !( 'other' ) ):name
+  _command_attribute_address_behavior ::= !( 'lines' ):name
+	| !( 'arguments' ):name
+	| !( 'buffers' ):name
+	| !( 'loaded_buffers' ):name
+	| !( 'windows' ):name
+	| !( 'tabs' ):name
+	| !( 'quickfix' ):name
+	| !( 'other' ):name
 
-  _command_attribute_nargs_value ::= !( /[01]/ ) -> "integer_literal"
-	| !( /[*?+]/ ) -> "pattern_multi"
+  _command_attribute_nargs_value ::= !( /[01]/ ) -> integer_literal
+	| !( /[*?+]/ ) -> pattern_multi
 
-  _command_attribute_range_value ::= !( /[0-9]+/ ) -> "integer_literal"
-	| !( '%' ) -> "pattern_multi"
+  _command_attribute_range_value ::= !( /[0-9]+/ ) -> integer_literal
+	| !( '%' ) -> pattern_multi
 
-  command_attribute ::= ( '-nargs' ):name !( '=' ) ( _command_attribute_nargs_value ):val
-	| ( '-complete' ):name !( '=' ) ( _command_attribute_completion_behavior -> "behavior" ):val
-	| ( '-range' ):name !( '=' ) ( _command_attribute_range_value ):val
-	| ( '-range' ):name
-	| ( '-count' ):name !( '=' ) ( !( /[0-9]+/ ) -> "integer_literal" ):val
-	| ( '-count' ):name
-	| ( '-addr' ):name !( '=' ) ( _command_attribute_address_behavior -> "behavior" ):val
-	| ( '-bang' ):name
-	| ( '-bar' ):name
-	| ( '-register' ):name
-	| ( '-buffer' ):name
-	| ( '-keepscript' ):name
+  command_attribute ::= '-nargs':name !( '=' ) _command_attribute_nargs_value:val
+	| '-complete':name !( '=' ) ( _command_attribute_completion_behavior -> behavior ):val
+	| '-range':name !( '=' ) _command_attribute_range_value:val
+	| '-range':name
+	| '-count':name !( '=' ) ( !( /[0-9]+/ ) -> integer_literal ):val
+	| '-count':name
+	| '-addr':name !( '=' ) ( _command_attribute_address_behavior -> behavior ):val
+	| '-bang':name
+	| '-bar':name
+	| '-register':name
+	| '-buffer':name
+	| '-keepscript':name
 
-  command_statement ::= _command -> "command" bang? ( ( command_name ):name | command_attribute* ( command_name ):name ( /.*/ -> "command" ):repl )?
+  command_statement ::= _command -> "command" bang? ( command_name:name | command_attribute* command_name:name ( /.*/ -> command ):repl )?
 
   comclear_statement ::= _comclear -> "comclear"
 
@@ -810,29 +811,29 @@ rules:
 
   hl_group ::= /[a-zA-Z0-9_@.]+/
 
-  _hl_body_link ::= _default -> "default"? 'link' ( hl_group ):from ( hl_group ):to
+  _hl_body_link ::= ( _default -> "default" )? 'link' hl_group:from hl_group:to
 
   _hl_body_clear ::= 'clear' hl_group?
 
-  _hl_body_none ::= hl_group 'NONE' -> "hl_group"
+  _hl_body_none ::= hl_group 'NONE' -> hl_group
 
   _hl_none ::= !( 'NONE' )
 
   _hl_attr_list ::= ( _hl_none | !( 'bold' ) | !( 'underline' ) | !( 'undercurl' ) | !( 'underdouble' ) | !( 'underdotted' ) | !( 'underdashed' ) | !( 'strikethrough' ) | !( 'reverse' ) | !( 'inverse' ) | !( 'italic' ) | !( 'standout' ) | !( 'nocombine' ) ) ( ',' ( _hl_none | !( 'bold' ) | !( 'underline' ) | !( 'undercurl' ) | !( 'underdouble' ) | !( 'underdotted' ) | !( 'underdashed' ) | !( 'strikethrough' ) | !( 'reverse' ) | !( 'inverse' ) | !( 'italic' ) | !( 'standout' ) | !( 'nocombine' ) ) )*
 
-  _hl_key_cterm ::= ( 'term' | 'cterm' ):key !( '=' ) ( _hl_attr_list ):val
+  _hl_key_cterm ::= ( 'term' | 'cterm' ):key !( '=' ) _hl_attr_list:val
 
   _hl_term_list ::= ( !( /\S+/ ) | _immediate_keycode )+
 
-  _hl_key_start_stop ::= ( 'start' | 'stop' ):key !( '=' ) ( _hl_term_list ):val
+  _hl_key_start_stop ::= ( 'start' | 'stop' ):key !( '=' ) _hl_term_list:val
 
   _hl_color_nr ::= !( /[0-9]+\*?/ )
 
   _hl_key_ctermfg_ctermbg ::= ( 'ctermfg' | 'ctermbg' ):key !( '=' ) ( color | _hl_color_nr ):val
 
-  _hl_key_gui ::= ( 'gui' ):key !( '=' ) ( _hl_attr_list ):val
+  _hl_key_gui ::= 'gui':key !( '=' ) _hl_attr_list:val
 
-  _hl_quoted_name ::= !( "'"  ) !( /[^'\n]+/ ) "'"
+  _hl_quoted_name ::= !( "'" ) !( /[^'\n]+/ ) "'"
 
   color ::= _hl_quoted_name
 	| _hl_none
@@ -843,15 +844,15 @@ rules:
 	| !( /#[0-9a-fA-F]{6}/ )
 	| !( /[a-zA-Z]+/ )
 
-  _hl_key_gui_color ::= ( 'guifg' | 'guibg' | 'guisp' ):key !( '=' ) ( color ):val
+  _hl_key_gui_color ::= ( 'guifg' | 'guibg' | 'guisp' ):key !( '=' ) color:val
 
   font ::= _hl_none
 	| _hl_quoted_name
 	| !( /[a-zA-Z0-9-]+/ )
 
-  _hl_key_font ::= ( 'font' ):key !( '=' ) ( font ):val
+  _hl_key_font ::= 'font':key !( '=' ) font:val
 
-  _hl_key_blend ::= ( 'blend' ):key !( '=' ) ( integer_literal ):val
+  _hl_key_blend ::= 'blend':key !( '=' ) integer_literal:val
 
   hl_attribute ::= _hl_key_cterm
 	| _hl_key_start_stop
@@ -861,7 +862,7 @@ rules:
 	| _hl_key_font
 	| _hl_key_blend
 
-  _hl_body_keys ::= _default -> "default"? hl_group hl_attribute+
+  _hl_body_keys ::= ( _default -> "default" )? hl_group hl_attribute+
 
   _hl_body ::= hl_group
 	| _hl_body_clear
@@ -873,76 +874,76 @@ rules:
 
   _syn_enable ::= ( 'enable' | 'on' | 'off' | 'reset' ):sub
 
-  _syn_case ::= ( 'case' ):sub ( 'match' | 'ignore' )?
+  _syn_case ::= 'case':sub ( 'match' | 'ignore' )?
 
-  _syn_spell ::= ( 'spell' ):sub ( 'toplevel' | 'notoplevel' | 'default' )?
+  _syn_spell ::= 'spell':sub ( 'toplevel' | 'notoplevel' | 'default' )?
 
-  _syn_foldlevel ::= ( 'foldlevel' ):sub ( 'start' | 'minimum' )?
+  _syn_foldlevel ::= 'foldlevel':sub ( 'start' | 'minimum' )?
 
-  _syn_iskeyword ::= ( 'iskeyword' ):sub ( 'clear' | /[^ \n]+/ -> "value" )?
+  _syn_iskeyword ::= 'iskeyword':sub ( 'clear' | /[^ \n]+/ -> value )?
 
-  _syn_conceal ::= ( 'conceal' ):sub ( 'on' | 'off' )?
+  _syn_conceal ::= 'conceal':sub ( 'on' | 'off' )?
 
   _syn_hl_pattern ::= _separator_first pattern _separator
 
   hl_groups ::= hl_group ( ',' hl_group )*
 
-  _syn_arguments_keyword ::= ( 'conceal' ):name
-	| ( 'cchar' ):name !( '=' ) ( _printable ):val
-	| ( 'contained' ):name
-	| ( 'containedin' ):name !( '=' ) ( hl_groups )?:val
-	| ( 'nextgroup' ):name !( '=' ) ( hl_groups )?:val
-	| ( 'transparent' ):name
-	| ( 'skipwhite' ):name
-	| ( 'skipnl' ):name
-	| ( 'skipempty' ):name
+  _syn_arguments_keyword ::= 'conceal':name
+	| 'cchar':name !( '=' ) _printable:val
+	| 'contained':name
+	| 'containedin':name !( '=' ) hl_groups?:val
+	| 'nextgroup':name !( '=' ) hl_groups?:val
+	| 'transparent':name
+	| 'skipwhite':name
+	| 'skipnl':name
+	| 'skipempty':name
 
   _syn_arguments_match ::= _syn_arguments_keyword
-	| ( 'contains' ):name !( '=' ) ( hl_groups )?:val
-	| ( 'fold' ):name
-	| ( 'display' ):name
-	| ( 'extend' ):name
-	| ( 'keepend' ):name
-	| ( 'excludenl' ):name
+	| 'contains':name !( '=' ) hl_groups?:val
+	| 'fold':name
+	| 'display':name
+	| 'extend':name
+	| 'keepend':name
+	| 'excludenl':name
 
   _syn_arguments_region ::= _syn_arguments_match
-	| ( 'matchgroup' ):name !( '=' ) ( hl_groups )?:val
-	| ( 'oneline' ):name
-	| ( 'concealends' ):name
+	| 'matchgroup':name !( '=' ) hl_groups?:val
+	| 'oneline':name
+	| 'concealends':name
 
-  _syn_arguments_cluster ::= ( 'contains' ):name !( '=' ) ( hl_groups )?:val
-	| ( 'add' ):name !( '=' ) ( hl_groups )?:val
-	| ( 'remove' ):name !( '=' ) ( hl_groups )?:val
+  _syn_arguments_cluster ::= 'contains':name !( '=' ) hl_groups?:val
+	| 'add':name !( '=' ) hl_groups?:val
+	| 'remove':name !( '=' ) hl_groups?:val
 
   _syn_pattern_offset ::= ( !( 'ms' ) | !( 'me' ) | !( 'hs' ) | !( 'he' ) | !( 'rs' ) | !( 're' ) | !( 'lc' ) ):what !( '=' ) ( !( /[se]([+-][0-9]+)?/ ) | !( /[0-9]/ ) ):offset
 
-  _syn_keyword ::= ( 'keyword' ):sub hl_group _syn_arguments_keyword -> "syntax_argument"* /[a-zA-Z0-9\[\]_]+/ -> "keyword" ( _syn_arguments_keyword -> "syntax_argument" | /[a-zA-Z0-9\[\]_]+/ -> "keyword" )*
+  _syn_keyword ::= 'keyword':sub hl_group ( _syn_arguments_keyword -> syntax_argument )* /[a-zA-Z0-9\[\]_]+/ -> keyword ( _syn_arguments_keyword -> syntax_argument | /[a-zA-Z0-9\[\]_]+/ -> keyword )*
 
-  _syn_match ::= ( 'match' ):sub hl_group _syn_arguments_match -> "syntax_argument"* _syn_hl_pattern ( _syn_pattern_offset -> "pattern_offset" ( ',' _syn_pattern_offset -> "pattern_offset" )* )? _syn_arguments_match -> "syntax_argument"*
+  _syn_match ::= 'match':sub hl_group ( _syn_arguments_match -> syntax_argument )* _syn_hl_pattern ( _syn_pattern_offset -> pattern_offset ( ',' _syn_pattern_offset -> pattern_offset )* )? ( _syn_arguments_match -> syntax_argument )*
 
-  _syn_region_start ::= ( 'start' ):name !( '=' ) ( _syn_hl_pattern ):val ( _syn_pattern_offset -> "pattern_offset" ( ',' _syn_pattern_offset -> "pattern_offset" )* )?
+  _syn_region_start ::= 'start':name !( '=' ) _syn_hl_pattern:val ( _syn_pattern_offset -> pattern_offset ( ',' _syn_pattern_offset -> pattern_offset )* )?
 
-  _syn_region_skip ::= ( 'skip' ):name !( '=' ) ( _syn_hl_pattern ):val ( _syn_pattern_offset -> "pattern_offset" ( ',' _syn_pattern_offset -> "pattern_offset" )* )?
+  _syn_region_skip ::= 'skip':name !( '=' ) _syn_hl_pattern:val ( _syn_pattern_offset -> pattern_offset ( ',' _syn_pattern_offset -> pattern_offset )* )?
 
-  _syn_region_end ::= ( 'end' ):name !( '=' ) ( _syn_hl_pattern ):val ( _syn_pattern_offset -> "pattern_offset" ( ',' _syn_pattern_offset -> "pattern_offset" )* )?
+  _syn_region_end ::= 'end':name !( '=' ) _syn_hl_pattern:val ( _syn_pattern_offset -> pattern_offset ( ',' _syn_pattern_offset -> pattern_offset )* )?
 
-  _syn_region ::= ( 'region' ):sub hl_group _syn_arguments_region -> "syntax_argument"* _syn_region_start -> "syntax_argument" _syn_arguments_region -> "syntax_argument"* ( _syn_region_skip -> "syntax_argument" _syn_arguments_region -> "syntax_argument"* )? ( _syn_region_end -> "syntax_argument" _syn_arguments_region -> "syntax_argument"* )+
+  _syn_region ::= 'region':sub hl_group ( _syn_arguments_region -> syntax_argument )* _syn_region_start -> syntax_argument ( _syn_arguments_region -> syntax_argument )* ( _syn_region_skip -> syntax_argument ( _syn_arguments_region -> syntax_argument )* )? ( _syn_region_end -> syntax_argument ( _syn_arguments_region -> syntax_argument )* )+
 
-  _syn_cluster ::= ( 'cluster' ):sub hl_group _syn_arguments_cluster -> "syntax_argument"*
+  _syn_cluster ::= 'cluster':sub hl_group ( _syn_arguments_cluster -> syntax_argument )*
 
-  _syn_include ::= ( 'include' ):sub ( '@' hl_group )?:grouplist filename
+  _syn_include ::= 'include':sub ( ( '@' hl_group ):grouplist )? filename
 
-  _syn_sync_lines ::= ( 'minlines' | 'maxlines' ):name !( '=' ) ( /[0-9]+/ ):val
+  _syn_sync_lines ::= ( 'minlines' | 'maxlines' ):name !( '=' ) /[0-9]+/:val
 
-  _syn_sync ::= ( 'sync' ):sub ( ( 'linebreaks' ):method !( '=' ) ( !( /[0-9]+/ ) ):val | ( 'fromstart' ):method | ( 'ccomment' ):method hl_group? _syn_sync_lines* | ( 'lines' | 'minlines' | 'maxlines' ):method !( '=' ) ( !( /[0-9]+/ ) ):val | ( 'match' | 'region' ):method hl_group ( ( 'grouphere' | 'groupthere' ) hl_group )? pattern | ( 'linecont' ):method _syn_sync_lines* pattern _syn_sync_lines* | ( 'clear' ):method hl_group? )
+  _syn_sync ::= 'sync':sub ( 'linebreaks':method !( '=' ) !( /[0-9]+/ ):val | 'fromstart':method | 'ccomment':method hl_group? _syn_sync_lines* | ( 'lines' | 'minlines' | 'maxlines' ):method !( '=' ) !( /[0-9]+/ ):val | ( 'match' | 'region' ):method hl_group ( ( 'grouphere' | 'groupthere' ) hl_group )? pattern | 'linecont':method _syn_sync_lines* pattern _syn_sync_lines* | 'clear':method hl_group? )
 
-  _syn_list ::= ( 'list' ):sub hl_group?
+  _syn_list ::= 'list':sub hl_group?
 
-  _syn_clear ::= ( 'clear' ):sub hl_group?
+  _syn_clear ::= 'clear':sub hl_group?
 
   syntax_statement ::= _syntax -> "syntax" ( _syn_enable | _syn_case | _syn_spell | _syn_foldlevel | _syn_iskeyword | _syn_conceal | _syn_keyword | _syn_match | _syn_region | _syn_cluster | _syn_include | _syn_sync | _syn_list | _syn_clear )?
 
-  edit_statement ::= _edit -> "edit" bang? plus_plus_opt* plus_cmd* ( '#' !( /[0-9]+/ ) -> "integer_literal" | filename )?
+  edit_statement ::= _edit -> "edit" bang? plus_plus_opt* plus_cmd* ( '#' !( /[0-9]+/ ) -> integer_literal | filename )?
 
   enew_statement ::= _enew -> "enew" bang?
 

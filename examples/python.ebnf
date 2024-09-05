@@ -1,10 +1,11 @@
-; From tree-sitter-python/src/grammar.json
+; repository: https://github.com/tree-sitter/tree-sitter-python.git
+; commit: 9a7f191b45af504c04acc78abc0afa5e0baf5ffe
+; json from: tree-sitter-python/src/grammar.json
+; From /tmp/tslua/python0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -16,10 +17,10 @@ externals ::= {
 	escape_interpolation
 	string_end
 	comment
-	undefined
-	undefined
-	undefined
-	undefined
+	']'
+	')'
+	'}'
+	'except'
 	}
 
 extras ::= {
@@ -98,12 +99,12 @@ rules:
 
   _import_list ::= ( dotted_name | aliased_import ):name ( ',' ( dotted_name | aliased_import ):name )* ','?
 
-  aliased_import ::= ( dotted_name ):name 'as' ( identifier ):alias
+  aliased_import ::= dotted_name:name 'as' identifier:alias
 
   wildcard_import ::= '*'
 
-  print_statement ::=  1(  'print' chevron ( ',' ( expression ):argument )* ','? )
-	|  -3(   ~-1(  'print' ( expression ):argument ( ',' ( expression ):argument )* ','? )  )
+  print_statement ::=  1(  'print' chevron ( ',' expression:argument )* ','? ) 
+	|  -3(   ~-1(  'print' expression:argument ( ',' expression:argument )* ','? )  ) 
 
   chevron ::= '>>' expression
 
@@ -115,7 +116,7 @@ rules:
 	| augmented_assignment
 	| yield
 
-  named_expression ::= ( _named_expression_lhs ):name ':=' ( expression ):value
+  named_expression ::= _named_expression_lhs:name ':=' expression:value
 
   _named_expression_lhs ::= identifier
 	| keyword_identifier
@@ -127,13 +128,13 @@ rules:
   _expressions ::= expression
 	| expression_list
 
-  raise_statement ::= 'raise' _expressions? ( 'from' ( expression ):cause )?
+  raise_statement ::= 'raise' _expressions? ( 'from' expression:cause )?
 
-  pass_statement ::=  <0(  'pass' )
+  pass_statement ::=  <0(  'pass' ) 
 
-  break_statement ::=  <0(  'break' )
+  break_statement ::=  <0(  'break' ) 
 
-  continue_statement ::=  <0(  'continue' )
+  continue_statement ::=  <0(  'continue' ) 
 
   _compound_statement ::= if_statement
 	| for_statement
@@ -145,24 +146,24 @@ rules:
 	| decorated_definition
 	| match_statement
 
-  if_statement ::= 'if' ( expression ):condition ':' ( _suite ):consequence ( elif_clause )*:alternative ( else_clause )?:alternative
+  if_statement ::= 'if' expression:condition ':' _suite:consequence ( elif_clause:alternative )* ( else_clause:alternative )?
 
-  elif_clause ::= 'elif' ( expression ):condition ':' ( _suite ):consequence
+  elif_clause ::= 'elif' expression:condition ':' _suite:consequence
 
-  else_clause ::= 'else' ':' ( _suite ):body
+  else_clause ::= 'else' ':' _suite:body
 
-  match_statement ::= 'match' ( expression ):subject ( ',' ( expression ):subject )* ','? ':' ( _match_block -> "block" ):body
+  match_statement ::= 'match' expression:subject ( ',' expression:subject )* ','? ':' ( _match_block -> block ):body
 
-  _match_block ::= _indent ( case_clause )*:alternative _dedent
+  _match_block ::= _indent ( case_clause:alternative )* _dedent
 	| _newline
 
-  case_clause ::= 'case' case_pattern ( ',' case_pattern )* ','? ( if_clause )?:guard ':' ( _suite ):consequence
+  case_clause ::= 'case' case_pattern ( ',' case_pattern )* ','? ( if_clause:guard )? ':' _suite:consequence
 
-  for_statement ::= 'async'? 'for' ( _left_hand_side ):left 'in' ( _expressions ):right ':' ( _suite ):body ( else_clause )?:alternative
+  for_statement ::= 'async'? 'for' _left_hand_side:left 'in' _expressions:right ':' _suite:body else_clause?:alternative
 
-  while_statement ::= 'while' ( expression ):condition ':' ( _suite ):body ( else_clause )?:alternative
+  while_statement ::= 'while' expression:condition ':' _suite:body ( else_clause:alternative )?
 
-  try_statement ::= 'try' ':' ( _suite ):body ( except_clause+ else_clause? finally_clause? | except_group_clause+ else_clause? finally_clause? | finally_clause )
+  try_statement ::= 'try' ':' _suite:body ( except_clause+ else_clause? finally_clause? | except_group_clause+ else_clause? finally_clause? | finally_clause )
 
   except_clause ::= 'except' ( expression ( ( 'as' | ',' ) expression )? )? ':' _suite
 
@@ -170,14 +171,14 @@ rules:
 
   finally_clause ::= 'finally' ':' _suite
 
-  with_statement ::= 'async'? 'with' with_clause ':' ( _suite ):body
+  with_statement ::= 'async'? 'with' with_clause ':' _suite:body
 
   with_clause ::= with_item ( ',' with_item )* ','?
 	| '(' with_item ( ',' with_item )* ','? ')'
 
-  with_item ::=  ~1(  ( expression ):value )
+  with_item ::=  ~1(  expression:value ) 
 
-  function_definition ::= 'async'? 'def' ( identifier ):name ( type_parameter )?:type_parameters ( parameters ):parameters ( '->' ( type ):return_type )? ':' ( _suite ):body
+  function_definition ::= 'async'? 'def' identifier:name type_parameter?:type_parameters parameters:parameters ( '->' type:return_type )? ':' _suite:body
 
   parameters ::= '(' _parameters? ')'
 
@@ -193,37 +194,37 @@ rules:
 
   exec_statement ::= 'exec' ( string | identifier ):code ( 'in' expression ( ',' expression )* )?
 
-  type_alias_statement ::=  ~1(  'type' type '=' type )
+  type_alias_statement ::=  ~1(  'type' type '=' type ) 
 
-  class_definition ::= 'class' ( identifier ):name ( type_parameter )?:type_parameters ( argument_list )?:superclasses ':' ( _suite ):body
+  class_definition ::= 'class' identifier:name type_parameter?:type_parameters argument_list?:superclasses ':' _suite:body
 
   type_parameter ::= '[' type ( ',' type )* ','? ']'
 
-  parenthesized_list_splat ::=  1(  '(' ( parenthesized_list_splat -> "parenthesized_expression" | list_splat ) ')' )
+  parenthesized_list_splat ::=  1(  '(' ( parenthesized_list_splat -> parenthesized_expression | list_splat ) ')' ) 
 
-  argument_list ::= '(' ( ( expression | list_splat | dictionary_splat | parenthesized_list_splat -> "parenthesized_expression" | keyword_argument ) ( ',' ( expression | list_splat | dictionary_splat | parenthesized_list_splat -> "parenthesized_expression" | keyword_argument ) )* )? ','? ')'
+  argument_list ::= '(' ( ( expression | list_splat | dictionary_splat | parenthesized_list_splat -> parenthesized_expression | keyword_argument ) ( ',' ( expression | list_splat | dictionary_splat | parenthesized_list_splat -> parenthesized_expression | keyword_argument ) )* )? ','? ')'
 
   decorated_definition ::= decorator+ ( class_definition | function_definition ):definition
 
   decorator ::= '@' expression _newline
 
-  _suite ::= _simple_statements -> "block"
+  _suite ::= _simple_statements -> block
 	| _indent block
-	| _newline -> "block"
+	| _newline -> block
 
   block ::= _statement* _dedent
 
-  expression_list ::=  >0(  expression ( ',' | ( ',' expression )+ ','? ) )
+  expression_list ::=  >0(  expression ( ',' | ( ',' expression )+ ','? ) ) 
 
-  dotted_name ::=  1(  identifier ( '.' identifier )* )
+  dotted_name ::=  1(  identifier ( '.' identifier )* ) 
 
-  case_pattern ::=  1(  _as_pattern -> "as_pattern" | keyword_pattern | _simple_pattern )
+  case_pattern ::=  1(  _as_pattern -> as_pattern | keyword_pattern | _simple_pattern ) 
 
-  _simple_pattern ::=  1(  class_pattern | splat_pattern | union_pattern | _list_pattern -> "list_pattern" | _tuple_pattern -> "tuple_pattern" | dict_pattern | string | concatenated_string | true | false | none | '-'? ( integer | float ) | complex_pattern | dotted_name | '_' )
+  _simple_pattern ::=  1(  class_pattern | splat_pattern | union_pattern | _list_pattern -> list_pattern | _tuple_pattern -> tuple_pattern | dict_pattern | string | concatenated_string | true | false | none | '-'? ( integer | float ) | complex_pattern | dotted_name | '_' ) 
 
   _as_pattern ::= case_pattern 'as' identifier
 
-  union_pattern ::=  >0(  _simple_pattern  <0(  '|' _simple_pattern ) + )
+  union_pattern ::=  >0(  _simple_pattern  <0(  '|' _simple_pattern ) + ) 
 
   _list_pattern ::= '[' ( case_pattern ( ',' case_pattern )* ','? )? ']'
 
@@ -231,15 +232,15 @@ rules:
 
   dict_pattern ::= '{' ( ( _key_value_pattern | splat_pattern ) ( ',' ( _key_value_pattern | splat_pattern ) )* ','? )? '}'
 
-  _key_value_pattern ::= ( _simple_pattern ):key ':' ( case_pattern ):value
+  _key_value_pattern ::= _simple_pattern:key ':' case_pattern:value
 
   keyword_pattern ::= identifier '=' _simple_pattern
 
-  splat_pattern ::=  1(  ( '*' | '**' ) ( identifier | '_' ) )
+  splat_pattern ::=  1(  ( '*' | '**' ) ( identifier | '_' ) ) 
 
   class_pattern ::= dotted_name '(' ( case_pattern ( ',' case_pattern )* ','? )? ')'
 
-  complex_pattern ::=  1(  '-'? ( integer | float ) ( '+' | '-' ) ( integer | float ) )
+  complex_pattern ::=  1(  '-'? ( integer | float ) ( '+' | '-' ) ( integer | float ) ) 
 
   _parameters ::= parameter ( ',' parameter )* ','?
 
@@ -267,18 +268,18 @@ rules:
 
   list_pattern ::= '[' _patterns? ']'
 
-  default_parameter ::= ( identifier | tuple_pattern ):name '=' ( expression ):value
+  default_parameter ::= ( identifier | tuple_pattern ):name '=' expression:value
 
-  typed_default_parameter ::=  -1(  ( identifier ):name ':' ( type ):type '=' ( expression ):value )
+  typed_default_parameter ::=  -1(  identifier:name ':' type:type '=' expression:value ) 
 
   list_splat_pattern ::= '*' ( identifier | keyword_identifier | subscript | attribute )
 
   dictionary_splat_pattern ::= '**' ( identifier | keyword_identifier | subscript | attribute )
 
-  as_pattern ::=  <0(  expression 'as' ( expression -> "as_pattern_target" ):alias )
+  as_pattern ::=  <0(  expression 'as' ( expression -> as_pattern_target ):alias ) 
 
   _expression_within_for_in_clause ::= expression
-	| lambda_within_for_in_clause -> "lambda"
+	| lambda_within_for_in_clause -> lambda
 
   expression ::= comparison_operator
 	| not_operator
@@ -314,42 +315,42 @@ rules:
 	| parenthesized_expression
 	| generator_expression
 	| ellipsis
-	| list_splat_pattern -> "list_splat"
+	| list_splat_pattern -> list_splat
 
-  not_operator ::=  12(  'not' ( expression ):argument )
+  not_operator ::=  12(  'not' expression:argument ) 
 
-  boolean_operator ::=  <11(  ( expression ):left ( 'and' ):operator ( expression ):right )
-	|  <10(  ( expression ):left ( 'or' ):operator ( expression ):right )
+  boolean_operator ::=  <11(  expression:left 'and':operator expression:right ) 
+	|  <10(  expression:left 'or':operator expression:right ) 
 
-  binary_operator ::=  <18(  ( primary_expression ):left ( '+' ):operator ( primary_expression ):right )
-	|  <18(  ( primary_expression ):left ( '-' ):operator ( primary_expression ):right )
-	|  <19(  ( primary_expression ):left ( '*' ):operator ( primary_expression ):right )
-	|  <19(  ( primary_expression ):left ( '@' ):operator ( primary_expression ):right )
-	|  <19(  ( primary_expression ):left ( '/' ):operator ( primary_expression ):right )
-	|  <19(  ( primary_expression ):left ( '%' ):operator ( primary_expression ):right )
-	|  <19(  ( primary_expression ):left ( '//' ):operator ( primary_expression ):right )
-	|  >21(  ( primary_expression ):left ( '**' ):operator ( primary_expression ):right )
-	|  <14(  ( primary_expression ):left ( '|' ):operator ( primary_expression ):right )
-	|  <15(  ( primary_expression ):left ( '&' ):operator ( primary_expression ):right )
-	|  <16(  ( primary_expression ):left ( '^' ):operator ( primary_expression ):right )
-	|  <17(  ( primary_expression ):left ( '<<' ):operator ( primary_expression ):right )
-	|  <17(  ( primary_expression ):left ( '>>' ):operator ( primary_expression ):right )
+  binary_operator ::=  <18(  primary_expression:left '+':operator primary_expression:right ) 
+	|  <18(  primary_expression:left '-':operator primary_expression:right ) 
+	|  <19(  primary_expression:left '*':operator primary_expression:right ) 
+	|  <19(  primary_expression:left '@':operator primary_expression:right ) 
+	|  <19(  primary_expression:left '/':operator primary_expression:right ) 
+	|  <19(  primary_expression:left '%':operator primary_expression:right ) 
+	|  <19(  primary_expression:left '//':operator primary_expression:right ) 
+	|  >21(  primary_expression:left '**':operator primary_expression:right ) 
+	|  <14(  primary_expression:left '|':operator primary_expression:right ) 
+	|  <15(  primary_expression:left '&':operator primary_expression:right ) 
+	|  <16(  primary_expression:left '^':operator primary_expression:right ) 
+	|  <17(  primary_expression:left '<<':operator primary_expression:right ) 
+	|  <17(  primary_expression:left '>>':operator primary_expression:right ) 
 
-  unary_operator ::=  20(  ( '+' | '-' | '~' ):operator ( primary_expression ):argument )
+  unary_operator ::=  20(  ( '+' | '-' | '~' ):operator primary_expression:argument ) 
 
   _not_in ::= 'not' 'in'
 
   _is_not ::= 'is' 'not'
 
-  comparison_operator ::=  <13(  primary_expression ( ( '<' | '<=' | '==' | '!=' | '>=' | '>' | '<>' | 'in' | _not_in -> "not in" | 'is' | _is_not -> "is not" ):operators primary_expression )+ )
+  comparison_operator ::=  <13(  primary_expression ( ( '<' | '<=' | '==' | '!=' | '>=' | '>' | '<>' | 'in' | _not_in -> "not in" | 'is' | _is_not -> "is not" ):operators primary_expression )+ ) 
 
-  lambda ::=  -2(  'lambda' ( lambda_parameters )?:parameters ':' ( expression ):body )
+  lambda ::=  -2(  'lambda' lambda_parameters?:parameters ':' expression:body ) 
 
-  lambda_within_for_in_clause ::= 'lambda' ( lambda_parameters )?:parameters ':' ( _expression_within_for_in_clause ):body
+  lambda_within_for_in_clause ::= 'lambda' lambda_parameters?:parameters ':' _expression_within_for_in_clause:body
 
-  assignment ::= ( _left_hand_side ):left ( '=' ( _right_hand_side ):right | ':' ( type ):type | ':' ( type ):type '=' ( _right_hand_side ):right )
+  assignment ::= _left_hand_side:left ( '=' _right_hand_side:right | ':' type:type | ':' type:type '=' _right_hand_side:right )
 
-  augmented_assignment ::= ( _left_hand_side ):left ( '+=' | '-=' | '*=' | '/=' | '@=' | '//=' | '%=' | '**=' | '>>=' | '<<=' | '&=' | '^=' | '|=' ):operator ( _right_hand_side ):right
+  augmented_assignment ::= _left_hand_side:left ( '+=' | '-=' | '*=' | '/=' | '@=' | '//=' | '%=' | '**=' | '>>=' | '<<=' | '&=' | '^=' | '|=' ):operator _right_hand_side:right
 
   _left_hand_side ::= pattern
 	| pattern_list
@@ -363,19 +364,19 @@ rules:
 	| pattern_list
 	| yield
 
-  yield ::=  >0(  'yield' ( 'from' expression | _expressions ) )
+  yield ::=  >0(  'yield' ( 'from' expression | _expressions? ) ) 
 
-  attribute ::=  22(  ( primary_expression ):object '.' ( identifier ):attribute )
+  attribute ::=  22(  primary_expression:object '.' identifier:attribute ) 
 
-  subscript ::=  22(  ( primary_expression ):value '[' ( expression | slice ):subscript ( ',' ( expression | slice ):subscript )* ','? ']' )
+  subscript ::=  22(  primary_expression:value '[' ( expression | slice ):subscript ( ',' ( expression | slice ):subscript )* ','? ']' ) 
 
   slice ::= expression? ':' expression? ( ':' expression? )?
 
   ellipsis ::= '...'
 
-  call ::=  22(  ( primary_expression ):function ( generator_expression | argument_list ):arguments )
+  call ::=  22(  primary_expression:function ( generator_expression | argument_list ):arguments ) 
 
-  typed_parameter ::=  -1(  ( identifier | list_splat_pattern | dictionary_splat_pattern ) ':' ( type ):type )
+  typed_parameter ::=  -1(  ( identifier | list_splat_pattern | dictionary_splat_pattern ) ':' type:type ) 
 
   type ::= expression
 	| splat_type
@@ -384,17 +385,17 @@ rules:
 	| constrained_type
 	| member_type
 
-  splat_type ::=  1(  ( '*' | '**' ) identifier )
+  splat_type ::=  1(  ( '*' | '**' ) identifier ) 
 
-  generic_type ::=  1(  identifier type_parameter )
+  generic_type ::=  1(  identifier type_parameter ) 
 
-  union_type ::=  <0(  type '|' type )
+  union_type ::=  <0(  type '|' type ) 
 
-  constrained_type ::=  >0(  type ':' type )
+  constrained_type ::=  >0(  type ':' type ) 
 
   member_type ::= type '.' identifier
 
-  keyword_argument ::= ( identifier | keyword_identifier ):name '=' ( expression ):value
+  keyword_argument ::= ( identifier | keyword_identifier ):name '=' expression:value
 
   list ::= '[' _collection_elements? ']'
 
@@ -404,57 +405,57 @@ rules:
 
   dictionary ::= '{' ( ( pair | dictionary_splat ) ( ',' ( pair | dictionary_splat ) )* )? ','? '}'
 
-  pair ::= ( expression ):key ':' ( expression ):value
+  pair ::= expression:key ':' expression:value
 
-  list_comprehension ::= '[' ( expression ):body _comprehension_clauses ']'
+  list_comprehension ::= '[' expression:body _comprehension_clauses ']'
 
-  dictionary_comprehension ::= '{' ( pair ):body _comprehension_clauses '}'
+  dictionary_comprehension ::= '{' pair:body _comprehension_clauses '}'
 
-  set_comprehension ::= '{' ( expression ):body _comprehension_clauses '}'
+  set_comprehension ::= '{' expression:body _comprehension_clauses '}'
 
-  generator_expression ::= '(' ( expression ):body _comprehension_clauses ')'
+  generator_expression ::= '(' expression:body _comprehension_clauses ')'
 
   _comprehension_clauses ::= for_in_clause ( for_in_clause | if_clause )*
 
-  parenthesized_expression ::=  1(  '(' ( expression | yield ) ')' )
+  parenthesized_expression ::=  1(  '(' ( expression | yield ) ')' ) 
 
   _collection_elements ::= ( expression | yield | list_splat | parenthesized_list_splat ) ( ',' ( expression | yield | list_splat | parenthesized_list_splat ) )* ','?
 
-  for_in_clause ::=  <0(  'async'? 'for' ( _left_hand_side ):left 'in' ( _expression_within_for_in_clause ( ',' _expression_within_for_in_clause )* ):right ','? )
+  for_in_clause ::=  <0(  'async'? 'for' _left_hand_side:left 'in' ( _expression_within_for_in_clause ( ',' _expression_within_for_in_clause )* ):right ','? ) 
 
   if_clause ::= 'if' expression
 
-  conditional_expression ::=  >-1(  expression 'if' expression 'else' expression )
+  conditional_expression ::=  >-1(  expression 'if' expression 'else' expression ) 
 
   concatenated_string ::= string string+
 
   string ::= string_start ( interpolation | string_content )* string_end
 
-  string_content ::=  >0(  ( escape_interpolation | escape_sequence | _not_escape_sequence | _string_content )+ )
+  string_content ::=  >0(  ( escape_interpolation | escape_sequence | _not_escape_sequence | _string_content )+ ) 
 
-  interpolation ::= '{' ( _f_expression ):expression '='? ( type_conversion )?:type_conversion ( format_specifier )?:format_specifier '}'
+  interpolation ::= '{' _f_expression:expression '='? ( type_conversion:type_conversion )? ( format_specifier:format_specifier )? '}'
 
   _f_expression ::= expression
 	| expression_list
 	| pattern_list
 	| yield
 
-  escape_sequence ::= !(  1(  '\\'  ( /u[a-fA-F\d]{4}/ | /U[a-fA-F\d]{8}/ | /x[a-fA-F\d]{2}/ | /\d{1,3}/ | /\r?\n/ | /['"abfrntv\\]/ | /N\{[^}]+\}/ ) )  )
+  escape_sequence ::= !(  1(  '\\' ( /u[a-fA-F\d]{4}/ | /U[a-fA-F\d]{8}/ | /x[a-fA-F\d]{2}/ | /\d{1,3}/ | /\r?\n/ | /['"abfrntv\\]/ | /N\{[^}]+\}/ ) )  )
 
-  _not_escape_sequence ::= !( '\\'  )
+  _not_escape_sequence ::= !( '\\' )
 
-  format_specifier ::= ':' ( @(  1(  /[^{}\n]+/ )  ) | interpolation -> "format_expression" )*
+  format_specifier ::= ':' ( @(  1(  /[^{}\n]+/ )  ) | interpolation -> format_expression )*
 
   type_conversion ::= /![a-z]/
 
-  integer ::= @( ( '0x' | '0X' ) /_?[A-Fa-f0-9]+/+ /[Ll]/? | ( '0o' | '0O' ) /_?[0-7]+/+ /[Ll]/? | ( '0b' | '0B' ) /_?[0-1]+/+ /[Ll]/? | /[0-9]+_?/+ ( /[Ll]/ | /[jJ]/ ) )
+  integer ::= @( ( '0x' | '0X' ) /_?[A-Fa-f0-9]+/+ /[Ll]/? | ( '0o' | '0O' ) /_?[0-7]+/+ /[Ll]/? | ( '0b' | '0B' ) /_?[0-1]+/+ /[Ll]/? | /[0-9]+_?/+ ( /[Ll]/? | /[jJ]/? ) )
 
   float ::= @( ( /[0-9]+_?/+ '.' /[0-9]+_?/+? ( /[eE][\+-]?/ /[0-9]+_?/+ )? | /[0-9]+_?/+? '.' /[0-9]+_?/+ ( /[eE][\+-]?/ /[0-9]+_?/+ )? | /[0-9]+_?/+ /[eE][\+-]?/ /[0-9]+_?/+ ) /[jJ]/? )
 
   identifier ::= /[_\p{XID_Start}][_\p{XID_Continue}]*/
 
-  keyword_identifier ::=  -3(  ( 'print' | 'exec' | 'async' | 'await' ) -> "identifier" )
-	| ( 'type' | 'match' ) -> "identifier"
+  keyword_identifier ::=  -3(  ( 'print' | 'exec' | 'async' | 'await' ) -> identifier ) 
+	| ( 'type' | 'match' ) -> identifier
 
   true ::= 'True'
 
@@ -462,11 +463,11 @@ rules:
 
   none ::= 'None'
 
-  await ::=  20(  'await' primary_expression )
+  await ::=  20(  'await' primary_expression ) 
 
   comment ::= @( '#' /.*/ )
 
-  line_continuation ::= @( '\\'  ( '\r' ? '\n'  | '\0'  ) )
+  line_continuation ::= @( '\\' ( '\r'? '\n' | '\0' ) )
 
   positional_separator ::= '/'
 

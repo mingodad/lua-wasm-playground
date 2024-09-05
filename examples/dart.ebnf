@@ -1,10 +1,11 @@
-; From tree-sitter-dart/src/grammar.json
+; repository: https://github.com/UserNobody14/tree-sitter-dart.git
+; commit: 9ac03bb2154316624fb4c41fe0f372a5f1597b43
+; json from: tree-sitter-dart/src/grammar.json
+; From /tmp/tslua/dart0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -152,27 +153,27 @@ rules:
 
   decimal_floating_point_literal ::= @( @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) '.' @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) ( /[eE]/ ( '-' | '+' )? @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) )? | '.' @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) ( /[eE]/ ( '-' | '+' )? @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) )? | @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) /[eE]/ ( '-' | '+' )? @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) | @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) ( /[eE]/ ( '-' | '+' )? @( /[0-9]+/ ( /_+/ /[0-9]+/ )* ) )? )
 
-  true ::=  0(  'true' )
+  true ::=  0(  'true' ) 
 
-  false ::=  0(  'false' )
+  false ::=  0(  'false' ) 
 
   string_literal ::= ( _string_literal_double_quotes | _string_literal_single_quotes | _string_literal_double_quotes_multiple | _string_literal_single_quotes_multiple | _raw_string_literal_double_quotes | _raw_string_literal_single_quotes | _raw_string_literal_double_quotes_multiple | _raw_string_literal_single_quotes_multiple )+
 
-  _string_literal_double_quotes ::= '"'  ( _template_chars_double_single | "'"  | escape_sequence | _sub_string_test | template_substitution )* '"'
+  _string_literal_double_quotes ::= '"' ( _template_chars_double_single | "'" | escape_sequence | _sub_string_test | template_substitution )* '"'
 
-  _string_literal_single_quotes ::= "'"  ( _template_chars_single_single | '"'  | escape_sequence | _sub_string_test | template_substitution )* "'"
+  _string_literal_single_quotes ::= "'" ( _template_chars_single_single | '"' | escape_sequence | _sub_string_test | template_substitution )* "'"
 
-  _string_literal_double_quotes_multiple ::=  <0(  '"""' ( _template_chars_double | "'"  | '"'  | escape_sequence | _sub_string_test | template_substitution )* '"""' )
+  _string_literal_double_quotes_multiple ::=  <0(  '"""' ( _template_chars_double | "'" | '"' | escape_sequence | _sub_string_test | template_substitution )* '"""' ) 
 
-  _string_literal_single_quotes_multiple ::=  <0(  "'''" ( _template_chars_single | '"'  | "'"  | escape_sequence | _sub_string_test | template_substitution )* "'''" )
+  _string_literal_single_quotes_multiple ::=  <0(  "'''" ( _template_chars_single | '"' | "'" | escape_sequence | _sub_string_test | template_substitution )* "'''" ) 
 
-  _raw_string_literal_double_quotes ::= 'r"' ( _template_chars_double_single | "'"  | _template_chars_raw_slash | _unused_escape_sequence | _sub_string_test | '$' )* '"'
+  _raw_string_literal_double_quotes ::= 'r"' ( _template_chars_double_single | "'" | _template_chars_raw_slash | _unused_escape_sequence | _sub_string_test | '$' )* '"'
 
-  _raw_string_literal_single_quotes ::= "r'" ( _template_chars_single_single | '"'  | _template_chars_raw_slash | _unused_escape_sequence | _sub_string_test | '$' )* "'"
+  _raw_string_literal_single_quotes ::= "r'" ( _template_chars_single_single | '"' | _template_chars_raw_slash | _unused_escape_sequence | _sub_string_test | '$' )* "'"
 
-  _raw_string_literal_double_quotes_multiple ::=  <0(  'r"""' ( _template_chars_double | "'"  | _template_chars_raw_slash | '"'  | _unused_escape_sequence | _sub_string_test | '$' )* '"""' )
+  _raw_string_literal_double_quotes_multiple ::=  <0(  'r"""' ( _template_chars_double | "'" | _template_chars_raw_slash | '"' | _unused_escape_sequence | _sub_string_test | '$' )* '"""' ) 
 
-  _raw_string_literal_single_quotes_multiple ::=  <0(  "r'''" ( _template_chars_single | '"'  | "'"  | _template_chars_raw_slash | _unused_escape_sequence | _sub_string_test | '$' )* "'''" )
+  _raw_string_literal_single_quotes_multiple ::=  <0(  "r'''" ( _template_chars_single | '"' | "'" | _template_chars_raw_slash | _unused_escape_sequence | _sub_string_test | '$' )* "'''" ) 
 
   _triple_quote_end ::= @( "'''" )
 
@@ -184,7 +185,7 @@ rules:
 
   _string_interp ::= /\$((\w+)|\{([^{}]+)\})/
 
-  _unused_escape_sequence ::= !( '\\'  ( /[^xu0-7]/ | /[0-7]{1,3}/ | /x[0-9a-fA-F]{2}/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F]+\}/ ) )
+  _unused_escape_sequence ::= !( '\\' ( /[^xu0-7]/ | /[0-7]{1,3}/ | /x[0-9a-fA-F]{2}/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F]+\}/ ) )
 
   escape_sequence ::= _unused_escape_sequence
 
@@ -192,7 +193,7 @@ rules:
 
   set_or_map_literal ::= const_builtin? type_arguments? '{' ( _element ( ',' _element )* ','? )? '}'
 
-  pair ::= ( _expression ):key ':' ( _expression ):value
+  pair ::= _expression:key ':' _expression:value
 
   _element ::= _expression
 	| pair
@@ -200,7 +201,7 @@ rules:
 	| if_element
 	| for_element
 
-  null_literal ::=  0(  'null' )
+  null_literal ::=  0(  'null' ) 
 
   record_literal ::= const_builtin? _record_literal_no_const
 
@@ -240,9 +241,9 @@ rules:
 
   rethrow_expression ::= rethrow_builtin
 
-  assignment_expression ::=  >1(  ( assignable_expression ):left ( _assignment_operator ):operator ( _expression ):right )
+  assignment_expression ::=  >1(  assignable_expression:left _assignment_operator:operator _expression:right ) 
 
-  assignment_expression_without_cascade ::=  >1(  ( assignable_expression ):left ( _assignment_operator ):operator ( _expression_without_cascade ):right )
+  assignment_expression_without_cascade ::=  >1(  assignable_expression:left _assignment_operator:operator _expression_without_cascade:right ) 
 
   assignable_expression ::= _primary _assignable_selector_part
 	| super unconditional_assignable_selector
@@ -266,48 +267,48 @@ rules:
 	| '|='
 	| '??='
 
-  lambda_expression ::= ( function_signature ):parameters ( function_body ):body
+  lambda_expression ::= function_signature:parameters function_body:body
 
-  function_expression ::= ( _formal_parameter_part ):parameters ( function_expression_body ):body
+  function_expression ::= _formal_parameter_part:parameters function_expression_body:body
 
   inferred_parameters ::= '(' identifier ( ',' identifier )* ')'
 
-  if_null_expression ::=  <4(  ( _real_expression ):first _if_null_expression )
+  if_null_expression ::=  <4(  _real_expression:first _if_null_expression ) 
 
-  _if_null_expression ::= ( '??' ( _real_expression ):second )+
+  _if_null_expression ::= ( '??' _real_expression:second )+
 
-  conditional_expression ::=  <3(  _real_expression '?' ( _expression_without_cascade ):consequence ':' ( _expression_without_cascade ):alternative )
+  conditional_expression ::=  <3(  _real_expression '?' _expression_without_cascade:consequence ':' _expression_without_cascade:alternative ) 
 
-  logical_or_expression ::=  <5(  _real_expression ( logical_or_operator _real_expression )+ )
+  logical_or_expression ::=  <5(  _real_expression ( logical_or_operator _real_expression )+ ) 
 
-  logical_and_expression ::=  <6(  _real_expression ( logical_and_operator _real_expression )+ )
+  logical_and_expression ::=  <6(  _real_expression ( logical_and_operator _real_expression )+ ) 
 
-  equality_expression ::=  7(  _real_expression equality_operator _real_expression | super equality_operator _real_expression )
+  equality_expression ::=  7(  _real_expression equality_operator _real_expression | super equality_operator _real_expression ) 
 
   equality_operator ::= @( '==' | '!=' )
 
-  type_cast_expression ::=  <9(  _real_expression type_cast )
+  type_cast_expression ::=  <9(  _real_expression type_cast ) 
 
-  type_test_expression ::=  9(  _real_expression type_test )
+  type_test_expression ::=  9(  _real_expression type_test ) 
 
-  relational_expression ::=  8(  _real_expression relational_operator _real_expression | super relational_operator _real_expression )
+  relational_expression ::=  8(  _real_expression relational_operator _real_expression | super relational_operator _real_expression ) 
 
   relational_operator ::= '<'
 	| '>'
 	| '<='
 	| '>='
 
-  bitwise_or_expression ::=  <10(  _real_expression ( '|' _real_expression )+ | super ( '|' _real_expression )+ )
+  bitwise_or_expression ::=  <10(  _real_expression ( '|' _real_expression )+ | super ( '|' _real_expression )+ ) 
 
-  bitwise_xor_expression ::=  <11(  _real_expression ( '^' _real_expression )+ | super ( '^' _real_expression )+ )
+  bitwise_xor_expression ::=  <11(  _real_expression ( '^' _real_expression )+ | super ( '^' _real_expression )+ ) 
 
-  bitwise_and_expression ::=  <12(  _real_expression ( '&' _real_expression )+ | super ( '&' _real_expression )+ )
+  bitwise_and_expression ::=  <12(  _real_expression ( '&' _real_expression )+ | super ( '&' _real_expression )+ ) 
 
-  shift_expression ::=  <13(  _real_expression ( shift_operator _real_expression )+ | super ( shift_operator _real_expression )+ )
+  shift_expression ::=  <13(  _real_expression ( shift_operator _real_expression )+ | super ( shift_operator _real_expression )+ ) 
 
-  additive_expression ::=  <14(  _real_expression ( additive_operator _real_expression )+ | super ( additive_operator _real_expression )+ )
+  additive_expression ::=  <14(  _real_expression ( additive_operator _real_expression )+ | super ( additive_operator _real_expression )+ ) 
 
-  multiplicative_expression ::=  <15(  _unary_expression ( multiplicative_operator _unary_expression )+ | super ( multiplicative_operator _unary_expression )+ )
+  multiplicative_expression ::=  <15(  _unary_expression ( multiplicative_operator _unary_expression )+ | super ( multiplicative_operator _unary_expression )+ ) 
 
   bitwise_operator ::= _bitwise_operator
 
@@ -332,14 +333,14 @@ rules:
 	| '%'
 	| '~/'
 
-  _unary_expression ::=  16(  _postfix_expression | unary_expression )
+  _unary_expression ::=  16(  _postfix_expression | unary_expression ) 
 
-  unary_expression ::=  16(  prefix_operator _unary_expression | await_expression | ( minus_operator | tilde_operator ) super | increment_operator assignable_expression )
+  unary_expression ::=  16(  prefix_operator _unary_expression | await_expression | ( minus_operator | tilde_operator ) super | increment_operator assignable_expression ) 
 
   _postfix_expression ::= _primary selector*
 	| postfix_expression
 
-  postfix_expression ::=  >0(  assignable_expression postfix_operator | constructor_invocation selector* )
+  postfix_expression ::=  >0(  assignable_expression postfix_operator | constructor_invocation selector* ) 
 
   postfix_operator ::= increment_operator
 
@@ -347,7 +348,7 @@ rules:
 
   spread_element ::= '...' '?'? _expression
 
-  selector ::=  >0(  _exclamation_operator | _assignable_selector | argument_part | type_arguments )
+  selector ::=  >0(  _exclamation_operator | _assignable_selector | argument_part | type_arguments ) 
 
   prefix_operator ::= minus_operator
 	| negation_operator
@@ -373,7 +374,7 @@ rules:
 
   new_expression ::= _new_builtin _type_not_void _dot_identifier? arguments
 
-  _dot_identifier ::=  ~19(  '.' identifier )
+  _dot_identifier ::=  ~19(  '.' identifier ) 
 
   const_object_expression ::= const_builtin _type_not_void _dot_identifier? arguments
 
@@ -393,13 +394,13 @@ rules:
   _compound_access ::= '.'
 	| '?.'
 
-  constructor_invocation ::=  >0(  _type_name type_arguments '.' identifier arguments | _type_name '.' _new_builtin arguments )
+  constructor_invocation ::=  >0(  _type_name type_arguments '.' identifier arguments | _type_name '.' _new_builtin arguments ) 
 
-  constructor_tearoff ::=  >0(  _type_name type_arguments? '.' _new_builtin )
+  constructor_tearoff ::=  >0(  _type_name type_arguments? '.' _new_builtin ) 
 
   arguments ::= '(' _argument_list? ')'
 
-  _argument_list ::=  >0(  _any_argument ( ',' _any_argument )* ','? )
+  _argument_list ::=  >0(  _any_argument ( ',' _any_argument )* ','? ) 
 
   _any_argument ::= argument
 	| named_argument
@@ -408,7 +409,7 @@ rules:
 
   named_argument ::= label _expression
 
-  cascade_section ::=  <2(  ( '..' | '?..' ) cascade_selector argument_part* _cascade_subsection* _cascade_assignment_section? )
+  cascade_section ::=  <2(  ( '..' | '?..' ) cascade_selector argument_part* _cascade_subsection* _cascade_assignment_section? ) 
 
   _cascade_subsection ::= _assignable_selector argument_part*
 
@@ -437,11 +438,11 @@ rules:
   _wildcard_bounds ::= 'extends' _type
 	| super _type
 
-  dimensions ::=  >0(  ( _metadata? '[' ']' )+ )
+  dimensions ::=  >0(  ( _metadata? '[' ']' )+ ) 
 
   _statement ::= block
-	|  ~1(  local_function_declaration )
-	|  ~2(  local_variable_declaration )
+	|  ~1(  local_function_declaration ) 
+	|  ~2(  local_variable_declaration ) 
 	| for_statement
 	| while_statement
 	| do_statement
@@ -470,9 +471,9 @@ rules:
 
   assertion_arguments ::= '(' _expression ( ',' _expression )? ','? ')'
 
-  switch_statement ::= 'switch' ( parenthesized_expression ):condition ( switch_block ):body
+  switch_statement ::= 'switch' parenthesized_expression:condition switch_block:body
 
-  switch_expression ::= 'switch' ( parenthesized_expression ):condition ( '{' switch_expression_case ( ',' switch_expression_case )* ','? '}' ):body
+  switch_expression ::= 'switch' parenthesized_expression:condition ( '{' switch_expression_case ( ',' switch_expression_case )* ','? '}' ):body
 
   switch_expression_case ::= _guarded_pattern '=>' _expression
 
@@ -484,7 +485,7 @@ rules:
 
   _logical_and_pattern ::= _relational_pattern ( logical_and_operator _relational_pattern )*
 
-  _relational_pattern ::=  8(  ( relational_operator | equality_operator ) _real_expression | _unary_pattern )
+  _relational_pattern ::=  8(  ( relational_operator | equality_operator ) _real_expression | _unary_pattern ) 
 
   _unary_pattern ::= cast_pattern
 	| null_check_pattern
@@ -561,7 +562,7 @@ rules:
 
   switch_label ::= label* ( case_builtin _expression ':' | 'default' ':' )
 
-  do_statement ::= 'do' ( _statement ):body 'while' ( parenthesized_expression ):condition _semicolon
+  do_statement ::= 'do' _statement:body 'while' parenthesized_expression:condition _semicolon
 
   break_statement ::= break_builtin identifier? _semicolon
 
@@ -580,7 +581,7 @@ rules:
   _on_part ::= catch_clause block
 	| 'on' _type_not_void catch_clause? block
 
-  _try_head ::= 'try' ( block ):body
+  _try_head ::= 'try' block:body
 
   catch_clause ::= 'catch' catch_parameters
 
@@ -590,27 +591,27 @@ rules:
 
   finally_clause ::= 'finally' block
 
-  if_element ::=  >0(  'if' '(' _expression ( 'case' _guarded_pattern )? ')' ( _element ):consequence ( 'else' ( _element ):alternative )? )
+  if_element ::=  >0(  'if' '(' _expression ( 'case' _guarded_pattern )? ')' _element:consequence ( 'else' _element:alternative )? ) 
 
-  if_statement ::=  >0(  'if' '(' _expression ( 'case' _guarded_pattern )? ')' ( _statement ):consequence ( 'else' ( _statement ):alternative )? )
+  if_statement ::=  >0(  'if' '(' _expression ( 'case' _guarded_pattern )? ')' _statement:consequence ( 'else' _statement:alternative )? ) 
 
-  while_statement ::= 'while' ( parenthesized_expression ):condition ( _statement ):body
+  while_statement ::= 'while' parenthesized_expression:condition _statement:body
 
-  for_statement ::= 'await'? 'for' for_loop_parts ( _statement ):body
+  for_statement ::= 'await'? 'for' for_loop_parts _statement:body
 
   for_loop_parts ::= '(' _for_loop_parts ')'
 
-  _for_loop_parts ::= ( _declared_identifier | identifier ) 'in' ( _expression ):value
-	| ( ( local_variable_declaration ):init | ( ( _expression ):init ( ',' ( _expression ):init )* )? _semicolon )? ( _expression )?:condition _semicolon ( ( _expression ):update ( ',' ( _expression ):update )* )?
-	| ( final_builtin | inferred_type ) _outer_pattern 'in' ( _expression ):value
+  _for_loop_parts ::= ( _declared_identifier | identifier ) 'in' _expression:value
+	| ( local_variable_declaration:init | ( _expression:init ( ',' _expression:init )* )? _semicolon )? _expression?:condition _semicolon ( _expression:update ( ',' _expression:update )* )?
+	| ( final_builtin | inferred_type ) _outer_pattern 'in' _expression:value
 
-  for_element ::= 'await'? 'for' for_loop_parts ( _element ):body
+  for_element ::= 'await'? 'for' for_loop_parts _element:body
 
-  annotation ::=  >0(  '@' ( identifier | scoped_identifier ):name ( type_arguments arguments | arguments ) )
+  annotation ::=  >0(  '@' ( identifier | scoped_identifier ):name ( type_arguments arguments? | arguments? ) ) 
 
-  _declaration ::=  1(  import_specification | class_definition | enum_declaration )
+  _declaration ::=  1(  import_specification | class_definition | enum_declaration ) 
 
-  import_or_export ::=  19(  library_import | library_export )
+  import_or_export ::=  19(  library_import | library_export ) 
 
   library_import ::= _metadata? import_specification
 
@@ -640,12 +641,12 @@ rules:
 
   asterisk ::= '*'
 
-  enum_declaration ::= _metadata? 'enum' ( identifier ):name type_parameters? mixins? interfaces? ( enum_body ):body
+  enum_declaration ::= _metadata? 'enum' identifier:name type_parameters? mixins? interfaces? enum_body:body
 
   enum_body ::= '{' enum_constant ( ',' enum_constant )* ','? ( ';' ( _metadata? _class_member_definition )* )? '}'
 
-  enum_constant ::= _metadata? ( identifier ):name argument_part?
-	| _metadata? ( identifier ):name type_arguments? '.' ( identifier | _new_builtin ) arguments
+  enum_constant ::= _metadata? identifier:name argument_part?
+	| _metadata? identifier:name type_arguments? '.' ( identifier | _new_builtin ) arguments
 
   type_alias ::= _metadata? _typedef _type? _type_name _formal_parameter_part ';'
 	| _metadata? _typedef _type_name type_parameters? '=' _type ';'
@@ -654,16 +655,16 @@ rules:
 
   _mixin_class_modifiers ::= abstract? base? mixin 'class'
 
-  class_definition ::= _metadata? ( _class_modifiers | _mixin_class_modifiers ) ( identifier ):name ( type_parameters )?:type_parameters ( superclass )?:superclass ( interfaces )?:interfaces ( class_body ):body
+  class_definition ::= _metadata? ( _class_modifiers | _mixin_class_modifiers ) identifier:name ( type_parameters:type_parameters )? ( superclass:superclass )? ( interfaces:interfaces )? class_body:body
 	| _metadata? _class_modifiers mixin_application_class
 
-  extension_declaration ::= _metadata? 'extension' ( identifier )?:name ( type_parameters )?:type_parameters 'on' ( _type ):class ( extension_body ):body
+  extension_declaration ::= _metadata? 'extension' ( identifier:name )? ( type_parameters:type_parameters )? 'on' _type:class extension_body:body
 
-  _metadata ::=  >0(  annotation+ )
+  _metadata ::=  >0(  annotation+ ) 
 
   type_parameters ::= '<' type_parameter ( ',' type_parameter )* '>'
 
-  type_parameter ::= _metadata? ( identifier -> "type_identifier" | nullable_type ) nullable_type? type_bound?
+  type_parameter ::= _metadata? ( identifier -> type_identifier | nullable_type ) nullable_type? type_bound?
 
   type_bound ::= 'extends' _type_not_void
 
@@ -689,9 +690,9 @@ rules:
   _class_member_definition ::= declaration _semicolon
 	| method_signature function_body
 
-  getter_signature ::= _type? _get ( identifier ):name _native?
+  getter_signature ::= _type? _get identifier:name _native?
 
-  setter_signature ::= _type? _set ( identifier ):name _formal_parameter_part _native?
+  setter_signature ::= _type? _set identifier:name _formal_parameter_part _native?
 
   method_signature ::= constructor_signature initializers?
 	| factory_constructor_signature
@@ -759,24 +760,24 @@ rules:
 
   redirection ::= ':' this ( '.' _identifier_or_new )? arguments
 
-  constructor_signature ::= ( identifier ( '.' _identifier_or_new )? ):name ( formal_parameter_list ):parameters
+  constructor_signature ::= ( identifier ( '.' _identifier_or_new )? ):name formal_parameter_list:parameters
 
   constant_constructor_signature ::= const_builtin identifier ( '.' _identifier_or_new )? formal_parameter_list
 
   constructor_body ::= '{' explicit_constructor_invocation? _statement* '}'
 
-  explicit_constructor_invocation ::= ( ( type_arguments )?:type_arguments ( this | super ):constructor | ( _ambiguous_name | _primary ):object '.' ( type_arguments )?:type_arguments ( super ):constructor ) ( arguments ):arguments _semicolon
+  explicit_constructor_invocation ::= ( type_arguments?:type_arguments ( this | super ):constructor | ( _ambiguous_name | _primary ):object '.' type_arguments?:type_arguments super:constructor ) arguments:arguments _semicolon
 
   _ambiguous_name ::= identifier
 	| scoped_identifier
 
-  scoped_identifier ::= ( identifier | scoped_identifier ):scope '.' ( identifier ):name
+  scoped_identifier ::= ( identifier | scoped_identifier ):scope '.' identifier:name
 
   variable_declaration ::= _declared_identifier ( ',' identifier ( ',' identifier )* )?
 
-  initialized_variable_definition ::= _declared_identifier (  0(  '=' )  ( _expression ):value )? ( ',' initialized_identifier )*
+  initialized_variable_definition ::= _declared_identifier (  0(  '=' )  _expression:value )? ( ',' initialized_identifier )*
 
-  _declared_identifier ::= _metadata? _covariant? _final_const_var_or_type ( identifier ):name
+  _declared_identifier ::= _metadata? _covariant? _final_const_var_or_type identifier:name
 
   _final_const_var_or_type ::= _late_builtin? final_builtin _type?
 	| const_builtin _type?
@@ -827,19 +828,19 @@ rules:
 
   _type_not_void_list ::= _type_not_void ( ',' _type_not_void )*
 
-  _type_name ::= identifier -> "type_identifier" _type_dot_identifier?
+  _type_name ::= identifier -> type_identifier _type_dot_identifier?
 
-  _type_dot_identifier ::=  >19(  '.' identifier -> "type_identifier" )
+  _type_dot_identifier ::=  >19(  '.' identifier -> type_identifier ) 
 
   typed_identifier ::= _type identifier
 
-  nullable_type ::=  0(  '?' )
+  nullable_type ::=  0(  '?' ) 
 
-  nullable_selector ::=  0(  '?' )
+  nullable_selector ::=  0(  '?' ) 
 
   floating_point_type ::= @( 'double' )
 
-  boolean_type ::=  0(  'bool' )
+  boolean_type ::=  0(  'bool' ) 
 
   void_type ::= @( 'void' )
 
@@ -850,7 +851,7 @@ rules:
 	| final_builtin
 	| final_builtin? _type
 
-  inferred_type ::=  0(  'var' )
+  inferred_type ::=  0(  'var' ) 
 
   function_body ::= 'async'? '=>' _expression _semicolon
 	| ( 'async' | 'async*' | 'sync*' )? block
@@ -858,7 +859,7 @@ rules:
   function_expression_body ::= 'async'? '=>' _expression
 	| ( 'async' | 'async*' | 'sync*' )? block
 
-  function_signature ::= _type? ( _get -> "identifier" | _set -> "identifier" | identifier ):name _formal_parameter_part _native?
+  function_signature ::= _type? ( _get -> identifier | _set -> identifier | identifier ):name _formal_parameter_part _native?
 
   _formal_parameter_part ::= type_parameters? formal_parameter_list
 
@@ -913,7 +914,7 @@ rules:
   qualified ::= _type_name '.' _identifier_or_new
 	| _type_name '.' _type_name '.' _identifier_or_new
 
-  _as ::=  0(  'as' )
+  _as ::=  0(  'as' ) 
 
   break_builtin ::= @( 'break' )
 
@@ -925,69 +926,69 @@ rules:
 
   part_of_builtin ::= @( 'part of' )
 
-  _covariant ::=  0(  'covariant' )
+  _covariant ::=  0(  'covariant' ) 
 
-  _deferred ::=  0(  'deferred' )
+  _deferred ::=  0(  'deferred' ) 
 
-  _dynamic ::=  0(  'dynamic' )
+  _dynamic ::=  0(  'dynamic' ) 
 
-  _export ::=  0(  'export' )
+  _export ::=  0(  'export' ) 
 
   _external ::= _external_builtin
 
-  _factory ::=  0(  'factory' )
+  _factory ::=  0(  'factory' ) 
 
-  _function_builtin_identifier ::=  0(  'Function' )
+  _function_builtin_identifier ::=  0(  'Function' ) 
 
-  _get ::=  0(  'get' )
+  _get ::=  0(  'get' ) 
 
   _native ::= 'native' string_literal?
 
-  _implements ::=  0(  'implements' )
+  _implements ::=  0(  'implements' ) 
 
-  _import ::=  0(  'import' )
+  _import ::=  0(  'import' ) 
 
-  interface ::=  0(  'interface' )
+  interface ::=  0(  'interface' ) 
 
-  base ::=  0(  'base' )
+  base ::=  0(  'base' ) 
 
-  abstract ::=  0(  'abstract' )
+  abstract ::=  0(  'abstract' ) 
 
-  sealed ::=  0(  'sealed' )
+  sealed ::=  0(  'sealed' ) 
 
-  _library ::=  0(  'library' )
+  _library ::=  0(  'library' ) 
 
-  _operator ::=  0(  'operator' )
+  _operator ::=  0(  'operator' ) 
 
-  mixin ::=  0(  'mixin' )
+  mixin ::=  0(  'mixin' ) 
 
-  _part ::=  0(  'part' )
+  _part ::=  0(  'part' ) 
 
-  _required ::=  0(  'required' )
+  _required ::=  0(  'required' ) 
 
-  _set ::=  0(  'set' )
+  _set ::=  0(  'set' ) 
 
-  _static ::=  0(  'static' )
+  _static ::=  0(  'static' ) 
 
-  _typedef ::=  0(  'typedef' )
+  _typedef ::=  0(  'typedef' ) 
 
-  _new_builtin ::=  0(  'new' )
+  _new_builtin ::=  0(  'new' ) 
 
-  logical_and_operator ::=  0(  '&&' )
+  logical_and_operator ::=  0(  '&&' ) 
 
-  logical_or_operator ::=  0(  '||' )
+  logical_or_operator ::=  0(  '||' ) 
 
   const_builtin ::= @( 'const' )
 
   final_builtin ::= @( 'final' )
 
-  _late_builtin ::=  0(  'late' )
+  _late_builtin ::=  0(  'late' ) 
 
-  _external_builtin ::=  0(  'external' )
+  _external_builtin ::=  0(  'external' ) 
 
-  this ::=  0(  'this' )
+  this ::=  0(  'this' ) 
 
-  super ::=  0(  'super' )
+  super ::=  0(  'super' ) 
 
   label ::= identifier ':'
 

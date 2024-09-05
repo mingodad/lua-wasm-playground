@@ -1,10 +1,11 @@
-; From tree-sitter-bison/src/grammar.json
+; repository: https://gitlab.com/btuin2/tree-sitter-bison
+; commit: 0681f9d1d21bbccdc44ab5241426409b4313f9b5
+; json from: tree-sitter-bison/src/grammar.json
+; From /tmp/tslua/bison0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -21,7 +22,7 @@ rules:
 
   sections ::= ( prologue | declaration ';'? )* grammar_rules_section
 
-  prologue ::= '%{' prologue_body -> "embedded_code"? '%}'
+  prologue ::= '%{' ( prologue_body -> embedded_code )? '%}'
 
   prologue_body ::= ( @( /([^%\n"]|%[^{}\n]|"([^"\\]|\\.)+")+/ ) )+
 
@@ -29,10 +30,10 @@ rules:
 
   grammar_rules_body ::= ( grammar_rule | declaration ';' )+
 
-  grammar_rule ::= grammar_rule_identifier -> "grammar_rule_declaration" ':' ( action? directive_empty -> "directive" action? | _component+ )? ( '|' ( directive_empty -> "directive" | _component+ ) )* ';'
+  grammar_rule ::= grammar_rule_identifier -> grammar_rule_declaration ':' ( action? directive_empty -> directive action? | _component+ )? ( '|' ( directive_empty -> directive | _component+ ) )* ';'
 
   _component ::= ( char_literal | string_literal | grammar_rule_identifier ) ( '[' /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ ']' )?
-	| directive_merge -> "directive"
+	| directive_merge -> directive
 	| action
 
   action ::= code_block
@@ -69,78 +70,78 @@ rules:
 	| _decl_param
 	| _decl_lex_param
 
-  _decl_type ::= ( '%' !( 'type' ) ) -> "declaration_name" type_tag? ( grammar_rule_identifier | char_literal | string_literal )+ ( type_tag ( grammar_rule_identifier | char_literal | string_literal )+ )*
+  _decl_type ::= ( '%' !( 'type' ) ) -> declaration_name type_tag? ( grammar_rule_identifier | char_literal | string_literal )+ ( type_tag ( grammar_rule_identifier | char_literal | string_literal )+ )*
 
-  _decl_require ::= ( '%' !( 'require' ) ) -> "declaration_name" string_literal
+  _decl_require ::= ( '%' !( 'require' ) ) -> declaration_name string_literal
 
-  _decl_token ::= ( '%' !( 'token' ) ) -> "declaration_name" type_tag? ( grammar_rule_identifier number_literal? string? )+ ( type_tag ( grammar_rule_identifier number_literal? string_literal? )+ )*
+  _decl_token ::= ( '%' !( 'token' ) ) -> declaration_name type_tag? ( grammar_rule_identifier number_literal? string? )+ ( type_tag ( grammar_rule_identifier number_literal? string_literal? )+ )*
 
-  _decl_nterm ::= ( '%' !( 'nterm' ) ) -> "declaration_name" type_tag? grammar_rule_identifier+ ( type_tag grammar_rule_identifier* )*
+  _decl_nterm ::= ( '%' !( 'nterm' ) ) -> declaration_name type_tag? grammar_rule_identifier+ ( type_tag grammar_rule_identifier* )*
 
-  _decl_op_precedence ::= ( '%' !( 'left' | 'right' | 'nonassoc' | 'precedence' ) ) -> "declaration_name" type_tag? ( ( grammar_rule_identifier | string_literal | char_literal ) number_literal? )+ ( type_tag ( ( grammar_rule_identifier | string_literal | char_literal ) number_literal? )+ )*
+  _decl_op_precedence ::= ( '%' !( 'left' | 'right' | 'nonassoc' | 'precedence' ) ) -> declaration_name type_tag? ( ( grammar_rule_identifier | string_literal | char_literal ) number_literal? )+ ( type_tag ( ( grammar_rule_identifier | string_literal | char_literal ) number_literal? )+ )*
 
-  _decl_initial_declaration ::= ( '%' !( 'initial-declaration' ) ) -> "declaration_name" code_block
+  _decl_initial_declaration ::= ( '%' !( 'initial-declaration' ) ) -> declaration_name code_block
 
-  _decl_glr_parser ::= ( '%' !( 'glr-parser' ) ) -> "declaration_name"
+  _decl_glr_parser ::= ( '%' !( 'glr-parser' ) ) -> declaration_name
 
-  _decl_destructor ::= ( '%' !( 'destructor' ) ) -> "declaration_name" code_block ( type_tag | '<' '*'? '>' | grammar_rule_identifier )*
+  _decl_destructor ::= ( '%' !( 'destructor' ) ) -> declaration_name code_block ( type_tag | '<' '*'? '>' | grammar_rule_identifier )*
 
-  _decl_printer ::= ( '%' !( 'printer' ) ) -> "declaration_name" code_block ( type_tag | '<' '*'? '>' | grammar_rule_identifier )*
+  _decl_printer ::= ( '%' !( 'printer' ) ) -> declaration_name code_block ( type_tag | '<' '*'? '>' | grammar_rule_identifier )*
 
-  _decl_expect ::= ( '%' !( 'expect' | 'expect-rr' ) ) -> "declaration_name" @( /[0-9]+/ )
+  _decl_expect ::= ( '%' !( 'expect' | 'expect-rr' ) ) -> declaration_name @( /[0-9]+/ )
 
-  _decl_start ::= ( '%' !( 'start' ) ) -> "declaration_name" grammar_rule_identifier
+  _decl_start ::= ( '%' !( 'start' ) ) -> declaration_name grammar_rule_identifier
 
-  _decl_define ::= ( '%' !( 'define' ) ) -> "declaration_name" /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ ( '.' /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ )* ( /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ | '{' ( /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ | string_literal ) '}' | string_literal )?
+  _decl_define ::= ( '%' !( 'define' ) ) -> declaration_name /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ ( '.' /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ )* ( /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ | '{' ( /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ | string_literal ) '}' | string_literal )?
 
-  _decl_code ::= ( '%' !( 'code' ) ) -> "declaration_name" ( /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ ( '-' /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ )* )? code_block
+  _decl_code ::= ( '%' !( 'code' ) ) -> declaration_name ( /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ ( '-' /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ )* )? code_block
 
-  _decl_union ::= ( '%' !( 'union' ) ) -> "declaration_name" /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/? code_block
+  _decl_union ::= ( '%' !( 'union' ) ) -> declaration_name /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/? code_block
 
-  _decl_debug ::= ( '%' !( 'debug' ) ) -> "declaration_name"
+  _decl_debug ::= ( '%' !( 'debug' ) ) -> declaration_name
 
-  _decl_header ::= ( '%' !( 'header' ) ) -> "declaration_name" string_literal?
+  _decl_header ::= ( '%' !( 'header' ) ) -> declaration_name string_literal?
 
-  decl_language ::= ( '%' !( 'language' ) ) -> "declaration_name" ( string_literal ):language
+  decl_language ::= ( '%' !( 'language' ) ) -> declaration_name string_literal:language
 
-  _decl_locations ::= ( '%' !( 'locations' ) ) -> "declaration_name"
+  _decl_locations ::= ( '%' !( 'locations' ) ) -> declaration_name
 
-  _decl_name_prefix ::= ( '%' !( 'name-prefix' ) ) -> "declaration_name" string_literal
+  _decl_name_prefix ::= ( '%' !( 'name-prefix' ) ) -> declaration_name string_literal
 
-  _decl_no_lines ::= ( '%' !( 'no-lines' ) ) -> "declaration_name"
+  _decl_no_lines ::= ( '%' !( 'no-lines' ) ) -> declaration_name
 
-  _decl_output ::= ( '%' !( 'output' ) ) -> "declaration_name" string_literal
+  _decl_output ::= ( '%' !( 'output' ) ) -> declaration_name string_literal
 
-  _decl_pure_parser ::= ( '%' !( 'pure-parser' ) ) -> "declaration_name"
+  _decl_pure_parser ::= ( '%' !( 'pure-parser' ) ) -> declaration_name
 
-  _decl_skeleton ::= ( '%' !( 'skeleton' ) ) -> "declaration_name" string_literal
+  _decl_skeleton ::= ( '%' !( 'skeleton' ) ) -> declaration_name string_literal
 
-  _decl_token_table ::= ( '%' !( 'token-table' ) ) -> "declaration_name"
+  _decl_token_table ::= ( '%' !( 'token-table' ) ) -> declaration_name
 
-  _decl_verbose ::= ( '%' !( 'verbose' ) ) -> "declaration_name"
+  _decl_verbose ::= ( '%' !( 'verbose' ) ) -> declaration_name
 
-  _decl_yacc ::= ( '%' !( 'yacc' ) ) -> "declaration_name"
+  _decl_yacc ::= ( '%' !( 'yacc' ) ) -> declaration_name
 
-  _decl_initial_action ::= ( '%' !( 'initial-action' ) ) -> "declaration_name" code_block
+  _decl_initial_action ::= ( '%' !( 'initial-action' ) ) -> declaration_name code_block
 
-  _decl_parse_param ::= ( '%' !( 'parse-param' ) ) -> "declaration_name" code_block
+  _decl_parse_param ::= ( '%' !( 'parse-param' ) ) -> declaration_name code_block
 
-  _decl_param ::= ( '%' !( 'param' ) ) -> "declaration_name" code_block
+  _decl_param ::= ( '%' !( 'param' ) ) -> declaration_name code_block
 
-  _decl_lex_param ::= ( '%' !( 'lex-param' ) ) -> "declaration_name" code_block
+  _decl_lex_param ::= ( '%' !( 'lex-param' ) ) -> declaration_name code_block
 
   directive_merge ::= '%merge' '<' type '>'
 
   directive_empty ::= @( '%empty' )
 
-  epilogue ::= undelimited_code_block -> "embedded_code"
+  epilogue ::= undelimited_code_block -> embedded_code
 
   string ::= string_literal
 	| '_(' string_literal ')'
 
-  string_literal ::= ( 'L"' | 'u"' | 'U"' | 'u8"' | '"'  ) ( !(  1(  /[^\\"\n]+/ )  ) -> "string_content" )* '"'
+  string_literal ::= ( 'L"' | 'u"' | 'U"' | 'u8"' | '"' ) ( !(  1(  /[^\\"\n]+/ )  ) -> string_content )* '"'
 
-  number_literal ::= @( /[-\+]/? ( /0[xX]/ | /0[bB]/ )? ( ( /[0-9]/+ ( "'"  /[0-9]/+ )* | /0[bB]/ /[0-9]/+ ( "'"  /[0-9]/+ )* | /0[xX]/ /[0-9a-fA-F]/+ ( "'"  /[0-9a-fA-F]/+ )* ) ( '.' ( /[0-9a-fA-F]/+ ( "'"  /[0-9a-fA-F]/+ )* )? )? | '.' /[0-9]/+ ( "'"  /[0-9]/+ )* ) ( /[eEpP]/ ( /[-\+]/? /[0-9a-fA-F]/+ ( "'"  /[0-9a-fA-F]/+ )* )? )? /[uUlLwWfFbBdD]*/ )
+  number_literal ::= @( /[-\+]/? ( /0[xX]/ | /0[bB]/ )? ( ( /[0-9]/+ ( "'" /[0-9]/+ )* | /0[bB]/ /[0-9]/+ ( "'" /[0-9]/+ )* | /0[xX]/ /[0-9a-fA-F]/+ ( "'" /[0-9a-fA-F]/+ )* ) ( '.' ( /[0-9a-fA-F]/+ ( "'" /[0-9a-fA-F]/+ )* )? )? | '.' /[0-9]/+ ( "'" /[0-9]/+ )* ) ( /[eEpP]/ ( /[-\+]/? /[0-9a-fA-F]/+ ( "'" /[0-9a-fA-F]/+ )* )? )? /[uUlLwWfFbBdD]*/ )
 
   type_tag ::= '<' type '>'
 
@@ -150,9 +151,9 @@ rules:
 
   grammar_rule_identifier ::= /(\p{XID_Start}|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/ !( !( '.' ) ( !( 'opt' ) | !( '1' ) ) )
 
-  code_block ::= '{' undelimited_code_block -> "embedded_code" '}'
+  code_block ::= '{' undelimited_code_block -> embedded_code '}'
 
-  char_literal ::= "'"  '\\' ? /[^\n']/ "'"
+  char_literal ::= "'" '\\'? /[^\n']/ "'"
 
   comment ::= '//' /.*/
 	| '/*' /[^*]*\*+([^/*][^*]*\*+)*/ '/'

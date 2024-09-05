@@ -1,14 +1,15 @@
-; From tree-sitter-fortran/src/grammar.json
+; repository: https://github.com/stadelmanma/tree-sitter-fortran.git
+; commit: 8f842945abefb76b9a68c0835619b37060b8f098
+; json from: tree-sitter-fortran/src/grammar.json
+; From /tmp/tslua/fortran0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
 
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
-
 
 externals ::= {
-	undefined
+	'&'
 	_integer_literal
 	_float_literal
 	_boz_literal
@@ -52,25 +53,25 @@ rules:
 
   translation_unit ::= _top_level_item* program?
 
-  _top_level_item ::=  2(  include_statement _end_of_statement | program | module | submodule | interface | subroutine | function )
+  _top_level_item ::=  2(  include_statement _end_of_statement | program | module | submodule | interface | subroutine | function ) 
 
   program ::= program_statement? _specification_part* _statement* internal_procedures? end_program_statement
 
   program_statement ::= /[pP][rR][oO][gG][rR][aA][mM]/ -> "program" _name
 
-  end_program_statement ::=  >0(  ( /[eE][nN][dD]/ /[pP][rR][oO][gG][rR][aA][mM]/? | /[eE][nN][dD][pP][rR][oO][gG][rR][aA][mM]/ ) -> "endprogram" _name? _end_of_statement )
+  end_program_statement ::=  >0(  ( /[eE][nN][dD]/ /[pP][rR][oO][gG][rR][aA][mM]/? | /[eE][nN][dD][pP][rR][oO][gG][rR][aA][mM]/ ) -> "endprogram" _name? _end_of_statement ) 
 
   module ::= module_statement _specification_part* internal_procedures? end_module_statement
 
   module_statement ::= /[mM][oO][dD][uU][lL][eE]/ -> "module" _name
 
-  end_module_statement ::=  >0(  ( /[eE][nN][dD]/ /[mM][oO][dD][uU][lL][eE]/? | /[eE][nN][dD][mM][oO][dD][uU][lL][eE]/ ) -> "endmodule" _name? _end_of_statement )
+  end_module_statement ::=  >0(  ( /[eE][nN][dD]/ /[mM][oO][dD][uU][lL][eE]/? | /[eE][nN][dD][mM][oO][dD][uU][lL][eE]/ ) -> "endmodule" _name? _end_of_statement ) 
 
   submodule ::= submodule_statement _specification_part* internal_procedures? end_submodule_statement
 
-  submodule_statement ::= /[sS][uU][bB][mM][oO][dD][uU][lL][eE]/ -> "submodule" '(' ( module_name ):ancestor ( ':' ( module_name ):parent )? ')' _name
+  submodule_statement ::= /[sS][uU][bB][mM][oO][dD][uU][lL][eE]/ -> "submodule" '(' module_name:ancestor ( ':' module_name:parent )? ')' _name
 
-  end_submodule_statement ::=  >0(  ( /[eE][nN][dD]/ /[sS][uU][bB][mM][oO][dD][uU][lL][eE]/? | /[eE][nN][dD][sS][uU][bB][mM][oO][dD][uU][lL][eE]/ ) -> "endsubmodule" _name? _end_of_statement )
+  end_submodule_statement ::=  >0(  ( /[eE][nN][dD]/ /[sS][uU][bB][mM][oO][dD][uU][lL][eE]/? | /[eE][nN][dD][sS][uU][bB][mM][oO][dD][uU][lL][eE]/ ) -> "endsubmodule" _name? _end_of_statement ) 
 
   module_name ::= _name
 
@@ -78,7 +79,7 @@ rules:
 
   interface_statement ::= abstract_specifier? /[iI][nN][tT][eE][rR][fF][aA][cC][eE]/ -> "interface" ( _name | _generic_procedure )?
 
-  end_interface_statement ::=  >0(  ( /[eE][nN][dD]/ /[iI][nN][tT][eE][rR][fF][aA][cC][eE]/ | /[eE][nN][dD][iI][nN][tT][eE][rR][fF][aA][cC][eE]/ ) -> "endinterface" ( _name | _generic_procedure )? _end_of_statement )
+  end_interface_statement ::=  >0(  ( /[eE][nN][dD]/ /[iI][nN][tT][eE][rR][fF][aA][cC][eE]/ | /[eE][nN][dD][iI][nN][tT][eE][rR][fF][aA][cC][eE]/ ) -> "endinterface" ( _name | _generic_procedure )? _end_of_statement ) 
 
   assignment ::= /[aA][sS][sS][iI][gG][nN][mM][eE][nN][tT]/ -> "assignment" '(' '=' ')'
 
@@ -92,31 +93,31 @@ rules:
 
   subroutine ::= subroutine_statement _end_of_statement _specification_part* _statement* internal_procedures? end_subroutine_statement
 
-  subroutine_statement ::= _callable_interface_qualifers? /[sS][uU][bB][rR][oO][uU][tT][iI][nN][eE]/ -> "subroutine" ( _name ):name ( _parameters )?:parameters language_binding?
+  subroutine_statement ::= _callable_interface_qualifers? /[sS][uU][bB][rR][oO][uU][tT][iI][nN][eE]/ -> "subroutine" _name:name ( _parameters:parameters )? language_binding?
 
-  end_subroutine_statement ::=  >0(  ( /[eE][nN][dD]/ /[sS][uU][bB][rR][oO][uU][tT][iI][nN][eE]/? | /[eE][nN][dD][sS][uU][bB][rR][oO][uU][tT][iI][nN][eE]/ ) -> "endsubroutine" _name? _end_of_statement )
+  end_subroutine_statement ::=  >0(  ( /[eE][nN][dD]/ /[sS][uU][bB][rR][oO][uU][tT][iI][nN][eE]/? | /[eE][nN][dD][sS][uU][bB][rR][oO][uU][tT][iI][nN][eE]/ ) -> "endsubroutine" _name? _end_of_statement ) 
 
   module_procedure ::= module_procedure_statement _end_of_statement _specification_part* _statement* internal_procedures? end_module_procedure_statement
 
-  module_procedure_statement ::= _callable_interface_qualifers? /[mM][oO][dD][uU][lL][eE]/ -> "module" /[pP][rR][oO][cC][eE][dD][uU][rR][eE]/ -> "procedure" ( _name ):name
+  module_procedure_statement ::= _callable_interface_qualifers? /[mM][oO][dD][uU][lL][eE]/ -> "module" /[pP][rR][oO][cC][eE][dD][uU][rR][eE]/ -> "procedure" _name:name
 
-  end_module_procedure_statement ::=  >0(  ( /[eE][nN][dD]/ /[pP][rR][oO][cC][eE][dD][uU][rR][eE]/? | /[eE][nN][dD][pP][rR][oO][cC][eE][dD][uU][rR][eE]/ ) -> "endprocedure" _name? _end_of_statement )
+  end_module_procedure_statement ::=  >0(  ( /[eE][nN][dD]/ /[pP][rR][oO][cC][eE][dD][uU][rR][eE]/? | /[eE][nN][dD][pP][rR][oO][cC][eE][dD][uU][rR][eE]/ ) -> "endprocedure" _name? _end_of_statement ) 
 
   function ::= function_statement _end_of_statement _specification_part* _statement* internal_procedures? end_function_statement
 
-  function_statement ::= _callable_interface_qualifers? /[fF][uU][nN][cC][tT][iI][oO][nN]/ -> "function" ( _name ):name ( _parameters )?:parameters ( language_binding | function_result )*?
+  function_statement ::= _callable_interface_qualifers? /[fF][uU][nN][cC][tT][iI][oO][nN]/ -> "function" _name:name ( _parameters:parameters )? ( language_binding | function_result )*?
 
   language_binding ::= /[bB][iI][nN][dD]/ -> "bind" '(' identifier ( ',' keyword_argument )? ')'
 
   _callable_interface_qualifers ::=  >1(  procedure_attributes | procedure_qualifier | _intrinsic_type | derived_type ) +
 
-  procedure_attributes ::=  1(  /[aA][tT][tT][rR][iI][bB][uU][tT][eE][sS]/ -> "attributes" '(' ( /[gG][lL][oO][bB][aA][lL]/ -> "global" | /[dD][eE][vV][iI][cC][eE]/ -> "device" | /[hH][oO][sS][tT]/ -> "host" | /[gG][rR][iI][dD]_[gG][lL][oO][bB][aA][lL]/ -> "grid_global" ) ( ',' ( /[gG][lL][oO][bB][aA][lL]/ -> "global" | /[dD][eE][vV][iI][cC][eE]/ -> "device" | /[hH][oO][sS][tT]/ -> "host" | /[gG][rR][iI][dD]_[gG][lL][oO][bB][aA][lL]/ -> "grid_global" ) )* ')' )
+  procedure_attributes ::=  1(  /[aA][tT][tT][rR][iI][bB][uU][tT][eE][sS]/ -> "attributes" '(' ( /[gG][lL][oO][bB][aA][lL]/ -> "global" | /[dD][eE][vV][iI][cC][eE]/ -> "device" | /[hH][oO][sS][tT]/ -> "host" | /[gG][rR][iI][dD]_[gG][lL][oO][bB][aA][lL]/ -> "grid_global" ) ( ',' ( /[gG][lL][oO][bB][aA][lL]/ -> "global" | /[dD][eE][vV][iI][cC][eE]/ -> "device" | /[hH][oO][sS][tT]/ -> "host" | /[gG][rR][iI][dD]_[gG][lL][oO][bB][aA][lL]/ -> "grid_global" ) )* ')' ) 
 
-  end_function_statement ::=  >0(  ( /[eE][nN][dD]/ /[fF][uU][nN][cC][tT][iI][oO][nN]/? | /[eE][nN][dD][fF][uU][nN][cC][tT][iI][oO][nN]/ ) -> "endfunction" _name? _end_of_statement )
+  end_function_statement ::=  >0(  ( /[eE][nN][dD]/ /[fF][uU][nN][cC][tT][iI][oO][nN]/? | /[eE][nN][dD][fF][uU][nN][cC][tT][iI][oO][nN]/ ) -> "endfunction" _name? _end_of_statement ) 
 
   function_result ::= /[rR][eE][sS][uU][lL][tT]/ -> "result" '(' identifier ')'
 
-  _name ::= identifier -> "name"
+  _name ::= identifier -> name
 
   _parameters ::= '(' ')'
 	| parameters
@@ -127,21 +128,21 @@ rules:
 
   contains_statement ::= /[cC][oO][nN][tT][aA][iI][nN][sS]/ -> "contains"
 
-  _specification_part ::=  1(   1(  include_statement _end_of_statement )  | use_statement _end_of_statement | implicit_statement _end_of_statement | save_statement _end_of_statement | import_statement _end_of_statement | public_statement _end_of_statement | private_statement _end_of_statement | enum | interface | derived_type_definition | namelist_statement _end_of_statement | common_statement _end_of_statement | variable_declaration _end_of_statement | variable_modification _end_of_statement | parameter_statement _end_of_statement | equivalence_statement _end_of_statement | data_statement _end_of_statement |  1(  statement_label format_statement _end_of_statement )  )
+  _specification_part ::=  1(   1(  include_statement _end_of_statement )  | use_statement _end_of_statement | implicit_statement _end_of_statement | save_statement _end_of_statement | import_statement _end_of_statement | public_statement _end_of_statement | private_statement _end_of_statement | enum | interface | derived_type_definition | namelist_statement _end_of_statement | common_statement _end_of_statement | variable_declaration _end_of_statement | variable_modification _end_of_statement | parameter_statement _end_of_statement | equivalence_statement _end_of_statement | data_statement _end_of_statement |  1(  statement_label format_statement _end_of_statement )  ) 
 
-  use_statement ::= /[uU][sS][eE]/ -> "use" ( ',' ( /[iI][nN][tT][rR][iI][nN][sS][iI][cC]/ -> "intrinsic" | /[nN][oO][nN]_[iI][nN][tT][rR][iI][nN][sS][iI][cC]/ -> "non_intrinsic" ) '::' | '::' ) identifier -> "module_name" ( ',' use_alias ( ',' use_alias )* | included_items )?
+  use_statement ::= /[uU][sS][eE]/ -> "use" ( ',' ( /[iI][nN][tT][rR][iI][nN][sS][iI][cC]/ -> "intrinsic" | /[nN][oO][nN]_[iI][nN][tT][rR][iI][nN][sS][iI][cC]/ -> "non_intrinsic" ) '::'? | '::'? ) identifier -> module_name ( ',' use_alias ( ',' use_alias )* | included_items )?
 
   included_items ::= ',' /[oO][nN][lL][yY]/ -> "only" ':' ( ( use_alias | identifier | _generic_procedure ) ( ',' ( use_alias | identifier | _generic_procedure ) )* )?
 
-  use_alias ::= identifier -> "local_name" '=>' identifier
+  use_alias ::= identifier -> local_name '=>' identifier
 
-  implicit_statement ::= /[iI][mM][pP][lL][iI][cC][iI][tT]/ -> "implicit" ( intrinsic_type size? '(' implicit_range ( ',' implicit_range )* ')' ( ',' intrinsic_type size? '(' implicit_range ( ',' implicit_range )* ')' )* | /[nN][oO][nN][eE]/ -> "none" ( '(' ( /[tT][yY][pP][eE]/ -> "type" | /[eE][xX][tT][eE][rR][nN][aA][lL]/ -> "external" ) ( ',' ( /[tT][yY][pP][eE]/ -> "type" | /[eE][xX][tT][eE][rR][nN][aA][lL]/ -> "external" ) )* ')' )? )
+  implicit_statement ::= /[iI][mM][pP][lL][iI][cC][iI][tT]/ -> "implicit" ( intrinsic_type size? '(' implicit_range ( ',' implicit_range )* ')' ( ',' intrinsic_type size? '(' implicit_range ( ',' implicit_range )* ')' )* | /[nN][oO][nN][eE]/ -> none ( '(' ( /[tT][yY][pP][eE]/ -> "type" | /[eE][xX][tT][eE][rR][nN][aA][lL]/ -> "external" ) ( ',' ( /[tT][yY][pP][eE]/ -> "type" | /[eE][xX][tT][eE][rR][nN][aA][lL]/ -> "external" ) )* ')' )? )
 
-  save_statement ::=  1(  /[sS][aA][vV][eE]/ -> "save" ( '::'? ( identifier | '/' identifier '/' ) ( ',' ( identifier | '/' identifier '/' ) )* )? )
+  save_statement ::=  1(  /[sS][aA][vV][eE]/ -> "save" ( '::'? ( identifier | '/' identifier '/' ) ( ',' ( identifier | '/' identifier '/' ) )* )? ) 
 
-  private_statement ::=  1(  /[pP][rR][iI][vV][aA][tT][eE]/ -> "private" ( '::' ( identifier | _generic_procedure ) ( ',' ( identifier | _generic_procedure ) )* )? )
+  private_statement ::=  1(  /[pP][rR][iI][vV][aA][tT][eE]/ -> "private" ( '::' ( identifier | _generic_procedure ) ( ',' ( identifier | _generic_procedure ) )* )? ) 
 
-  public_statement ::=  1(  /[pP][uU][bB][lL][iI][cC]/ -> "public" ( '::' ( identifier | _generic_procedure ) ( ',' ( identifier | _generic_procedure ) )* )? )
+  public_statement ::=  1(  /[pP][uU][bB][lL][iI][cC]/ -> "public" ( '::' ( identifier | _generic_procedure ) ( ',' ( identifier | _generic_procedure ) )* )? ) 
 
   namelist_statement ::= /[nN][aA][mM][eE][lL][iI][sS][tT]/ -> "namelist" variable_group+
 
@@ -151,12 +152,12 @@ rules:
 
   implicit_range ::= /[a-zA-Z]/ ( '-' /[a-zA-Z]/ )?
 
-  import_statement ::=  <0(  /[iI][mM][pP][oO][rR][tT]/ -> "import" _import_names? )
+  import_statement ::=  <0(  /[iI][mM][pP][oO][rR][tT]/ -> "import" _import_names? ) 
 
   _import_names ::= '::'? identifier ( ',' identifier )*
 	| ',' ( /[oO][nN][lL][yY]/ -> "only" ':' identifier ( ',' identifier )* | /[nN][oO][nN][eE]/ -> "none" | /[aA][lL][lL]/ -> "all" )
 
-  derived_type_definition ::= derived_type_statement public_statement? private_statement? ( /[sS][eE][qQ][uU][eE][nN][cC][eE]/ -> "sequence" -> "sequence_statement" _end_of_statement )? ( ( include_statement | variable_declaration ) _end_of_statement )* derived_type_procedures? end_type_statement
+  derived_type_definition ::= derived_type_statement public_statement? private_statement? ( /[sS][eE][qQ][uU][eE][nN][cC][eE]/ -> "sequence" -> sequence_statement _end_of_statement )? ( ( include_statement | variable_declaration ) _end_of_statement )* derived_type_procedures? end_type_statement
 
   abstract_specifier ::= /[aA][bB][sS][tT][rR][aA][cC][tT]/ -> "abstract"
 
@@ -166,19 +167,19 @@ rules:
   base_type_specifier ::= /[eE][xX][tT][eE][nN][dD][sS]/ -> "extends" '(' identifier ')'
 
   _derived_type_qualifier ::= abstract_specifier
-	| ( access_specifier ):access
-	| ( base_type_specifier ):base
+	| access_specifier:access
+	| base_type_specifier:base
 	| language_binding
 
   derived_type_statement ::= statement_label? /[tT][yY][pP][eE]/ -> "type" ( '::'? _type_name | ',' _derived_type_qualifier ( ',' _derived_type_qualifier )* '::' _type_name ) _end_of_statement
 
-  end_type_statement ::=  >0(  ( /[eE][nN][dD]/ /[tT][yY][pP][eE]/? | /[eE][nN][dD][tT][yY][pP][eE]/ ) -> "endtype" _name? _end_of_statement )
+  end_type_statement ::=  >0(  ( /[eE][nN][dD]/ /[tT][yY][pP][eE]/? | /[eE][nN][dD][tT][yY][pP][eE]/ ) -> "endtype" _name? _end_of_statement ) 
 
-  _type_name ::= identifier -> "type_name"
+  _type_name ::= identifier -> type_name
 
   derived_type_procedures ::= contains_statement public_statement? private_statement? procedure_statement*
 
-  procedure_statement ::= _procedure_kind ( '(' identifier -> "procedure_interface" ')' )? ( ',' procedure_attribute ( ',' procedure_attribute )* )? '::'? ( method_name | binding_name '=>' method_name ) ( ',' ( method_name | binding_name '=>' method_name ) )*
+  procedure_statement ::= _procedure_kind ( '(' identifier -> procedure_interface ')' )? ( ',' procedure_attribute ( ',' procedure_attribute )* )? '::'? ( method_name | binding_name '=>' method_name ) ( ',' ( method_name | binding_name '=>' method_name ) )*
 
   binding_name ::= identifier
 	| _generic_procedure
@@ -192,11 +193,11 @@ rules:
 	| /[pP][rR][oO][pP][eE][rR][tT][yY]/ -> "property"
 	| /[fF][iI][nN][aA][lL]/ -> "final"
 
-  procedure_attribute ::=  <0(  /[dD][eE][fF][eE][rR][rR][eE][dD]/ -> "deferred" | /[pP][aA][sS][sS]/ -> "pass" ( '(' identifier ')' )? | /[nN][oO][pP][aA][sS][sS]/ -> "nopass" | /[nN][oO][nN]_[oO][vV][eE][rR][rR][iI][dD][aA][bB][lL][eE]/ -> "non_overridable" | /[pP][uU][bB][lL][iI][cC]/ -> "public" | /[pP][rR][iI][vV][aA][tT][eE]/ -> "private" | /[fF][aA][mM][iI][lL][yY]/ -> "family" | /[pP][oO][iI][nN][tT][eE][rR]/ -> "pointer" )
+  procedure_attribute ::=  <0(  /[dD][eE][fF][eE][rR][rR][eE][dD]/ -> "deferred" | /[pP][aA][sS][sS]/ -> "pass" ( '(' identifier ')' )? | /[nN][oO][pP][aA][sS][sS]/ -> "nopass" | /[nN][oO][nN]_[oO][vV][eE][rR][rR][iI][dD][aA][bB][lL][eE]/ -> "non_overridable" | /[pP][uU][bB][lL][iI][cC]/ -> "public" | /[pP][rR][iI][vV][aA][tT][eE]/ -> "private" | /[fF][aA][mM][iI][lL][yY]/ -> "family" | /[pP][oO][iI][nN][tT][eE][rR]/ -> "pointer" ) 
 
-  variable_declaration ::= ( _intrinsic_type | derived_type | procedure_declaration -> "procedure" ) ( ',' type_qualifier ( ',' type_qualifier )* )? '::'? _declaration_targets
+  variable_declaration ::= ( _intrinsic_type | derived_type | procedure_declaration -> procedure ) ( ',' type_qualifier ( ',' type_qualifier )* )? '::'? _declaration_targets
 
-  procedure_declaration ::= /[pP][rR][oO][cC][eE][dD][uU][rR][eE]/ -> "procedure" ( '(' identifier -> "procedure_interface"? ')' )? ( ',' procedure_attribute ( ',' procedure_attribute )* )?
+  procedure_declaration ::= /[pP][rR][oO][cC][eE][dD][uU][rR][eE]/ -> "procedure" ( '(' ( identifier -> procedure_interface )? ')' )? ( ',' procedure_attribute ( ',' procedure_attribute )* )?
 
   variable_modification ::= ( type_qualifier | variable_attributes )+ '::'? _declaration_targets
 
@@ -204,7 +205,7 @@ rules:
 
   _declaration_targets ::= ( identifier |  >1(  identifier character_length )  | call_expression | assignment_statement | pointer_association_statement ) ( ',' ( identifier |  >1(  identifier character_length )  | call_expression | assignment_statement | pointer_association_statement ) )*
 
-  _intrinsic_type ::=  >0(  intrinsic_type size? )
+  _intrinsic_type ::=  >0(  intrinsic_type size? ) 
 
   intrinsic_type ::= /[bB][yY][tT][eE]/ -> "byte"
 	| /[iI][nN][tT][eE][gG][eE][rR]/ -> "integer"
@@ -219,7 +220,7 @@ rules:
 
   unlimited_polymorphic ::= '*'
 
-  size ::= '*' -> "assumed_size"? argument_list
+  size ::= ( '*' -> assumed_size )? argument_list
 	| '*' ( /\d+/ | parenthesized_expression )
 
   character_length ::= '*' /\d+/? ( '(' '*' ')' )?
@@ -227,7 +228,7 @@ rules:
   type_qualifier ::= /[aA][bB][sS][tT][rR][aA][cC][tT]/ -> "abstract"
 	| /[aA][lL][lL][oO][cC][aA][tT][aA][bB][lL][eE]/ -> "allocatable"
 	| /[aA][uU][tT][oO][mM][aA][tT][iI][cC]/ -> "automatic"
-	|  >0(  /[dD][iI][mM][eE][nN][sS][iI][oO][nN]/ -> "dimension" argument_list? )
+	|  >0(  /[dD][iI][mM][eE][nN][sS][iI][oO][nN]/ -> "dimension" argument_list? ) 
 	| /[cC][oO][nN][sS][tT][aA][nN][tT]/ -> "constant"
 	| /[cC][oO][nN][tT][iI][gG][uU][oO][uU][sS]/ -> "contiguous"
 	| /[dD][eE][vV][iI][cC][eE]/ -> "device"
@@ -257,7 +258,7 @@ rules:
 	| /[pP][uU][rR][eE]/ -> "pure"
 	| /[rR][eE][cC][uU][rR][sS][iI][vV][eE]/ -> "recursive"
 
-  parameter_statement ::=  1(  /[pP][aA][rR][aA][mM][eE][tT][eE][rR]/ -> "parameter" '(' parameter_assignment ( ',' parameter_assignment )* ')' )
+  parameter_statement ::=  1(  /[pP][aA][rR][aA][mM][eE][tT][eE][rR]/ -> "parameter" '(' parameter_assignment ( ',' parameter_assignment )* ')' ) 
 
   parameter_assignment ::= identifier '=' _expression
 
@@ -294,17 +295,17 @@ rules:
 	| associate_statement
 	| file_position_statement
 
-  statement_label ::=  1(  _integer_literal -> "statement_label" )
+  statement_label ::=  1(  _integer_literal -> "statement_label" ) 
 
   statement_label_reference ::= statement_label -> "statement_label_reference"
 
-  stop_statement ::= /[eE][rR][rR][oO][rR]/ -> "error"? /[sS][tT][oO][pP]/ -> "stop" _expression? ( ','  1(  /[qQ][uU][iI][eE][tT]/ -> "quiet" '=' _expression )  )?
+  stop_statement ::= ( /[eE][rR][rR][oO][rR]/ -> "error" )? /[sS][tT][oO][pP]/ -> "stop" _expression? ( ','  1(  /[qQ][uU][iI][eE][tT]/ -> "quiet" '=' _expression )  )?
 
-  assignment_statement ::=  >-10(  ( _expression ):left '=' ( _expression ):right )
+  assignment_statement ::=  >-10(  _expression:left '=' _expression:right ) 
 
-  pointer_association_statement ::=  >0(  _expression '=>' _expression )
+  pointer_association_statement ::=  >0(  _expression '=>' _expression ) 
 
-  subroutine_call ::=  1(  /[cC][aA][lL][lL]/ -> "call" ( _expression ):subroutine cuda_kernel_argument_list? argument_list? )
+  subroutine_call ::=  1(  /[cC][aA][lL][lL]/ -> "call" _expression:subroutine cuda_kernel_argument_list? argument_list? ) 
 
   cuda_kernel_argument_list ::= '<<<' _expression ( ',' _expression )* '>>>'
 
@@ -314,13 +315,13 @@ rules:
 	| ( /[gG][oO]/ /[tT][oO]/ | /[gG][oO][tT][oO]/ ) -> "goto" ( statement_label_reference | '(' statement_label_reference ( ',' statement_label_reference )* ')' ','? _expression )
 	| /[rR][eE][tT][uU][rR][nN]/ -> "return"
 
-  include_statement ::= /[iI][nN][cC][lL][uU][dD][eE]/ -> "include" ( string_literal -> "filename" ):path
+  include_statement ::= /[iI][nN][cC][lL][uU][dD][eE]/ -> "include" ( string_literal -> filename ):path
 
-  data_statement ::=  1(  /[dD][aA][tT][aA]/ -> "data" data_set ( ',' data_set )* )
+  data_statement ::=  1(  /[dD][aA][tT][aA]/ -> "data" data_set ( ',' data_set )* ) 
 
-  data_set ::=  1(  ( identifier | implied_do_loop_expression | call_expression | derived_type_member_expression ) ( ',' ( identifier | implied_do_loop_expression | call_expression | derived_type_member_expression ) )* data_value )
+  data_set ::=  1(  ( identifier | implied_do_loop_expression | call_expression | derived_type_member_expression ) ( ',' ( identifier | implied_do_loop_expression | call_expression | derived_type_member_expression ) )* data_value ) 
 
-  data_value ::= '/'  1(  ( number_literal ):repeat '*' ) ? ( number_literal | complex_literal | string_literal | boolean_literal | unary_expression | null_literal | identifier | call_expression ) ( ','  1(  ( number_literal ):repeat '*' ) ? ( number_literal | complex_literal | string_literal | boolean_literal | unary_expression | null_literal | identifier | call_expression ) )* '/'
+  data_value ::= '/'  1(  number_literal:repeat '*' ) ? ( number_literal | complex_literal | string_literal | boolean_literal | unary_expression | null_literal | identifier | call_expression ) ( ','  1(  number_literal:repeat '*' ) ? ( number_literal | complex_literal | string_literal | boolean_literal | unary_expression | null_literal | identifier | call_expression ) )* '/'
 
   do_loop_statement ::= block_label_start_expression? /[dD][oO]/ -> "do" ','? ( while_statement | loop_control_expression | concurrent_statement )? _end_of_statement _statement* statement_label? end_do_loop_statement
 
@@ -332,9 +333,9 @@ rules:
 
   concurrent_statement ::= concurrent_header concurrent_locality*
 
-  concurrent_header ::= /[cC][oO][nN][cC][uU][rR][rR][eE][nN][tT]/ -> "concurrent" '(' ( ( _intrinsic_type ):type '::' )? concurrent_control ( ',' concurrent_control )* ( ',' _expression -> "concurrent_mask" )? ')'
+  concurrent_header ::= /[cC][oO][nN][cC][uU][rR][rR][eE][nN][tT]/ -> "concurrent" '(' ( _intrinsic_type:type '::' )? concurrent_control ( ',' concurrent_control )* ( ',' _expression -> concurrent_mask )? ')'
 
-  concurrent_control ::= identifier '=' ( _expression ):initial ':' ( _expression ):final ( ':' ( _expression ):step )?
+  concurrent_control ::= identifier '=' _expression:initial ':' _expression:final ( ':' _expression:step )?
 
   concurrent_locality ::= ( /[lL][oO][cC][aA][lL]/ -> "local" | /[lL][oO][cC][aA][lL]_[iI][nN][iI][tT]/ -> "local_init" | /[sS][hH][aA][rR][eE][dD]/ -> "shared" ) '(' identifier ( ',' identifier )* ')'
 	| /[dD][eE][fF][aA][uU][lL][tT]/ -> "default" '(' /[nN][oO][nN][eE]/ -> "none" ')'
@@ -342,9 +343,9 @@ rules:
   if_statement ::= _inline_if_statement
 	| _block_if_statement
 
-  _inline_if_statement ::=  >2(  /[iI][fF]/ -> "if" parenthesized_expression _statements )
+  _inline_if_statement ::=  >2(  /[iI][fF]/ -> "if" parenthesized_expression _statements ) 
 
-  arithmetic_if_statement ::=  >0(  /[iI][fF]/ -> "if" parenthesized_expression statement_label_reference ',' statement_label_reference ',' statement_label_reference )
+  arithmetic_if_statement ::=  >0(  /[iI][fF]/ -> "if" parenthesized_expression statement_label_reference ',' statement_label_reference ',' statement_label_reference ) 
 
   _block_if_statement ::= block_label_start_expression? /[iI][fF]/ -> "if" parenthesized_expression /[tT][hH][eE][nN]/ -> "then" _block_label? _end_of_statement _statement* elseif_clause* else_clause? statement_label? end_if_statement
 
@@ -357,7 +358,7 @@ rules:
   where_statement ::= _inline_where_statement
 	| _block_where_statement
 
-  _inline_where_statement ::=  >0(  /[wW][hH][eE][rR][eE]/ -> "where" parenthesized_expression _statements )
+  _inline_where_statement ::=  >0(  /[wW][hH][eE][rR][eE]/ -> "where" parenthesized_expression _statements ) 
 
   _block_where_statement ::= block_label_start_expression? /[wW][hH][eE][rR][eE]/ -> "where" parenthesized_expression _end_of_statement _statement* elsewhere_clause* end_where_statement
 
@@ -388,16 +389,16 @@ rules:
 
   selector ::= '(' ( _expression | pointer_association_statement ) ')'
 
-  case_statement ::= /[cC][aA][sS][eE]/ -> "case" ( '(' case_value_range_list ')' | /[dD][eE][fF][aA][uU][lL][tT]/ -> "default" -> "default" ) _block_label? _end_of_statement _statement*
+  case_statement ::= /[cC][aA][sS][eE]/ -> "case" ( '(' case_value_range_list ')' | /[dD][eE][fF][aA][uU][lL][tT]/ -> "default" -> default ) _block_label? _end_of_statement _statement*
 
-  type_statement ::= ( ( ( /[tT][yY][pP][eE]/ /[iI][sS]/ | /[tT][yY][pP][eE][iI][sS]/ ) -> "typeis" | ( /[cC][lL][aA][sS][sS]/ /[iI][sS]/ | /[cC][lL][aA][sS][sS][iI][sS]/ ) -> "classis" ) ( '(' ( _intrinsic_type | identifier ):type ')' ) | _class_default -> "default" ) _block_label? _end_of_statement _statement*
+  type_statement ::= ( ( ( /[tT][yY][pP][eE]/ /[iI][sS]/ | /[tT][yY][pP][eE][iI][sS]/ ) -> "typeis" | ( /[cC][lL][aA][sS][sS]/ /[iI][sS]/ | /[cC][lL][aA][sS][sS][iI][sS]/ ) -> "classis" ) ( '(' ( _intrinsic_type | identifier ):type ')' ) | _class_default -> default ) _block_label? _end_of_statement _statement*
 
   _class_default ::= /[cC][lL][aA][sS][sS]/ /[dD][eE][fF][aA][uU][lL][tT]/
 	| /[cC][lL][aA][sS][sS][dD][eE][fF][aA][uU][lL][tT]/
 
   case_value_range_list ::= ( _expression | extent_specifier ) ( ',' ( _expression | extent_specifier ) )*
 
-  rank_statement ::= /[rR][aA][nN][kK]/ -> "rank" ( '(' case_value_range_list ')' | /[dD][eE][fF][aA][uU][lL][tT]/ -> "default" -> "default" ) _block_label? _end_of_statement _statement*
+  rank_statement ::= /[rR][aA][nN][kK]/ -> "rank" ( '(' case_value_range_list ')' | /[dD][eE][fF][aA][uU][lL][tT]/ -> "default" -> default ) _block_label? _end_of_statement _statement*
 
   block_construct ::= block_label_start_expression? /[bB][lL][oO][cC][kK]/ -> "block" _end_of_statement _specification_part* _statement* end_block_construct_statement
 
@@ -405,11 +406,11 @@ rules:
 
   associate_statement ::= block_label_start_expression? /[aA][sS][sS][oO][cC][iI][aA][tT][eE]/ -> "associate" '(' association ( ',' association )* ')' _end_of_statement _statement* end_associate_statement
 
-  association ::= ( identifier ):name '=>' ( _expression ):selector
+  association ::= identifier:name '=>' _expression:selector
 
   end_associate_statement ::= ( /[eE][nN][dD]/ /[aA][sS][sS][oO][cC][iI][aA][tT][eE]/ | /[eE][nN][dD][aA][sS][sS][oO][cC][iI][aA][tT][eE]/ ) -> "endassociate" _block_label?
 
-  format_statement ::=  1(  /[fF][oO][rR][mM][aA][tT]/ -> "format" '(' _transfer_items -> "transfer_items" ')' )
+  format_statement ::=  1(  /[fF][oO][rR][mM][aA][tT]/ -> "format" '(' _transfer_items -> transfer_items ')' ) 
 
   _transfer_item ::= string_literal
 	| edit_descriptor
@@ -420,25 +421,25 @@ rules:
 
   edit_descriptor ::= /[a-gi-zA-GI-Z0-9/:.*$]+/
 
-  hollerith_constant ::=  >10(  /[0-9]+H[^/,)]+/ )
+  hollerith_constant ::=  >10(  /[0-9]+H[^/,)]+/ ) 
 
   _io_arguments ::= '(' ( unit_identifier | unit_identifier ',' format_identifier | unit_identifier ',' format_identifier ',' keyword_argument ( ',' keyword_argument )* | unit_identifier ',' keyword_argument ( ',' keyword_argument )* | keyword_argument ( ',' keyword_argument )* ) ')'
 
-  read_statement ::=  1(  _simple_read_statement | _parameterized_read_statement )
+  read_statement ::=  1(  _simple_read_statement | _parameterized_read_statement ) 
 
-  _simple_read_statement ::=  1(  /[rR][eE][aA][dD]/ -> "read" format_identifier ( ',' input_item_list )? )
+  _simple_read_statement ::=  1(  /[rR][eE][aA][dD]/ -> "read" format_identifier ( ',' input_item_list )? ) 
 
-  _parameterized_read_statement ::=  1(  /[rR][eE][aA][dD]/ -> "read" _io_arguments input_item_list? )
+  _parameterized_read_statement ::=  1(  /[rR][eE][aA][dD]/ -> "read" _io_arguments input_item_list? ) 
 
   print_statement ::= /[pP][rR][iI][nN][tT]/ -> "print" format_identifier ( ',' output_item_list )?
 
   open_statement ::= /[oO][pP][eE][nN]/ -> "open" _io_arguments output_item_list?
 
-  close_statement ::=  1(  /[cC][lL][oO][sS][eE]/ -> "close" '(' ( unit_identifier | unit_identifier ',' keyword_argument ( ',' keyword_argument )* | keyword_argument ( ',' keyword_argument )* ) ')' )
+  close_statement ::=  1(  /[cC][lL][oO][sS][eE]/ -> "close" '(' ( unit_identifier | unit_identifier ',' keyword_argument ( ',' keyword_argument )* | keyword_argument ( ',' keyword_argument )* ) ')' ) 
 
-  write_statement ::=  1(  /[wW][rR][iI][tT][eE]/ -> "write" _io_arguments ','? output_item_list? )
+  write_statement ::=  1(  /[wW][rR][iI][tT][eE]/ -> "write" _io_arguments ','? output_item_list? ) 
 
-  inquire_statement ::=  1(  /[iI][nN][qQ][uU][iI][rR][eE]/ -> "inquire" _io_arguments output_item_list? )
+  inquire_statement ::=  1(  /[iI][nN][qQ][uU][iI][rR][eE]/ -> "inquire" _io_arguments output_item_list? ) 
 
   enum ::= enum_statement enumerator_statement* end_enum_statement _end_of_statement
 
@@ -448,7 +449,7 @@ rules:
 
   end_enum_statement ::= ( /[eE][nN][dD]/ /[eE][nN][uU][mM]/ | /[eE][nN][dD][eE][nN][uU][mM]/ ) -> "endenum"
 
-  unit_identifier ::=  1(  number_literal | _io_expressions )
+  unit_identifier ::=  1(  number_literal | _io_expressions ) 
 
   format_identifier ::= statement_label_reference
 	| _io_expressions
@@ -462,11 +463,11 @@ rules:
 	| /[rR][eE][wW][iI][nN][dD]/ -> "rewind" _file_position_spec
 	| /[pP][aA][uU][sS][eE]/ -> "pause" string_literal?
 
-  _io_expressions ::=  1(  '*' | string_literal | identifier | derived_type_member_expression | concatenation_expression | math_expression | parenthesized_expression | call_expression )
+  _io_expressions ::=  1(  '*' | string_literal | identifier | derived_type_member_expression | concatenation_expression | math_expression | parenthesized_expression | call_expression ) 
 
-  input_item_list ::=  >0(  _expression ( ',' _expression )* )
+  input_item_list ::=  >0(  _expression ( ',' _expression )* ) 
 
-  output_item_list ::=  >0(  _expression ( ',' _expression )* )
+  output_item_list ::=  >0(  _expression ( ',' _expression )* ) 
 
   _expression ::= number_literal
 	| complex_literal
@@ -487,47 +488,47 @@ rules:
 
   parenthesized_expression ::= '(' _expression ')'
 
-  derived_type_member_expression ::=  >100(  _expression '%' identifier -> "type_member" )
+  derived_type_member_expression ::=  >100(  _expression '%' identifier -> type_member ) 
 
-  logical_expression ::=  <10(  ( _expression ):left ( /\.[oO][rR]\./ -> "\.or\." ):operator ( _expression ):right )
-	|  <20(  ( _expression ):left ( /\.[aA][nN][dD]\./ -> "\.and\." ):operator ( _expression ):right )
-	|  <5(  ( _expression ):left ( /\.[eE][qQ][vV]\./ -> "\.eqv\." ):operator ( _expression ):right )
-	|  <5(  ( _expression ):left ( /\.[nN][eE][qQ][vV]\./ -> "\.neqv\." ):operator ( _expression ):right )
-	|  <30(  /\.[nN][oO][tT]\./ -> "\.not\." _expression )
+  logical_expression ::=  <10(  _expression:left ( /\.[oO][rR]\./ -> "\\.or\." ):operator _expression:right ) 
+	|  <20(  _expression:left ( /\.[aA][nN][dD]\./ -> "\\.and\." ):operator _expression:right ) 
+	|  <5(  _expression:left ( /\.[eE][qQ][vV]\./ -> "\\.eqv\." ):operator _expression:right ) 
+	|  <5(  _expression:left ( /\.[nN][eE][qQ][vV]\./ -> "\\.neqv\." ):operator _expression:right ) 
+	|  <30(  /\.[nN][oO][tT]\./ -> "\\.not\." _expression ) 
 
-  relational_expression ::=  <40(  ( _expression ):left ( '<' ):operator ( _expression ):right )
-	|  <40(  ( _expression ):left ( /\.[lL][tT]\./ -> "\.lt\." ):operator ( _expression ):right )
-	|  <40(  ( _expression ):left ( '>' ):operator ( _expression ):right )
-	|  <40(  ( _expression ):left ( /\.[gG][tT]\./ -> "\.gt\." ):operator ( _expression ):right )
-	|  <40(  ( _expression ):left ( '<=' ):operator ( _expression ):right )
-	|  <40(  ( _expression ):left ( /\.[lL][eE]\./ -> "\.le\." ):operator ( _expression ):right )
-	|  <40(  ( _expression ):left ( '>=' ):operator ( _expression ):right )
-	|  <40(  ( _expression ):left ( /\.[gG][eE]\./ -> "\.ge\." ):operator ( _expression ):right )
-	|  <40(  ( _expression ):left ( '==' ):operator ( _expression ):right )
-	|  <40(  ( _expression ):left ( /\.[eE][qQ]\./ -> "\.eq\." ):operator ( _expression ):right )
-	|  <40(  ( _expression ):left ( '/=' ):operator ( _expression ):right )
-	|  <40(  ( _expression ):left ( /\.[nN][eE]\./ -> "\.ne\." ):operator ( _expression ):right )
+  relational_expression ::=  <40(  _expression:left '<':operator _expression:right ) 
+	|  <40(  _expression:left ( /\.[lL][tT]\./ -> "\\.lt\." ):operator _expression:right ) 
+	|  <40(  _expression:left '>':operator _expression:right ) 
+	|  <40(  _expression:left ( /\.[gG][tT]\./ -> "\\.gt\." ):operator _expression:right ) 
+	|  <40(  _expression:left '<=':operator _expression:right ) 
+	|  <40(  _expression:left ( /\.[lL][eE]\./ -> "\\.le\." ):operator _expression:right ) 
+	|  <40(  _expression:left '>=':operator _expression:right ) 
+	|  <40(  _expression:left ( /\.[gG][eE]\./ -> "\\.ge\." ):operator _expression:right ) 
+	|  <40(  _expression:left '==':operator _expression:right ) 
+	|  <40(  _expression:left ( /\.[eE][qQ]\./ -> "\\.eq\." ):operator _expression:right ) 
+	|  <40(  _expression:left '/=':operator _expression:right ) 
+	|  <40(  _expression:left ( /\.[nN][eE]\./ -> "\\.ne\." ):operator _expression:right ) 
 
-  concatenation_expression ::=  >50(  ( _expression ):left ( '//' ):operator ( _expression ):right )
+  concatenation_expression ::=  >50(  _expression:left '//':operator _expression:right ) 
 
-  math_expression ::=  <50(  ( _expression ):left ( '+' ):operator ( _expression ):right )
-	|  <50(  ( _expression ):left ( '-' ):operator ( _expression ):right )
-	|  <60(  ( _expression ):left ( '*' ):operator ( _expression ):right )
-	|  <60(  ( _expression ):left ( '/' ):operator ( _expression ):right )
-	|  <70(  ( _expression ):left ( '**' ):operator ( _expression ):right )
-	|  <2(  ( _expression ):left ( user_defined_operator ):operator ( _expression ):right )
+  math_expression ::=  <50(  _expression:left '+':operator _expression:right ) 
+	|  <50(  _expression:left '-':operator _expression:right ) 
+	|  <60(  _expression:left '*':operator _expression:right ) 
+	|  <60(  _expression:left '/':operator _expression:right ) 
+	|  <70(  _expression:left '**':operator _expression:right ) 
+	|  <2(  _expression:left user_defined_operator:operator _expression:right ) 
 
-  unary_expression ::=  <90(  ( '-' | '+' | user_defined_operator ):operator ( _expression ):argument )
+  unary_expression ::=  <90(  ( '-' | '+' | user_defined_operator ):operator _expression:argument ) 
 
-  user_defined_operator ::=  >0(  '.' /[a-zA-Z]+/ '.' )
+  user_defined_operator ::=  >0(  '.' /[a-zA-Z]+/ '.' ) 
 
-  call_expression ::=  80(  _expression argument_list+ )
+  call_expression ::=  80(  _expression argument_list+ ) 
 
   implied_do_loop_expression ::= '(' _expression ( ',' _expression )* ',' loop_control_expression ')'
 
-  argument_list ::=  ~1(  '(' ( ( keyword_argument | extent_specifier | assumed_size | assumed_rank | _expression ) ( ',' ( keyword_argument | extent_specifier | assumed_size | assumed_rank | _expression ) )* )? ')' )
+  argument_list ::=  ~1(  '(' ( ( keyword_argument | extent_specifier | assumed_size | assumed_rank | _expression ) ( ',' ( keyword_argument | extent_specifier | assumed_size | assumed_rank | _expression ) )* )? ')' ) 
 
-  keyword_argument ::=  1(  ( identifier ):name '=' ( _expression | assumed_size | assumed_shape ):value )
+  keyword_argument ::=  1(  identifier:name '=' ( _expression | assumed_size | assumed_shape ):value ) 
 
   extent_specifier ::= _expression? ':' ( _expression | assumed_size )? ( ':' _expression )?
 
@@ -539,7 +540,7 @@ rules:
 
   block_label_start_expression ::= identifier -> "label" ':'
 
-  _block_label ::= identifier -> "block_label"
+  _block_label ::= identifier -> block_label
 
   loop_control_expression ::= identifier '=' _expression ',' _expression ( ',' _expression )?
 
@@ -552,8 +553,8 @@ rules:
 
   _type_spec ::= ( _intrinsic_type | derived_type ) '::'
 
-  _ac_value_list ::= ( _type_spec ):type
-	| ( _type_spec )?:type _expression ( ',' _expression )*
+  _ac_value_list ::= _type_spec:type
+	| ( _type_spec:type )? _expression ( ',' _expression )*
 
   complex_literal ::= '(' ( number_literal | identifier | unary_expression ) ',' ( number_literal | identifier | unary_expression ) ')'
 
@@ -561,11 +562,11 @@ rules:
 	| _float_literal
 	| _boz_literal
 
-  boolean_literal ::= @( ( /\.[tT][rR][uU][eE]\./ -> "\.true\." | /\.[fF][aA][lL][sS][eE]\./ -> "\.false\." ) ( '_' /\w+/ )? )
+  boolean_literal ::= @( ( /\.[tT][rR][uU][eE]\./ -> "\\.true\." | /\.[fF][aA][lL][sS][eE]\./ -> "\\.false\." ) ( '_' /\w+/ )? )
 
-  null_literal ::=  1(  /[nN][uU][lL][lL]/ -> "null" '(' ')' )
+  null_literal ::=  1(  /[nN][uU][lL][lL]/ -> "null" '(' ')' ) 
 
-  preproc_file_line ::= '#' /\d+/ -> "preproc_line_number" /"[^"\n]*"/ -> "preproc_filename" /\d+/? _newline
+  preproc_file_line ::= '#' /\d+/ -> preproc_line_number /"[^"\n]*"/ -> preproc_filename /\d+/? _newline
 
   identifier ::= /[a-zA-Z_]\w*/
 	| /[bB][lL][oO][cC][kK]/ -> "block"

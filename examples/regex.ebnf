@@ -1,10 +1,11 @@
-; From tree-sitter-regex/src/grammar.json
+; repository: https://github.com/tree-sitter/tree-sitter-regex.git
+; commit: f70251e1f1d72bd6dc1f897f956f9112f8668441
+; json from: tree-sitter-regex/src/grammar.json
+; From /tmp/tslua/regex0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 extras ::= {
@@ -35,9 +36,9 @@ rules:
 
   end_assertion ::= '$'
 
-  boundary_assertion ::= '\b'
+  boundary_assertion ::= '\\b'
 
-  non_boundary_assertion ::= '\B'
+  non_boundary_assertion ::= '\\B'
 
   lookaround_assertion ::= _lookahead_assertion
 	| _lookbehind_assertion
@@ -50,11 +51,11 @@ rules:
 
   character_class ::= '[' '^'? ( class_range | _class_atom )* ']'
 
-  class_range ::=  >0(  _class_atom '-' _class_atom )
+  class_range ::=  >0(  _class_atom '-' _class_atom ) 
 
-  _class_atom ::= '-' -> "class_character"
+  _class_atom ::= '-' -> class_character
 	| class_character
-	| '\-' -> "identity_escape"
+	| '\\-' -> identity_escape
 	| character_class_escape
 	| _character_escape
 
@@ -66,22 +67,22 @@ rules:
 
   non_capturing_group ::= '(?:' pattern ')'
 
-  zero_or_more ::= '*' '?' -> "lazy"?
+  zero_or_more ::= '*' ( '?' -> lazy )?
 
-  one_or_more ::= '+' '?' -> "lazy"?
+  one_or_more ::= '+' ( '?' -> lazy )?
 
-  optional ::= '?' '?' -> "lazy"?
+  optional ::= '?' ( '?' -> lazy )?
 
-  count_quantifier ::= '{' decimal_digits ( ',' decimal_digits )? '}' '?' -> "lazy"?
+  count_quantifier ::= '{' decimal_digits ( ',' decimal_digits )? '}' ( '?' -> lazy )?
 
-  backreference_escape ::= '\k' group_name
+  backreference_escape ::= '\\k' group_name
 
   decimal_escape ::= /\\[1-9][0-9]*/
 
   character_class_escape ::= /\\[dDsSwW]/
 	| /\\[pP]/ '{' unicode_property_value_expression '}'
 
-  unicode_property_value_expression ::= ( unicode_property -> "unicode_property_name" '=' )? unicode_property -> "unicode_property_value"
+  unicode_property_value_expression ::= ( unicode_property -> unicode_property_name '=' )? unicode_property -> unicode_property_value
 
   unicode_property ::= /[a-zA-Z_0-9]+/
 
@@ -93,7 +94,7 @@ rules:
 
   control_letter_escape ::= /\\c[a-zA-Z]/
 
-  identity_escape ::= @( '\\'  /[^kdDsSpPwWbfnrtv0-9]/ )
+  identity_escape ::= @( '\\' /[^kdDsSpPwWbfnrtv0-9]/ )
 
   group_name ::= /[A-Za-z0-9]+/
 

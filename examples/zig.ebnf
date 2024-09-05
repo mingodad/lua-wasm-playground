@@ -1,10 +1,11 @@
-; From tree-sitter-zig/src/grammar.json
+; repository: https://github.com/GrayJack/tree-sitter-zig.git
+; commit: 8e970cb01c22cf89b8f70231ed4eca8d6fad1d56
+; json from: tree-sitter-zig/src/grammar.json
+; From /tmp/tslua/zig0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 extras ::= {
@@ -36,24 +37,24 @@ rules:
   _statement ::= _expression_statement
 	| _declaration_statement
 
-  _expression_statement ::=  <0(  _expression ';' |  1(  _expression_ending_with_block )  )
+  _expression_statement ::=  <0(  _expression ';' |  1(  _expression_ending_with_block )  ) 
 
-  _expression_ending_with_block ::=  1(  block | comptime_block | defer_block | suspend_block | resume_block | if_expression | while_expression | for_expression | test_expression )
+  _expression_ending_with_block ::=  1(  block | comptime_block | defer_block | suspend_block | resume_block | if_expression | while_expression | for_expression | test_expression ) 
 
   _declaration_statement ::= empty_statement
 	| assignment_statement
 	| function_signature
 	| function_declaration
 
-  _expression ::=  <0(  build_in_call_expr | call_expression | await_expression | suspend_expression | resume_expression | index_expression | field_expression | _expression_ending_with_block | struct_expression | struct_construction | anonymous_struct_enum | enum_expression | union_expression | error_expression | switch_expression | continue_expression | break_expression | return_expression | assignment_expression | array_expression | anonymous_array_expr | compound_assignment_expr | payload_expression | unary_expression | binary_expression | reference_expression | dereference_expression | orelse_postfix_expression | try_expression | _range_pattern | unreachable_expression | usingnamespace_expression | defer_expression | _type | _literals | identifier )
+  _expression ::=  <0(  build_in_call_expr | call_expression | await_expression | suspend_expression | resume_expression | index_expression | field_expression | _expression_ending_with_block | struct_expression | struct_construction | anonymous_struct_enum | enum_expression | union_expression | error_expression | switch_expression | continue_expression | break_expression | return_expression | assignment_expression | array_expression | anonymous_array_expr | compound_assignment_expr | payload_expression | unary_expression | binary_expression | reference_expression | dereference_expression | orelse_postfix_expression | try_expression | _range_pattern | unreachable_expression | usingnamespace_expression | defer_expression | _type | _literals | identifier ) 
 
   empty_statement ::= ';'
 
-  assignment_statement ::= visibility_modifier? ( 'threadlocal' | 'comptime' ) -> "assignment_modifier"? ( 'const' | 'var' ) ( identifier ):name ( ':' ( _type ):type )? '=' ( _expression ):expression ';'
+  assignment_statement ::= visibility_modifier? ( ( 'threadlocal' | 'comptime' ) -> assignment_modifier )? ( 'const' | 'var' ) identifier:name ( ':' _type:type )? '=' _expression:expression ';'
 
-  function_signature ::= visibility_modifier? function_modifiers? 'fn' ( identifier ):name ( parameters ):parameters ( _expression )?:return ';'
+  function_signature ::= visibility_modifier? function_modifiers? 'fn' identifier:name parameters:parameters ( _expression:return )? ';'
 
-  function_declaration ::= visibility_modifier? function_modifiers? 'fn' ( identifier ):name ( parameters ):parameters ( _expression )?:return ( block ):body
+  function_declaration ::= visibility_modifier? function_modifiers? 'fn' identifier:name parameters:parameters ( _expression:return )? block:body
 
   visibility_modifier ::= 'pub'
 
@@ -67,87 +68,87 @@ rules:
 
   parameters ::= '(' ( parameter ( ',' parameter )* ','? )? ')'
 
-  parameter ::= 'comptime'? ( identifier ):name ':' ( _type | 'anytype' -> "inference_type" | variadic_parameter | _expression ):type
+  parameter ::= 'comptime'? identifier:name ':' ( _type | 'anytype' -> inference_type | variadic_parameter | _expression ):type
 
   variadic_parameter ::= '...'
 
-  build_in_call_expr ::=  14(  ( /@[a-zA-Zα-ωΑ-Ωµ_][a-zA-Zα-ωΑ-Ωµ\d_]*/ -> "identifier" ):function ( arguments ):arguments )
+  build_in_call_expr ::=  14(  ( /@[a-zA-Zα-ωΑ-Ωµ_][a-zA-Zα-ωΑ-Ωµ\d_]*/ -> identifier ):function arguments:arguments ) 
 
-  call_expression ::=  14(  'async' -> "call_modifier"? ( identifier ):function ( arguments ):arguments )
+  call_expression ::=  14(  ( 'async' -> call_modifier )? identifier:function arguments:arguments ) 
 
-  await_expression ::=  <0(  'await' _expression )
+  await_expression ::=  <0(  'await' _expression ) 
 
-  suspend_expression ::=  <0(  'suspend' _expression? )
+  suspend_expression ::=  <0(  'suspend' _expression? ) 
 
-  resume_expression ::=  <0(  'resume' _expression? )
+  resume_expression ::=  <0(  'resume' _expression? ) 
 
   arguments ::= '(' ( _expression ( ',' _expression )* ','? )? ')'
 
-  field_expression ::=  <14(  ( _expression ):value '.' ( identifier -> "field_identifier" | _expression ):field )
+  field_expression ::=  <14(  _expression:value '.' ( identifier -> field_identifier | _expression ):field ) 
 
-  index_expression ::=  14(  _expression '[' ( _expression | slice_pattern ) ']' )
+  index_expression ::=  14(  _expression '[' ( _expression | slice_pattern ) ']' ) 
 
   _pattern ::= slice_pattern
 	| _range_pattern
-	| field_expression -> "field_pattern"
-	| _literals -> "literal_pattern"
+	| field_expression -> field_pattern
+	| _literals -> literal_pattern
 
-  slice_pattern ::=  >14(  ( _expression )?:start ( '..' | '...' ) ( _expression )?:end )
+  slice_pattern ::=  >14(  ( _expression:start )? ( '..' | '...' ) ( _expression:end )? ) 
 
   _range_pattern ::= range_pattern_inclusive
 	| range_pattern_exclusive
 
-  range_pattern_inclusive ::=  >0(  ( _expression ):start '...' ( _expression ):end )
+  range_pattern_inclusive ::=  >0(  _expression:start '...' _expression:end ) 
 
-  range_pattern_exclusive ::=  >0(  ( _expression ):start '..' ( _expression )?:end )
+  range_pattern_exclusive ::=  >0(  _expression:start '..' ( _expression:end )? ) 
 
-  switch_expression ::= 'switch' '(' ( _expression ):value ')' ( switch_block ):body
+  switch_expression ::= 'switch' '(' _expression:value ')' switch_block:body
 
   switch_block ::= '{' ( switch_arm* switch_last_arm )? '}'
 
-  switch_arm ::= ( switch_pattern ):pattern '=>' ( ( _expression ):value ',' | (  1(  _expression_ending_with_block )  ):value )
+  switch_arm ::= switch_pattern:pattern '=>' ( _expression:value ',' |  1(  _expression_ending_with_block ) :value )
 
-  switch_last_arm ::= ( 'else' -> "else_switch" | switch_pattern ):pattern '=>' ( _expression ):value ','?
+  switch_last_arm ::= ( 'else' -> else_switch | switch_pattern ):pattern '=>' _expression:value ','?
 
   switch_pattern ::= _pattern
 	| _pattern ( ',' _pattern )* ','?
 
-  if_expression ::=  <0(  'if' _condition ( _expression | block ):consequence _else_tail? )
+  if_expression ::=  <0(  'if' _condition ( _expression | block ):consequence _else_tail? ) 
 
-  while_expression ::=  <0(  loop_label? 'inline' -> "loop_modifier"? 'while' ( _condition | _condition_with_continue ) ( block ):body _else_tail? )
+  while_expression ::=  <0(  loop_label? ( 'inline' -> loop_modifier )? 'while' ( _condition | _condition_with_continue ) block:body _else_tail? ) 
 
-  for_expression ::=  <0(  loop_label? 'inline' -> "loop_modifier"? 'for' _condition ( block ):body _else_tail? )
+  for_expression ::=  <0(  loop_label? ( 'inline' -> loop_modifier )? 'for' _condition block:body _else_tail? ) 
 
-  _condition ::=  <0(  '(' ( _expression ):condition ')' payload? )
+  _condition ::=  <0(  '(' _expression:condition ')' payload? ) 
 
-  _condition_with_continue ::= '(' ( _expression ):condition ')' ':' '(' ( _expression | '{' _expression ( ';' _expression )* ';'? '}' ):continue ')'
+  _condition_with_continue ::= '(' _expression:condition ')' ':' '(' ( _expression | '{' _expression ( ';' _expression )* ';'? '}' ):continue ')'
 
-  _else_tail ::=  -1(  'else' _else_case )
+  _else_tail ::=  -1(  'else' _else_case ) 
 
-  _else_case ::=  <2(  ( _expression | block | if_expression | payload_expression ):alternative )
+  _else_case ::=  <2(  ( _expression | block | if_expression | payload_expression ):alternative ) 
 
-  loop_label ::= ( identifier -> "label_identifier" ):name ':'
+  loop_label ::= ( identifier -> label_identifier ):name ':'
 
-  payload ::= '|' '*'? ( identifier -> "payload_identifier" ( ',' identifier -> "payload_identifier" )* ','? ):values '|'
+  payload ::= '|' '*'? ( identifier -> payload_identifier ( ',' identifier -> payload_identifier )* ','? ):values '|'
 
-  payload_expression ::=  <0(  payload ( _expression | block ) )
+  payload_expression ::=  <0(  payload ( _expression | block ) ) 
 
-  break_expression ::=  <0(  'break' ( loop_label_inverse )?:label ( _expression )?:value )
+  break_expression ::=  <0(  'break' ( loop_label_inverse:label )? ( _expression:value )? ) 
 
-  continue_expression ::= 'continue' ( loop_label_inverse )?:label
+  continue_expression ::= 'continue' ( loop_label_inverse:label )?
 
-  loop_label_inverse ::= ':' ( identifier -> "label_identifier" ):name
+  loop_label_inverse ::= ':' ( identifier -> label_identifier ):name
 
-  return_expression ::=  <0(  'return' _expression )
-	|  -1(  'return' )
+  return_expression ::=  <0(  'return' _expression ) 
+	|  -1(  'return' ) 
 
-  test_expression ::= 'test' ( string_literal ):test_name ( block ):body
+  test_expression ::= 'test' string_literal:test_name block:body
 
-  try_expression ::=  <0(  'try' ( _expression ):expression )
+  try_expression ::=  <0(  'try' _expression:expression ) 
 
-  usingnamespace_expression ::=  <0(  visibility_modifier? 'usingnamespace' ( _expression ):import )
+  usingnamespace_expression ::=  <0(  visibility_modifier? 'usingnamespace' _expression:import ) 
 
-  _type ::=  -1(  primitive_type | optional_type | pointer_type | error_type | array_type | custom_number_type | _struct_standalone -> "struct_expression" | identifier -> "type_identifier" )
+  _type ::=  -1(  primitive_type | optional_type | pointer_type | error_type | array_type | custom_number_type | _struct_standalone -> struct_expression | identifier -> type_identifier ) 
 
   primitive_type ::= 'i8'
 	| 'u8'
@@ -185,17 +186,17 @@ rules:
 
   custom_number_type ::= /[iu]\d+/
 
-  error_type ::=  <0(  ( _type ):err '!' ( _type ):ok )
+  error_type ::=  <0(  _type:err '!' _type:ok ) 
 
-  optional_type ::=  -2(  '?' _type )
+  optional_type ::=  -2(  '?' _type ) 
 
-  array_type ::=  -3(  ( '[' ( integer_literal | identifier | ( '*' 'c'? ) -> "pointer" )?:size ']' )* type_prefix*? ( primitive_type | optional_type | pointer_type | error_type | custom_number_type | identifier -> "type_identifier" ) )
+  array_type ::=  -3(  ( '[' ( integer_literal | identifier | ( '*' 'c'? ) -> pointer )?:size ']' )* type_prefix*? ( primitive_type | optional_type | pointer_type | error_type | custom_number_type | identifier -> type_identifier ) ) 
 
-  pointer_type ::=  <0(  '*' type_prefix*? _expression )
+  pointer_type ::=  <0(  '*' type_prefix*? _expression ) 
 
-  type_prefix ::=  -1(  'null' | 'const' | 'volatile' | 'allowzero' | 'align' '(' _expression ')' | 'promise' '-' )
+  type_prefix ::=  -1(  'null' | 'const' | 'volatile' | 'allowzero' | 'align' '(' _expression ')' | 'promise' '-' ) 
 
-  defer_expression ::=  <0(  ( 'defer' | 'errdefer' ) _expression )
+  defer_expression ::=  <0(  ( 'defer' | 'errdefer' ) _expression ) 
 
   comptime_block ::= 'comptime' block
 
@@ -205,64 +206,64 @@ rules:
 
   resume_block ::= 'resume' block
 
-  block ::=  <0(  ( loop_label )?:label '{' _statement*? _expression? '}' )
+  block ::=  <0(  ( loop_label:label )? '{' _statement*? _expression? '}' ) 
 
-  reference_expression ::=  12(  '&' ( _expression ):value )
+  reference_expression ::=  12(  '&' _expression:value ) 
 
-  dereference_expression ::= ( _expression ):value '.*'
+  dereference_expression ::= _expression:value '.*'
 
-  orelse_postfix_expression ::= ( _expression ):value '.?'
+  orelse_postfix_expression ::= _expression:value '.?'
 
-  struct_construction ::= identifier -> "type_identifier" '{' ( field_init ( ',' field_init )* ','? )?:field '}'
+  struct_construction ::= identifier -> type_identifier '{' ( field_init ( ',' field_init )* ','? )?:field '}'
 
   anonymous_struct_enum ::= '.{' ( field_init ( ',' field_init )* ','? ):field '}'
 
-  field_init ::= '.' ( identifier -> "field_identifier" ):name '=' ( _expression ):value
+  field_init ::= '.' ( identifier -> field_identifier ):name '=' _expression:value
 
-  union_expression ::= ( 'packed' | 'extern' ) -> "union_modifier"? 'union' ( '(' ( _type | 'enum' -> "inference_type" ):type ')' )? '{' ( union_field_variant ( ',' union_field_variant )* ','? )?:field_variant _statement*? '}'
+  union_expression ::= ( ( 'packed' | 'extern' ) -> union_modifier )? 'union' ( '(' ( _type | 'enum' -> inference_type ):type ')' )? '{' ( union_field_variant ( ',' union_field_variant )* ','? )?:field_variant _statement*? '}'
 
-  union_field_variant ::=  2(  ( identifier -> "union_identifier" ):name ( ':' ( _type | 'var' -> "inference_type" ):type )? )
+  union_field_variant ::=  2(  ( identifier -> union_identifier ):name ( ':' ( _type | 'var' -> inference_type ):type )? ) 
 
-  enum_expression ::= ( 'packed' | 'extern' ) -> "enum_modifier"? 'enum' ( '(' ( _type ):type ')' )? '{' ( variant_declaration ( ',' variant_declaration )* ','? )?:variant _statement*? '}'
+  enum_expression ::= ( ( 'packed' | 'extern' ) -> enum_modifier )? 'enum' ( '(' _type:type ')' )? '{' ( variant_declaration ( ',' variant_declaration )* ','? )?:variant _statement*? '}'
 
-  variant_declaration ::=  2(  ( identifier -> "enum_identifier" ):name ( '=' ( _expression ):default )? )
+  variant_declaration ::=  2(  ( identifier -> enum_identifier ):name ( '=' _expression:default )? ) 
 
-  struct_expression ::= ( 'packed' | 'extern' ) -> "struct_modifier"? _struct_standalone
+  struct_expression ::= ( ( 'packed' | 'extern' ) -> struct_modifier )? _struct_standalone
 
   _struct_standalone ::= 'struct' '{' ( field_declaration ( ',' field_declaration )* ','? )?:field _statement*? '}'
 
-  field_declaration ::=  <0(  visibility_modifier? ( identifier -> "field_identifier" ):name ':' ( _type | 'var' -> "inference_type" ):type ( '=' ( _expression ):default )? )
+  field_declaration ::=  <0(  visibility_modifier? ( identifier -> field_identifier ):name ':' ( _type | 'var' -> inference_type ):type ( '=' _expression:default )? ) 
 
   error_expression ::= 'error' ( _error_one_shorthand | _default_error )
 
-  _error_one_shorthand ::= '.' ( identifier -> "error_identifier" ):error_variant
+  _error_one_shorthand ::= '.' ( identifier -> error_identifier ):error_variant
 
-  _default_error ::= '{' ( identifier -> "error_identifier" ( ',' identifier -> "error_identifier" )* ','? )?:error_variant '}'
+  _default_error ::= '{' ( identifier -> error_identifier ( ',' identifier -> error_identifier )* ','? )?:error_variant '}'
 
-  array_expression ::= ( '[' ( integer_literal | identifier ):size ']' )* ( _type ):type ( array_values ):values
+  array_expression ::= ( '[' ( integer_literal | identifier ):size ']' )* _type:type array_values:values
 
-  anonymous_array_expr ::= '.{' ( ( _expression ( ',' _expression )* ','? )? -> "array_values" ):values '}'
+  anonymous_array_expr ::= '.{' ( ( _expression ( ',' _expression )* ','? )? -> array_values ):values '}'
 
   array_values ::= '{' ( _expression ( ',' _expression )* ','? )? '}'
 
-  assignment_expression ::=  <0(  ( 'defer' | 'errdefer' )? ( _expression ):left '=' ( _expression ):right )
+  assignment_expression ::=  <0(  ( 'defer' | 'errdefer' )? _expression:left '=' _expression:right ) 
 
-  compound_assignment_expr ::=  <0(  ( _expression ):left ( assignment_operator ):operator ( _expression ):right )
+  compound_assignment_expr ::=  <0(  _expression:left assignment_operator:operator _expression:right ) 
 
-  unary_expression ::=  <12(  ( unary_operator ):operator ( _expression ):expression )
+  unary_expression ::=  <12(  unary_operator:operator _expression:expression ) 
 
   unreachable_expression ::= 'unreachable'
 
-  binary_expression ::=  <3(  ( _expression ):left ( 'and' -> "binary_operator" ):operator ( _expression ):right )
-	|  <2(  ( _expression ):left ( 'or' -> "binary_operator" ):operator ( _expression ):right )
-	|  <7(  ( _expression ):left ( '&' -> "binary_operator" ):operator ( _expression ):right )
-	|  <5(  ( _expression ):left ( '|' -> "binary_operator" ):operator ( _expression ):right )
-	|  <6(  ( _expression ):left ( '^' -> "binary_operator" ):operator ( _expression ):right )
-	|  <4(  ( _expression ):left ( ( '==' | '!=' | '<' | '<=' | '>' | '>=' ) -> "binary_operator" ):operator ( _expression ):right )
-	|  <8(  ( _expression ):left ( ( '<<' | '>>' ) -> "binary_operator" ):operator ( _expression ):right )
-	|  <9(  ( _expression ):left ( ( '+' | '-' | '++' | '+%' | '-%' ) -> "binary_operator" ):operator ( _expression ):right )
-	|  <10(  ( _expression ):left ( ( '*' | '/' | '%' | '**' | '*%' | '||' ) -> "binary_operator" ):operator ( _expression ):right )
-	|  <1(  ( _expression ):left ( ( 'orelse' | 'catch' ) -> "binary_operator" ):operator ( _expression ):right )
+  binary_expression ::=  <3(  _expression:left ( 'and' -> binary_operator ):operator _expression:right ) 
+	|  <2(  _expression:left ( 'or' -> binary_operator ):operator _expression:right ) 
+	|  <7(  _expression:left ( '&' -> binary_operator ):operator _expression:right ) 
+	|  <5(  _expression:left ( '|' -> binary_operator ):operator _expression:right ) 
+	|  <6(  _expression:left ( '^' -> binary_operator ):operator _expression:right ) 
+	|  <4(  _expression:left ( ( '==' | '!=' | '<' | '<=' | '>' | '>=' ) -> binary_operator ):operator _expression:right ) 
+	|  <8(  _expression:left ( ( '<<' | '>>' ) -> binary_operator ):operator _expression:right ) 
+	|  <9(  _expression:left ( ( '+' | '-' | '++' | '+%' | '-%' ) -> binary_operator ):operator _expression:right ) 
+	|  <10(  _expression:left ( ( '*' | '/' | '%' | '**' | '*%' | '||' ) -> binary_operator ):operator _expression:right ) 
+	|  <1(  _expression:left ( ( 'orelse' | 'catch' ) -> binary_operator ):operator _expression:right ) 
 
   _literals ::= integer_literal
 	| float_literal
@@ -274,19 +275,19 @@ rules:
 	| multiline_string_literal
 	| enum_literal
 
-  enum_literal ::=  >0(  '.' ( identifier -> "enum_identifier" ):variant )
+  enum_literal ::=  >0(  '.' ( identifier -> enum_identifier ):variant ) 
 
   integer_literal ::= @( ( /[0-9]+/ | /0x[0-9a-fA-F]+/ | /0b[01]+/ | /0o[0-7]+/ ) )
 
-  float_literal ::=  <0(  @( ( /0[xX]/ /[0-9a-fA-F][0-9a-fA-F_]*/ '.' /[0-9a-fA-F][0-9a-fA-F_]*/ | /[0-9][0-9_]*/ '.' /[0-9][0-9_]*/ ) /[eEpP][+-]?\d+/? ) )
+  float_literal ::=  <0(  @( ( /0[xX]/ /[0-9a-fA-F][0-9a-fA-F_]*/ '.' /[0-9a-fA-F][0-9a-fA-F_]*/ | /[0-9][0-9_]*/ '.' /[0-9][0-9_]*/ ) /[eEpP][+-]?\d+/? ) ) 
 
-  char_literal ::= "'"  ( escape_sequence | /./ )? "'"
+  char_literal ::= "'" ( escape_sequence | /./ )? "'"
 
-  string_literal ::= '"'  ( escape_sequence | /[^"\\]+/ )* !( '"'  )
+  string_literal ::= '"' ( escape_sequence | /[^"\\]+/ )* !( '"' )
 
-  multiline_string_literal ::=  <0(  ( '\\' ( /[^\r\n]/ | escape_sequence )* -> "string_literal" )+ )
+  multiline_string_literal ::=  <0(  ( '\\\\' ( /[^\r\n]/ | escape_sequence )* -> string_literal )+ ) 
 
-  escape_sequence ::= !( '\\'  ( /[^xu\n]/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F]+\}/ | /x[0-9a-fA-F]{2}/ ) )
+  escape_sequence ::= !( '\\' ( /[^xu\n]/ | /u[0-9a-fA-F]{4}/ | /u\{[0-9a-fA-F]+\}/ | /x[0-9a-fA-F]{2}/ ) )
 
   boolean_literal ::= 'true'
 	| 'false'
@@ -317,7 +318,7 @@ rules:
   identifier ::= _str_identifier
 	| _identifier_text
 
-  _str_identifier ::= '@"' ( escape_sequence | /[^"\\]+/ )* -> "string_literal" !( '"'  )
+  _str_identifier ::= '@"' ( escape_sequence | /[^"\\]+/ )* -> string_literal !( '"' )
 
   _identifier_text ::= /[a-zA-Zα-ωΑ-Ωµ_][a-zA-Zα-ωΑ-Ωµ\d_]*/
 

@@ -1,10 +1,11 @@
-; From tree-sitter-angular/src/grammar.json
+; repository: https://github.com/dlvandenberg/tree-sitter-angular.git
+; commit: c473dbc54ca27f95d8928cfdb2a1a79300e16951
+; json from: tree-sitter-angular/src/grammar.json
+; From /tmp/tslua/angular0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -13,7 +14,7 @@ externals ::= {
 	_style_start_tag_name
 	_end_tag_name
 	erroneous_end_tag_name
-	undefined
+	'/>'
 	_implicit_end_tag
 	raw_text
 	comment
@@ -35,9 +36,9 @@ rules:
 
   _doctype ::= /[Dd][Oo][Cc][Tt][Yy][Pp][Ee]/
 
-  _node ::=  1(  icu_expression )
-	|  1(  interpolation )
-	|  1(  _any_statement )
+  _node ::=  1(  icu_expression ) 
+	|  1(  interpolation ) 
+	|  1(  _any_statement ) 
 	| doctype
 	| entity
 	| text
@@ -49,27 +50,27 @@ rules:
   element ::= start_tag _node* ( end_tag | _implicit_end_tag )
 	| self_closing_tag
 
-  script_element ::= script_start_tag -> "start_tag" raw_text? end_tag
+  script_element ::= script_start_tag -> start_tag raw_text? end_tag
 
-  style_element ::= style_start_tag -> "start_tag" raw_text? end_tag
+  style_element ::= style_start_tag -> start_tag raw_text? end_tag
 
-  start_tag ::= '<' _start_tag_name -> "tag_name" attribute* '>'
+  start_tag ::= '<' _start_tag_name -> tag_name attribute* '>'
 
-  script_start_tag ::= '<' _script_start_tag_name -> "tag_name" attribute* '>'
+  script_start_tag ::= '<' _script_start_tag_name -> tag_name attribute* '>'
 
-  style_start_tag ::= '<' _style_start_tag_name -> "tag_name" attribute* '>'
+  style_start_tag ::= '<' _style_start_tag_name -> tag_name attribute* '>'
 
-  self_closing_tag ::= '<' _start_tag_name -> "tag_name" attribute* '/>'
+  self_closing_tag ::= '<' _start_tag_name -> tag_name attribute* '/>'
 
-  end_tag ::= '</' _end_tag_name -> "tag_name" '>'
+  end_tag ::= '</' _end_tag_name -> tag_name '>'
 
   erroneous_end_tag ::= '</' erroneous_end_tag_name '>'
 
-  attribute ::=  1(  property_binding )
-	|  1(  two_way_binding )
-	|  1(  animation_binding )
-	|  1(  event_binding )
-	|  1(  structural_directive )
+  attribute ::=  1(  property_binding ) 
+	|  1(  two_way_binding ) 
+	|  1(  animation_binding ) 
+	|  1(  event_binding ) 
+	|  1(  structural_directive ) 
 	| _normal_attribute
 
   attribute_name ::= /[^<>\*.\[\]\(\)"'=\s]+/
@@ -78,12 +79,12 @@ rules:
 
   entity ::= /&(#([xX][0-9a-fA-F]{1,6}|[0-9]{1,5})|[A-Za-z]{1,30});?/
 
-  quoted_attribute_value ::= "'"  /[^']+/ -> "attribute_value"? "'"
-	| '"'  /[^"]+/ -> "attribute_value"? '"'
+  quoted_attribute_value ::= "'" ( /[^']+/ -> attribute_value )? "'"
+	| '"' ( /[^"]+/ -> attribute_value )? '"'
 
   text ::= /[^<>{}&\s]([^<>{}&]*[^<>{}&\s])?/
 
-  statement_block ::=  >0(  '{' _node* '}' )
+  statement_block ::=  >0(  '{' _node* '}' ) 
 
   _any_statement ::= if_statement
 	| for_statement
@@ -91,71 +92,71 @@ rules:
 	| switch_statement
 	| _alternative_statement
 
-  _alternative_statement ::= ( else_statement ):alternative
-	| ( else_if_statement ):alternative_condition
-	| ( empty_statement ):empty
-	| ( placeholder_statement ):placeholder
-	| ( loading_statement ):loading
-	| ( error_statement ):error
+  _alternative_statement ::= else_statement:alternative
+	| else_if_statement:alternative_condition
+	| empty_statement:empty
+	| placeholder_statement:placeholder
+	| loading_statement:loading
+	| error_statement:error
 
-  switch_statement ::=  >0(  _control_flow_start -> "@" 'switch' -> "control_keyword" '(' ( expression ):value ')' ( switch_body ):body )
+  switch_statement ::=  >0(  _control_flow_start -> "@" 'switch' -> control_keyword '(' expression:value ')' switch_body:body ) 
 
   switch_body ::= '{' ( case_statement | default_statement )+ '}'
 
-  case_statement ::= _control_flow_start -> "@" 'case' -> "control_keyword" '(' ( _primitive ):value ')' ( statement_block ):body
+  case_statement ::= _control_flow_start -> "@" 'case' -> control_keyword '(' _primitive:value ')' statement_block:body
 
-  default_statement ::= _control_flow_start -> "@" 'default' -> "control_keyword" ( statement_block ):body
+  default_statement ::= _control_flow_start -> "@" 'default' -> control_keyword statement_block:body
 
-  defer_statement ::=  <0(  _control_flow_start -> "@" 'defer' -> "control_keyword" defer_trigger? ( statement_block ):body )
+  defer_statement ::=  <0(  _control_flow_start -> "@" 'defer' -> control_keyword defer_trigger? statement_block:body ) 
 
-  placeholder_statement ::=  <0(  _control_flow_start -> "@" 'placeholder' -> "control_keyword" placeholder_minimum? ( statement_block ):body )
+  placeholder_statement ::=  <0(  _control_flow_start -> "@" 'placeholder' -> control_keyword placeholder_minimum? statement_block:body ) 
 
-  loading_statement ::=  <0(  _control_flow_start -> "@" 'loading' -> "control_keyword" loading_condition? ( statement_block ):body )
+  loading_statement ::=  <0(  _control_flow_start -> "@" 'loading' -> control_keyword loading_condition? statement_block:body ) 
 
-  error_statement ::= _control_flow_start -> "@" 'error' -> "control_keyword" ( statement_block ):body
+  error_statement ::= _control_flow_start -> "@" 'error' -> control_keyword statement_block:body
 
-  defer_trigger ::= '(' ( defer_trigger_condition ):condition ( ';' ( defer_trigger_condition ):condition )*? ')'
+  defer_trigger ::= '(' defer_trigger_condition:condition ( ';' defer_trigger_condition:condition )*? ')'
 
-  placeholder_minimum ::= '(' ( timed_expression ):minimum ')'
+  placeholder_minimum ::= '(' timed_expression:minimum ')'
 
-  loading_condition ::= '(' ( timed_expression ):condition ( ';' ( timed_expression ):condition )? ')'
+  loading_condition ::= '(' timed_expression:condition ( ';' timed_expression:condition )? ')'
 
-  defer_trigger_condition ::= 'prefetch' -> "prefetch_keyword"? ( 'when' -> "special_keyword" ( _any_expression ):trigger | 'on' -> "special_keyword" ( _primitive ):trigger )
+  defer_trigger_condition ::= ( 'prefetch' -> prefetch_keyword )? ( 'when' -> special_keyword _any_expression:trigger | 'on' -> special_keyword _primitive:trigger )
 
-  timed_expression ::= ( 'after' | 'minimum' ) -> "special_keyword" ( number ):value ( 'ms' | 's' ) -> "unit"
+  timed_expression ::= ( 'after' | 'minimum' ) -> special_keyword number:value ( 'ms' | 's' ) -> unit
 
-  for_statement ::=  <0(  _control_flow_start -> "@" 'for' -> "control_keyword" '(' ( for_declaration ):declaration ( for_reference )?:reference ')' ( statement_block ):body )
+  for_statement ::=  <0(  _control_flow_start -> "@" 'for' -> control_keyword '(' for_declaration:declaration ( for_reference:reference )? ')' statement_block:body ) 
 
-  empty_statement ::= _control_flow_start -> "@" 'empty' -> "control_keyword" ( statement_block ):body
+  empty_statement ::= _control_flow_start -> "@" 'empty' -> control_keyword statement_block:body
 
-  for_declaration ::= ( identifier ):name 'of' -> "special_keyword" ( expression ):value ';' 'track' -> "special_keyword" ( expression ):track
+  for_declaration ::= identifier:name 'of' -> special_keyword expression:value ';' 'track' -> special_keyword expression:track
 
-  for_reference ::= ';' 'let' -> "special_keyword" ( assignment_expression ):alias ( ( ';' | ',' ) ( assignment_expression ):alias )*
+  for_reference ::= ';' 'let' -> special_keyword assignment_expression:alias ( ( ';' | ',' ) assignment_expression:alias )*
 
-  if_statement ::=  >0(  _if_start_expression _if_body_expression )
+  if_statement ::=  >0(  _if_start_expression _if_body_expression ) 
 
-  else_if_statement ::=  >0(  _else_if_start_expression _if_body_expression )
+  else_if_statement ::=  >0(  _else_if_start_expression _if_body_expression ) 
 
-  else_statement ::=  >0(  _control_flow_start -> "@" 'else' -> "control_keyword" statement_block )
+  else_statement ::=  >0(  _control_flow_start -> "@" 'else' -> control_keyword statement_block ) 
 
-  _if_start_expression ::= _control_flow_start -> "@" 'if' -> "control_keyword"
+  _if_start_expression ::= _control_flow_start -> "@" 'if' -> control_keyword
 
-  _else_if_start_expression ::= _control_flow_start -> "@" 'else' -> "control_keyword" 'if' -> "control_keyword"
+  _else_if_start_expression ::= _control_flow_start -> "@" 'else' -> control_keyword 'if' -> control_keyword
 
-  _if_body_expression ::=  <0(  '(' ( if_condition ):condition ( if_reference )?:reference ')' ( statement_block ):consequence )
+  _if_body_expression ::=  <0(  '(' if_condition:condition ( if_reference:reference )? ')' statement_block:consequence ) 
 
-  if_condition ::=  >1(  _any_expression )
+  if_condition ::=  >1(  _any_expression ) 
 
-  if_reference ::= ';' 'as' -> "special_keyword" identifier
+  if_reference ::= ';' 'as' -> special_keyword identifier
 
   _any_expression ::= binary_expression
 	| unary_expression
 	| expression
 	| ternary_expression
 	| nullish_coalescing_expression
-	|  3(  conditional_expression )
+	|  3(  conditional_expression ) 
 
-  assignment_expression ::= ( identifier ):name '=' ( _any_expression ):value
+  assignment_expression ::= identifier:name '=' _any_expression:value
 
   icu_expression ::= '{' ( _any_expression | concatenation_expression ) ',' icu_clause ',' icu_case+ '}'
 
@@ -164,27 +165,27 @@ rules:
 
   icu_case ::= icu_category '{' _node+ '}'
 
-  icu_category ::= /[^{}]+/
+  icu_category ::= /[^{}]+/i
 
   interpolation ::= _interpolation_start -> "{{" ( _any_expression | concatenation_expression ) _interpolation_end -> "}}"
 
-  concatenation_expression ::=  2(  _primitive '+' expression ( '+' _primitive )*? )
+  concatenation_expression ::=  2(  _primitive '+' expression ( '+' _primitive )*? ) 
 
   structural_directive ::= '*' identifier ( '=' _double_quote ( structural_expression | structural_declaration ) _double_quote )?
 
   structural_expression ::= _any_expression _alias? _else_template_expression? _context_expression?
 
-  structural_declaration ::= 'let' -> "special_keyword" structural_assignment ( ( ';' | ',' ) structural_assignment )*
+  structural_declaration ::= 'let' -> special_keyword structural_assignment ( ( ';' | ',' ) structural_assignment )*
 
-  structural_assignment ::= ( identifier ):name ':' ( identifier ):value
-	|  <2(  'let' -> "special_keyword"? ( identifier ):name ( identifier | '=' ):operator ( expression ):value _alias? )
-	| ( identifier ):name _alias?
+  structural_assignment ::= identifier:name ':' identifier:value
+	|  <2(  ( 'let' -> special_keyword )? identifier:name ( identifier | '=' ):operator expression:value _alias? ) 
+	| identifier:name _alias?
 
-  _alias ::= 'as' -> "special_keyword" ( identifier ):alias
+  _alias ::= 'as' -> special_keyword identifier:alias
 
-  _else_template_expression ::= ';' 'else' -> "special_keyword" identifier
+  _else_template_expression ::= ';' 'else' -> special_keyword identifier
 
-  _context_expression ::= ';' ( 'context' -> "special_keyword" | ( identifier ):named ) ':' _any_expression
+  _context_expression ::= ';' ( 'context' -> special_keyword | identifier:named ) ':' _any_expression
 
   property_binding ::= '[' binding_name ']' _binding_assignment
 
@@ -192,7 +193,7 @@ rules:
 
   two_way_binding ::= '[(' binding_name ')]' _binding_assignment
 
-  animation_binding ::= '[@' binding_name ']' ( _binding_assignment )?:trigger
+  animation_binding ::= '[@' binding_name ']' ( _binding_assignment:trigger )?
 
   _binding_assignment ::= '=' _double_quote ( _any_expression | assignment_expression )? _double_quote
 
@@ -200,21 +201,21 @@ rules:
 
   _normal_attribute ::= attribute_name ( '=' ( attribute_value | quoted_attribute_value ) )?
 
-  expression ::= _primitive ( pipe_sequence )?:pipes
+  expression ::= _primitive ( pipe_sequence:pipes )?
 
-  unary_expression ::= ( '!' -> "unary_operator" ):operator ( expression ):value
+  unary_expression ::= ( '!' -> unary_operator ):operator expression:value
 
-  binary_expression ::=  <1(  ( expression ):left ( _binary_op ):operator ( binary_expression | expression ):right )
+  binary_expression ::=  <1(  expression:left _binary_op:operator ( binary_expression | expression ):right ) 
 
-  ternary_expression ::=  >1(  ( _any_expression ):condition '?' -> "ternary_operator" ( group | _primitive ):consequence ':' -> "ternary_operator" ( group | _any_expression ):alternative )
+  ternary_expression ::=  >1(  _any_expression:condition '?' -> ternary_operator ( group | _primitive ):consequence ':' -> ternary_operator ( group | _any_expression ):alternative ) 
 
-  nullish_coalescing_expression ::= ( _any_expression ):condition '??' -> "coalescing_operator" ( _primitive ):default
+  nullish_coalescing_expression ::= _any_expression:condition '??' -> coalescing_operator _primitive:default
 
-  conditional_expression ::=  >1(  ( _primitive | unary_expression | binary_expression ):left ( '||' | '&&' ) -> "conditional_operator" ( _primitive | unary_expression | binary_expression | conditional_expression ):right )
+  conditional_expression ::=  >1(  ( _primitive | unary_expression | binary_expression ):left ( '||' | '&&' ) -> conditional_operator ( _primitive | unary_expression | binary_expression | conditional_expression ):right ) 
 
-  pipe_sequence ::= ( '|' -> "pipe_operator" pipe_call )+
+  pipe_sequence ::= ( '|' -> pipe_operator pipe_call )+
 
-  pipe_call ::= ( identifier ):name ( pipe_arguments )?:arguments
+  pipe_call ::= identifier:name ( pipe_arguments:arguments )?
 
   pipe_arguments ::= _pipe_argument+
 
@@ -232,7 +233,7 @@ rules:
 
   object ::= '{' pair* '}'
 
-  pair ::= ( identifier | string ):key ':' ( _any_expression ):value ','?
+  pair ::= ( identifier | string ):key ':' _any_expression:value ','?
 
   array ::= '[' ( expression | unary_expression ) ( ',' ( expression | unary_expression ) )* ']'
 
@@ -245,13 +246,13 @@ rules:
 
   group ::= '(' _any_expression ')'
 
-  call_expression ::=  <1(  ( identifier ):function '(' ( arguments )?:arguments ')' )
+  call_expression ::=  <1(  identifier:function '(' ( arguments:arguments )? ')' ) 
 
   arguments ::= ( _primitive | binary_expression | unary_expression ) ( ',' _primitive )*
 
-  member_expression ::= ( _primitive ):object ( ( '.' | '?.' | '!.' ) ( ( identifier ):property | ( call_expression ):call ) )
+  member_expression ::= _primitive:object ( ( '.' | '?.' | '!.' ) ( identifier:property | call_expression:call ) )
 
-  bracket_expression ::=  <1(  ( _primitive ):object '[' ( identifier | static_member_expression ):property ']' )
+  bracket_expression ::=  <1(  _primitive:object '[' ( identifier | static_member_expression ):property ']' ) 
 
   static_member_expression ::= _single_quote identifier _single_quote
 

@@ -1,10 +1,11 @@
-; From tree-sitter-lua/src/grammar.json
+; repository: https://github.com/Azganoth/tree-sitter-lua.git
+; commit: 6b02dfd7f07f36c223270e97eb0adf84e15a4cef
+; json from: tree-sitter-lua/src/grammar.json
+; From /tmp/tslua/lua0.json
 ; EBNF to generate grammar.js at
 ;      https://mingodad.github.io/lua-wasm-playground/
 ;      based on https://github.com/eatkins/tree-sitter-ebnf-generator
 ;      see also https://mingodad.github.io/plgh/json2ebnf.html
-
-;*** maybe you'll need to search and replace this (:[a-zA-Z_]+)([?*+]) => $2$1
 
 
 externals ::= {
@@ -63,51 +64,51 @@ rules:
 	| function_definition_statement
 	| local_function_definition_statement
 
-  local_function_definition_statement ::= 'local' 'function' ( identifier ):name _function_body
+  local_function_definition_statement ::= 'local' 'function' identifier:name _function_body
 
-  function_definition_statement ::= 'function' ( identifier | _table_function_variable -> "variable" ):name _function_body
+  function_definition_statement ::= 'function' ( identifier | _table_function_variable -> variable ):name _function_body
 
   _table_function_variable ::= _table_identifier ( _named_field_identifier | _method_identifier )
 
-  _table_identifier ::= ( identifier | _table_field_variable -> "variable" ):table
+  _table_identifier ::= ( identifier | _table_field_variable -> variable ):table
 
   _table_field_variable ::= _table_identifier _named_field_identifier
 
-  for_generic_statement ::= 'for' ( _name_list -> "variable_list" ):left 'in' ( _value_list -> "expression_list" ):right 'do' ( block )?:body 'end'
+  for_generic_statement ::= 'for' ( _name_list -> variable_list ):left 'in' ( _value_list -> expression_list ):right 'do' ( block:body )? 'end'
 
-  _name_list ::= ( identifier ):name ( ',' ( identifier ):name )*
+  _name_list ::= identifier:name ( ',' identifier:name )*
 
-  _value_list ::= ( expression ):value ( ',' ( expression ):value )*
+  _value_list ::= expression:value ( ',' expression:value )*
 
-  for_numeric_statement ::= 'for' ( identifier ):name '=' ( expression ):start ',' ( expression ):end ( ',' ( expression ):step )? 'do' ( block )?:body 'end'
+  for_numeric_statement ::= 'for' identifier:name '=' expression:start ',' expression:end ( ',' expression:step )? 'do' ( block:body )? 'end'
 
-  if_statement ::= 'if' ( expression ):condition 'then' ( block )?:consequence ( elseif_clause )*:alternative ( else_clause )?:alternative 'end'
+  if_statement ::= 'if' expression:condition 'then' ( block:consequence )? ( elseif_clause:alternative )* ( else_clause:alternative )? 'end'
 
-  elseif_clause ::= 'elseif' ( expression ):condition 'then' ( block )?:consequence
+  elseif_clause ::= 'elseif' expression:condition 'then' ( block:consequence )?
 
-  else_clause ::= 'else' ( block )?:body
+  else_clause ::= 'else' ( block:body )?
 
-  repeat_statement ::= 'repeat' ( block )?:body 'until' ( expression ):condition
+  repeat_statement ::= 'repeat' ( block:body )? 'until' expression:condition
 
-  while_statement ::= 'while' ( expression ):condition 'do' ( block )?:body 'end'
+  while_statement ::= 'while' expression:condition 'do' ( block:body )? 'end'
 
-  do_statement ::= 'do' ( block )?:body 'end'
+  do_statement ::= 'do' ( block:body )? 'end'
 
   break_statement ::= 'break'
 
-  goto_statement ::= 'goto' ( identifier ):name
+  goto_statement ::= 'goto' identifier:name
 
-  label_statement ::= '::' ( identifier ):name '::'
+  label_statement ::= '::' identifier:name '::'
 
-  local_variable_declaration ::= 'local' _local_variable_list -> "variable_list" ( '=' _value_list -> "expression_list" )?
+  local_variable_declaration ::= 'local' _local_variable_list -> variable_list ( '=' _value_list -> expression_list )?
 
-  _local_variable_list ::= _local_variable -> "variable" ( ',' _local_variable -> "variable" )*
+  _local_variable_list ::= _local_variable -> variable ( ',' _local_variable -> variable )*
 
-  _local_variable ::= ( identifier ):name attribute?
+  _local_variable ::= identifier:name attribute?
 
-  attribute ::= '<' ( identifier ):name '>'
+  attribute ::= '<' identifier:name '>'
 
-  variable_assignment ::= variable_list '=' _value_list -> "expression_list"
+  variable_assignment ::= variable_list '=' _value_list -> expression_list
 
   variable_list ::= variable ( ',' variable )*
 
@@ -125,38 +126,38 @@ rules:
 	| unary_expression
 	| binary_expression
 
-  binary_expression ::=  <1(  ( expression ):left ( 'or' ):operator ( expression ):right )
-	|  <2(  ( expression ):left ( 'and' ):operator ( expression ):right )
-	|  <3(  ( expression ):left ( '==' ):operator ( expression ):right )
-	|  <3(  ( expression ):left ( '~=' ):operator ( expression ):right )
-	|  <3(  ( expression ):left ( '<' ):operator ( expression ):right )
-	|  <3(  ( expression ):left ( '>' ):operator ( expression ):right )
-	|  <3(  ( expression ):left ( '<=' ):operator ( expression ):right )
-	|  <3(  ( expression ):left ( '>=' ):operator ( expression ):right )
-	|  <4(  ( expression ):left ( '|' ):operator ( expression ):right )
-	|  <5(  ( expression ):left ( '~' ):operator ( expression ):right )
-	|  <6(  ( expression ):left ( '&' ):operator ( expression ):right )
-	|  <7(  ( expression ):left ( '<<' ):operator ( expression ):right )
-	|  <7(  ( expression ):left ( '>>' ):operator ( expression ):right )
-	|  <9(  ( expression ):left ( '+' ):operator ( expression ):right )
-	|  <9(  ( expression ):left ( '-' ):operator ( expression ):right )
-	|  <10(  ( expression ):left ( '*' ):operator ( expression ):right )
-	|  <10(  ( expression ):left ( '/' ):operator ( expression ):right )
-	|  <10(  ( expression ):left ( '//' ):operator ( expression ):right )
-	|  <10(  ( expression ):left ( '%' ):operator ( expression ):right )
-	|  >8(  ( expression ):left ( '..' ):operator ( expression ):right )
-	|  >12(  ( expression ):left ( '^' ):operator ( expression ):right )
+  binary_expression ::=  <1(  expression:left 'or':operator expression:right ) 
+	|  <2(  expression:left 'and':operator expression:right ) 
+	|  <3(  expression:left '==':operator expression:right ) 
+	|  <3(  expression:left '~=':operator expression:right ) 
+	|  <3(  expression:left '<':operator expression:right ) 
+	|  <3(  expression:left '>':operator expression:right ) 
+	|  <3(  expression:left '<=':operator expression:right ) 
+	|  <3(  expression:left '>=':operator expression:right ) 
+	|  <4(  expression:left '|':operator expression:right ) 
+	|  <5(  expression:left '~':operator expression:right ) 
+	|  <6(  expression:left '&':operator expression:right ) 
+	|  <7(  expression:left '<<':operator expression:right ) 
+	|  <7(  expression:left '>>':operator expression:right ) 
+	|  <9(  expression:left '+':operator expression:right ) 
+	|  <9(  expression:left '-':operator expression:right ) 
+	|  <10(  expression:left '*':operator expression:right ) 
+	|  <10(  expression:left '/':operator expression:right ) 
+	|  <10(  expression:left '//':operator expression:right ) 
+	|  <10(  expression:left '%':operator expression:right ) 
+	|  >8(  expression:left '..':operator expression:right ) 
+	|  >12(  expression:left '^':operator expression:right ) 
 
-  unary_expression ::=  <11(  ( 'not' ):operator ( expression ):argument )
-	|  <11(  ( '#' ):operator ( expression ):argument )
-	|  <11(  ( '-' ):operator ( expression ):argument )
-	|  <11(  ( '~' ):operator ( expression ):argument )
+  unary_expression ::=  <11(  'not':operator expression:argument ) 
+	|  <11(  '#':operator expression:argument ) 
+	|  <11(  '-':operator expression:argument ) 
+	|  <11(  '~':operator expression:argument ) 
 
   table ::= '{' field_list? '}'
 
   field_list ::= field ( field_separator field )* field_separator?
 
-  field ::= ( ( ( identifier ):key | '[' ( expression ):key ']' ) '=' )? ( expression ):value
+  field ::= ( ( identifier:key | '[' expression:key ']' ) '=' )? expression:value
 
   field_separator ::= ','
 	| ';'
@@ -167,15 +168,15 @@ rules:
 
   prefix_expression ::= prefix
 
-  _prefix_expression ::=  13(  prefix )
+  _prefix_expression ::=  13(  prefix ) 
 
   parenthesized_expression ::= '(' expression ')'
 
-  call ::= ( _prefix_expression | _table_method_variable -> "variable" ):function ( argument_list ):arguments
+  call ::= ( _prefix_expression | _table_method_variable -> variable ):function argument_list:arguments
 
-  _table_method_variable ::= ( prefix_expression ):table _method_identifier
+  _table_method_variable ::= prefix_expression:table _method_identifier
 
-  _method_identifier ::= ':' ( identifier ):method
+  _method_identifier ::= ':' identifier:method
 
   argument_list ::= '(' expression_list? ')'
 	| table
@@ -183,20 +184,20 @@ rules:
 
   expression_list ::= expression ( ',' expression )*
 
-  variable ::= ( identifier ):name
+  variable ::= identifier:name
 	| _table_variable
 
-  _table_variable ::= ( identifier | _table_variable -> "variable" | call | parenthesized_expression ):table ( _indexed_field_identifier | _named_field_identifier )
+  _table_variable ::= ( identifier | _table_variable -> variable | call | parenthesized_expression ):table ( _indexed_field_identifier | _named_field_identifier )
 
-  _named_field_identifier ::= '.' ( identifier ):field
+  _named_field_identifier ::= '.' identifier:field
 
-  _indexed_field_identifier ::= '[' ( expression ):field ']'
+  _indexed_field_identifier ::= '[' expression:field ']'
 
   function_definition ::= 'function' _function_body
 
-  _function_body ::= '(' ( parameter_list )?:parameters ')' ( block )?:body 'end'
+  _function_body ::= '(' ( parameter_list:parameters )? ')' ( block:body )? 'end'
 
-  parameter_list ::= ( identifier ):name ( ',' ( identifier ):name )* ( ',' vararg_expression )?
+  parameter_list ::= identifier:name ( ',' identifier:name )* ( ',' vararg_expression )?
 	| vararg_expression
 
   vararg_expression ::= '...'

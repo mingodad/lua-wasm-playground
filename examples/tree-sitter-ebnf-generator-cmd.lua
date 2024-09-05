@@ -240,7 +240,7 @@ local function parse_args()
         os.exit(1)
       end
       file = arg
-      --file_name = arg
+      file_name = arg
     end
     arg = #args > 0 and table.remove(args, 1)
   end
@@ -332,8 +332,8 @@ local function scan_file()
   local leading = "[%w_%[%]]"
   local prefix = leading .. leading .. "?" .. leading .. "?"
   local line_re = "(" .. prefix .. "[%w_.]*)%s*(::?=)%s*(.*)"
-  --for line in io.lines(file) do
-  for line in file:gmatch("[^\n]*") do
+  for line in io.lines(file) do
+  --for line in file:gmatch("[^\n]*") do
     --print("++", count, line)
     count = count + 1
     local is_comment = line:find("%s*;") == 1
@@ -1010,7 +1010,7 @@ for _, v in ipairs(tokens) do
 end
 
 table.insert(contextFree, "  rules: {\n" .. table.concat(rule_defs, ",\n") .. "\n  }\n")
-local name = file_name --file:gsub(".ebnf", "")
+local name = file:gsub(".ebnf", "")
 local slash_index = name:find("/")
 while slash_index do
   name = name:sub(slash_index + 1)
