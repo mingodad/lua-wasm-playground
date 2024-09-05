@@ -38,8 +38,8 @@ extras ::= {
 	}
 
 precedences ::= {
-	{ _anonymous_object_member_declarator _simple_name }
-	{ block initializer_expression }
+	/*02*/{ _anonymous_object_member_declarator _simple_name }
+	/*01*/{ block initializer_expression }
 	}
 
 supertypes ::= {

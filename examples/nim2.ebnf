@@ -38,32 +38,32 @@ extras ::= {
 	}
 
 precedences ::= {
-	{ 'sigil' 'suffix' 'unary' 'type_modifiers' 'binary_10' 'binary_9' 'binary_8' 'binary_7' 'binary_6' 'binary_5' 'binary_4' 'binary_3' 'binary_2' 'binary_1' 'binary_0' _expression _simple_expression_command_start type_expression pragma_expression }
-	{ 'proc_type' }
-	{ 'post_expr' _basic_expression }
-	{ 'post_expr' _simple_expression_command_start }
-	{ 'post_expr' _simple_expression }
-	{ 'post_expr' _expression_statement }
-	{ enum_declaration enum_type }
-	{ object_declaration object_type }
-	{ _prefix_expression _simple_expression_command_start }
-	{ _simple_expression _command_expression }
-	{ _expression_with_call_do equal_expression }
-	{ _expression _command_expression }
-	{ _left_hand_side _expression }
-	{ _simple_expression _command_expression_argument_list }
-	{ _simple_expression_command_start _command_expression }
-	{ _call_do_argument_list _call_expression }
-	{ _call_do _simple_expression_command_start }
-	{ _call_do_argument_list _post_expression_block }
-	{ _call_block_argument_list _call_expression }
-	{ _call_block _simple_expression_command_start }
-	{ _command_block_argument_list _command_expression }
-	{ _simple_expression_command_start _command_statement }
-	{ _simple_expression_command_start _command_complex_expression }
-	{ _equal_expression_list _command_complex_expression_argument_list }
-	{ 'proc_expr' _basic_expression }
-	{ _type_definition 'type_modifiers' }
+	/*26*/{ 'sigil' 'suffix' 'unary' 'type_modifiers' 'binary_10' 'binary_9' 'binary_8' 'binary_7' 'binary_6' 'binary_5' 'binary_4' 'binary_3' 'binary_2' 'binary_1' 'binary_0' _expression _simple_expression_command_start type_expression pragma_expression }
+	/*25*/{ 'proc_type' }
+	/*24*/{ 'post_expr' _basic_expression }
+	/*23*/{ 'post_expr' _simple_expression_command_start }
+	/*22*/{ 'post_expr' _simple_expression }
+	/*21*/{ 'post_expr' _expression_statement }
+	/*20*/{ enum_declaration enum_type }
+	/*19*/{ object_declaration object_type }
+	/*18*/{ _prefix_expression _simple_expression_command_start }
+	/*17*/{ _simple_expression _command_expression }
+	/*16*/{ _expression_with_call_do equal_expression }
+	/*15*/{ _expression _command_expression }
+	/*14*/{ _left_hand_side _expression }
+	/*13*/{ _simple_expression _command_expression_argument_list }
+	/*12*/{ _simple_expression_command_start _command_expression }
+	/*11*/{ _call_do_argument_list _call_expression }
+	/*10*/{ _call_do _simple_expression_command_start }
+	/*09*/{ _call_do_argument_list _post_expression_block }
+	/*08*/{ _call_block_argument_list _call_expression }
+	/*07*/{ _call_block _simple_expression_command_start }
+	/*06*/{ _command_block_argument_list _command_expression }
+	/*05*/{ _simple_expression_command_start _command_statement }
+	/*04*/{ _simple_expression_command_start _command_complex_expression }
+	/*03*/{ _equal_expression_list _command_complex_expression_argument_list }
+	/*02*/{ 'proc_expr' _basic_expression }
+	/*01*/{ _type_definition 'type_modifiers' }
 	}
 
 conflicts ::= {

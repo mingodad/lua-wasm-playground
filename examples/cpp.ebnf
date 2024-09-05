@@ -19,8 +19,8 @@ extras ::= {
 	}
 
 precedences ::= {
-	{ argument_list type_qualifier }
-	{ _expression_not_binary _class_name }
+	/*02*/{ argument_list type_qualifier }
+	/*01*/{ _expression_not_binary _class_name }
 	}
 
 supertypes ::= {

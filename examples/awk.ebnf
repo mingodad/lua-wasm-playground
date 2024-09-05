@@ -21,16 +21,16 @@ extras ::= {
 	}
 
 precedences ::= {
-	{ getline_file getline_input grouping field_ref func_call update_exp 'binary_exponent' 'binary_times' 'binary_plus' string_concat unary_exp 'binary_relation' 'binary_match' _binary_in 'binary_and' 'binary_or' ternary_exp exp_list piped_io_exp range_pattern _statement }
-	{ func_call _exp }
-	{ update_exp _exp }
-	{ if_statement _statement_separated }
-	{ else_clause _statement_separated }
-	{ print_statement printf_statement grouping }
-	{ _print_args grouping piped_io_exp 'binary_relation' }
-	{ for_in_statement _exp }
-	{ _exp string_concat assignment_exp }
-	{ _print_args _binary_in }
+	/*10*/{ getline_file getline_input grouping field_ref func_call update_exp 'binary_exponent' 'binary_times' 'binary_plus' string_concat unary_exp 'binary_relation' 'binary_match' _binary_in 'binary_and' 'binary_or' ternary_exp exp_list piped_io_exp range_pattern _statement }
+	/*09*/{ func_call _exp }
+	/*08*/{ update_exp _exp }
+	/*07*/{ if_statement _statement_separated }
+	/*06*/{ else_clause _statement_separated }
+	/*05*/{ print_statement printf_statement grouping }
+	/*04*/{ _print_args grouping piped_io_exp 'binary_relation' }
+	/*03*/{ for_in_statement _exp }
+	/*02*/{ _exp string_concat assignment_exp }
+	/*01*/{ _print_args _binary_in }
 	}
 
 word ::= identifier

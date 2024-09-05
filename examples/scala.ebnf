@@ -33,9 +33,9 @@ extras ::= {
 	}
 
 precedences ::= {
-	{ 'mod' 'soft_id' }
-	{ 'end' 'soft_id' }
-	{ 'new' 'structural_type' }
+	/*03*/{ 'mod' 'soft_id' }
+	/*02*/{ 'end' 'soft_id' }
+	/*01*/{ 'new' 'structural_type' }
 	}
 
 supertypes ::= {

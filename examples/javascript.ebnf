@@ -26,15 +26,15 @@ extras ::= {
 	}
 
 precedences ::= {
-	{ 'member' 'template_call' 'call' update_expression 'unary_void' 'binary_exp' 'binary_times' 'binary_plus' 'binary_shift' 'binary_compare' 'binary_relation' 'binary_equality' 'bitwise_and' 'bitwise_xor' 'bitwise_or' 'logical_and' 'logical_or' 'ternary' sequence_expression arrow_function }
-	{ 'assign' primary_expression }
-	{ 'member' 'template_call' 'new' 'call' expression }
-	{ 'declaration' 'literal' }
-	{ primary_expression statement_block 'object' }
-	{ meta_property import }
-	{ import_statement import }
-	{ export_statement primary_expression }
-	{ lexical_declaration primary_expression }
+	/*09*/{ 'member' 'template_call' 'call' update_expression 'unary_void' 'binary_exp' 'binary_times' 'binary_plus' 'binary_shift' 'binary_compare' 'binary_relation' 'binary_equality' 'bitwise_and' 'bitwise_xor' 'bitwise_or' 'logical_and' 'logical_or' 'ternary' sequence_expression arrow_function }
+	/*08*/{ 'assign' primary_expression }
+	/*07*/{ 'member' 'template_call' 'new' 'call' expression }
+	/*06*/{ 'declaration' 'literal' }
+	/*05*/{ primary_expression statement_block 'object' }
+	/*04*/{ meta_property import }
+	/*03*/{ import_statement import }
+	/*02*/{ export_statement primary_expression }
+	/*01*/{ lexical_declaration primary_expression }
 	}
 
 supertypes ::= {
