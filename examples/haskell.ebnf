@@ -71,17 +71,28 @@ extras ::= {
 	}
 
 precedences ::= {
-	/*11*/{ 'projection' 'record' 'prefix' 'apply' 'negation' 'infix' 'implicit' 'fun' 'annotated' quantified_type }
-	/*10*/{ _pat_negation literal }
-	/*09*/{ 'bind' 'pat-name' }
-	/*08*/{ 'qualifying-module' 'qualified-id' }
-	/*07*/{ 'qualifying-module' 'con' }
-	/*06*/{ 'qualifying-module' 'type-name' }
-	/*05*/{ operator _type_star }
-	/*04*/{ _type_wildcard _type_param_wildcard }
-	/*03*/{ _constructor_ticked _tycon_ticked }
-	/*02*/{ 'qtype-single' 'qtype-curried' }
-	/*01*/{ 'patterns' 'apply' }
+	;;11
+	{ 'projection' 'record' 'prefix' 'apply' 'negation' 'infix' 'implicit' 'fun' 'annotated' quantified_type }
+	;;10
+	{ _pat_negation literal }
+	;;09
+	{ 'bind' 'pat-name' }
+	;;08
+	{ 'qualifying-module' 'qualified-id' }
+	;;07
+	{ 'qualifying-module' 'con' }
+	;;06
+	{ 'qualifying-module' 'type-name' }
+	;;05
+	{ operator _type_star }
+	;;04
+	{ _type_wildcard _type_param_wildcard }
+	;;03
+	{ _constructor_ticked _tycon_ticked }
+	;;02
+	{ 'qtype-single' 'qtype-curried' }
+	;;01
+	{ 'patterns' 'apply' }
 	}
 
 supertypes ::= {

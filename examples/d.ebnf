@@ -27,7 +27,8 @@ extras ::= {
 	}
 
 precedences ::= {
-	/*01*/{ 'unary' 'power' 'multiply' 'add' 'shift' 'compare' 'bitwise_and' 'exclusive_or' 'inclusive_or' 'logical_or' 'logical_and' 'ternary' 'assignment' }
+	;;01
+	{ 'unary' 'power' 'multiply' 'add' 'shift' 'compare' 'bitwise_and' 'exclusive_or' 'inclusive_or' 'logical_or' 'logical_and' 'ternary' 'assignment' }
 	}
 
 inline ::= {

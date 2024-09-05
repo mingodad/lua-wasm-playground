@@ -28,50 +28,94 @@ extras ::= {
 	}
 
 precedences ::= {
-	/*44*/{ 'member' 'template_call' 'call' update_expression 'unary_void' 'binary_exp' 'binary_times' 'binary_plus' 'binary_shift' 'binary_compare' 'binary_relation' 'binary_equality' 'bitwise_and' 'bitwise_xor' 'bitwise_or' 'logical_and' 'logical_or' 'ternary' sequence_expression arrow_function }
-	/*43*/{ 'assign' primary_expression }
-	/*42*/{ 'member' 'template_call' 'new' 'call' expression }
-	/*41*/{ 'declaration' 'literal' }
-	/*40*/{ primary_expression statement_block 'object' }
-	/*39*/{ meta_property import }
-	/*38*/{ import_statement import }
-	/*37*/{ export_statement primary_expression }
-	/*36*/{ lexical_declaration primary_expression }
-	/*35*/{ 'call' 'instantiation' 'unary' 'binary' await_expression arrow_function }
-	/*34*/{ 'extends' 'instantiation' }
-	/*33*/{ intersection_type union_type conditional_type function_type 'binary' type_predicate readonly_type }
-	/*32*/{ mapped_type_clause primary_expression }
-	/*31*/{ accessibility_modifier primary_expression }
-	/*30*/{ 'unary_void' expression }
-	/*29*/{ extends_clause primary_expression }
-	/*28*/{ 'unary' 'assign' }
-	/*27*/{ 'declaration' expression }
-	/*26*/{ predefined_type unary_expression }
-	/*25*/{ type flow_maybe_type }
-	/*24*/{ tuple_type array_type pattern type }
-	/*23*/{ readonly_type pattern }
-	/*22*/{ readonly_type primary_expression }
-	/*21*/{ type_query subscript_expression expression }
-	/*20*/{ type_query _type_query_subscript_expression }
-	/*19*/{ nested_type_identifier generic_type primary_type lookup_type index_type_query type }
-	/*18*/{ as_expression satisfies_expression primary_type }
-	/*17*/{ _type_query_member_expression member_expression }
-	/*16*/{ member_expression _type_query_member_expression_in_type_annotation }
-	/*15*/{ _type_query_member_expression primary_expression }
-	/*14*/{ _type_query_subscript_expression subscript_expression }
-	/*13*/{ _type_query_subscript_expression primary_expression }
-	/*12*/{ _type_query_call_expression primary_expression }
-	/*11*/{ _type_query_instantiation_expression primary_expression }
-	/*10*/{ type_query primary_expression }
-	/*09*/{ override_modifier primary_expression }
-	/*08*/{ decorator_call_expression decorator }
-	/*07*/{ literal_type pattern }
-	/*06*/{ predefined_type pattern }
-	/*05*/{ call_expression _type_query_call_expression }
-	/*04*/{ call_expression _type_query_call_expression_in_type_annotation }
-	/*03*/{ new_expression primary_expression }
-	/*02*/{ meta_property primary_expression }
-	/*01*/{ construct_signature _property_name }
+	;;44
+	{ 'member' 'template_call' 'call' update_expression 'unary_void' 'binary_exp' 'binary_times' 'binary_plus' 'binary_shift' 'binary_compare' 'binary_relation' 'binary_equality' 'bitwise_and' 'bitwise_xor' 'bitwise_or' 'logical_and' 'logical_or' 'ternary' sequence_expression arrow_function }
+	;;43
+	{ 'assign' primary_expression }
+	;;42
+	{ 'member' 'template_call' 'new' 'call' expression }
+	;;41
+	{ 'declaration' 'literal' }
+	;;40
+	{ primary_expression statement_block 'object' }
+	;;39
+	{ meta_property import }
+	;;38
+	{ import_statement import }
+	;;37
+	{ export_statement primary_expression }
+	;;36
+	{ lexical_declaration primary_expression }
+	;;35
+	{ 'call' 'instantiation' 'unary' 'binary' await_expression arrow_function }
+	;;34
+	{ 'extends' 'instantiation' }
+	;;33
+	{ intersection_type union_type conditional_type function_type 'binary' type_predicate readonly_type }
+	;;32
+	{ mapped_type_clause primary_expression }
+	;;31
+	{ accessibility_modifier primary_expression }
+	;;30
+	{ 'unary_void' expression }
+	;;29
+	{ extends_clause primary_expression }
+	;;28
+	{ 'unary' 'assign' }
+	;;27
+	{ 'declaration' expression }
+	;;26
+	{ predefined_type unary_expression }
+	;;25
+	{ type flow_maybe_type }
+	;;24
+	{ tuple_type array_type pattern type }
+	;;23
+	{ readonly_type pattern }
+	;;22
+	{ readonly_type primary_expression }
+	;;21
+	{ type_query subscript_expression expression }
+	;;20
+	{ type_query _type_query_subscript_expression }
+	;;19
+	{ nested_type_identifier generic_type primary_type lookup_type index_type_query type }
+	;;18
+	{ as_expression satisfies_expression primary_type }
+	;;17
+	{ _type_query_member_expression member_expression }
+	;;16
+	{ member_expression _type_query_member_expression_in_type_annotation }
+	;;15
+	{ _type_query_member_expression primary_expression }
+	;;14
+	{ _type_query_subscript_expression subscript_expression }
+	;;13
+	{ _type_query_subscript_expression primary_expression }
+	;;12
+	{ _type_query_call_expression primary_expression }
+	;;11
+	{ _type_query_instantiation_expression primary_expression }
+	;;10
+	{ type_query primary_expression }
+	;;09
+	{ override_modifier primary_expression }
+	;;08
+	{ decorator_call_expression decorator }
+	;;07
+	{ literal_type pattern }
+	;;06
+	{ predefined_type pattern }
+	;;05
+	{ call_expression _type_query_call_expression }
+	;;04
+	{ call_expression _type_query_call_expression_in_type_annotation }
+	;;03
+	{ new_expression primary_expression }
+	;;02
+	{ meta_property primary_expression }
+	;;01
+	{ construct_signature _property_name }
 	}
 
 supertypes ::= {

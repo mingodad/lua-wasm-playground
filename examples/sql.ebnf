@@ -22,7 +22,8 @@ extras ::= {
 	}
 
 precedences ::= {
-	/*01*/{ 'binary_is' 'unary_not' 'binary_exp' 'binary_times' 'binary_plus' 'unary_other' 'binary_other' 'binary_in' 'binary_compare' 'binary_relation' 'pattern_matching' 'between' 'clause_connective' 'clause_disjunctive' }
+	;;01
+	{ 'binary_is' 'unary_not' 'binary_exp' 'binary_times' 'binary_plus' 'unary_other' 'binary_other' 'binary_in' 'binary_compare' 'binary_relation' 'pattern_matching' 'between' 'clause_connective' 'clause_disjunctive' }
 	}
 
 conflicts ::= {
