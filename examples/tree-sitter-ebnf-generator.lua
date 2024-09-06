@@ -553,6 +553,9 @@ local function print_node(n, offset, max_width)
     if n.kind == SEQUENCE or n.kind == ROOT then
       local len = #n.children
       if len == 0 then error("empty sequence") end
+      if len == 1 then
+        return n.children[1].children[1], #n.children[1].children[1] > max_width
+      end
       return write_function_with_args("seq", n)
     elseif n.kind == LITERAL then
       return n.children[1], #n.children[1] > max_width

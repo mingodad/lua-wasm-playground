@@ -1,9 +1,11 @@
 #!/bin/sh
+mycw=$PWD
 tmp_folder="/tmp/tslua"
 grmh="$HOME/dev/c/A_grammars"
 cvt_cmd="qjs $grmh/plgh/json2ebnf-lua.js"
 gen_cmd="qjs $grmh/plgh/tree-sitter-generate.js"
 base_folder="$grmh/tree-sitter"
+valid_cmd="qjs $mycw/schemasafe.qjs $mycw/tree-sitter-json-schema.json"
 fname_list="tree-sitter-ada/src/grammar.json \
 	tree-sitter-angular/src/grammar.json \
 	tree-sitter-awk/src/grammar.json \
@@ -56,13 +58,12 @@ fname_list="tree-sitter-ada/src/grammar.json \
 	tree-sitter-vimdoc/src/grammar.json \
 	tree-sitter-zig/src/grammar.json"
 
+#fname_list="tree-sitter-make/src/grammar.json"
 	#"v-analyzer/tree_sitter_v/src/grammar.json"
 
 if [ ! -d $tmp_folder ]; then
 	mkdir $tmp_folder
 fi
-
-mycw=$PWD
 
 for fn in $fname_list
 do
@@ -98,4 +99,7 @@ do
 	tmp_fname_json=$tmp_folder/$fn_basename.json
 	echo "==jsToJson $tmp_fname_js"
 	$gen_cmd $tmp_fname_js > $tmp_fname_json
+
+	$valid_cmd $tmp_fname_json
+	$valid_cmd $tmp_fn_json0
 done
