@@ -36,7 +36,7 @@ extras ::= {
 	preproc_line
 	compiler_directive_decl
 	fsi_directive_decl
-	??:STRING
+	';'
 	}
 
 supertypes ::= {

@@ -20,7 +20,7 @@ externals ::= {
 extras ::= {
 	/[ \t\r\n]/
 	comment
-	??:STRING
+	'&'
 	preproc_file_line
 	}
 

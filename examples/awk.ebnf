@@ -16,8 +16,8 @@ externals ::= {
 
 extras ::= {
 	/[\s\t]/
-	??:STRING
-	??:STRING
+	'\\\n'
+	'\\\r\n'
 	}
 
 precedences ::= {

@@ -10,7 +10,7 @@
 
 extras ::= {
 	/[\s]/
-	??:ALIAS
+	 @( '\\' /\r?\n|\r/ ) -> "\\"
 	comment
 	}
 
