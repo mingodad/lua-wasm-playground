@@ -42,7 +42,10 @@
       "items": {
         "type": "array",
         "items": {
-          "$ref": "#/definitions/precedences-rule"
+          "oneOf": [
+            { "$ref": "#/definitions/string-rule" },
+            { "$ref": "#/definitions/symbol-rule" }
+          ]
         }
       }
     },
@@ -267,13 +270,6 @@
         }
       },
       "required": ["type", "content", "value"]
-    },
-
-    "precedences-rule": {
-      "oneOf": [
-        { "$ref": "#/definitions/string-rule" },
-        { "$ref": "#/definitions/symbol-rule" }
-      ]
     },
 
     "rule": {
