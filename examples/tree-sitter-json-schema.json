@@ -32,6 +32,7 @@
 
     "extras": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "$ref": "#/definitions/rule"
       }
@@ -39,8 +40,10 @@
 
     "precedences": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "type": "array",
+	"uniqueItems": true,
         "items": {
           "oneOf": [
             { "$ref": "#/definitions/string-rule" },
@@ -52,6 +55,7 @@
 
     "externals": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "$ref": "#/definitions/rule"
       }
@@ -59,6 +63,7 @@
 
     "inline": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "type": "string",
         "pattern": "^[a-zA-Z_]\\w*$"
@@ -67,8 +72,10 @@
 
     "conflicts": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "type": "array",
+	"uniqueItems": true,
         "items": {
           "type": "string",
           "pattern": "^[a-zA-Z_]\\w*$"
@@ -84,6 +91,7 @@
     "supertypes": {
       "description": "A list of hidden rule names that should be considered supertypes in the generated node types file. See https://tree-sitter.github.io/tree-sitter/using-parsers#static-node-types.",
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "description": "the name of a rule in `rules` or `extras`",
         "type": "string"
@@ -111,7 +119,8 @@
           "pattern": "^STRING$"
         },
         "value": {
-          "type": "string"
+          "type": "string",
+	  "minLength": 1
         }
       },
       "required": ["type", "value"]
@@ -124,7 +133,7 @@
           "type": "string",
           "pattern": "^PATTERN$"
         },
-        "value": { "type": "string" },
+        "value": { "type": "string", "minLength": 1 },
         "flags": { "type": "string" }
       },
       "required": ["type", "value"]
@@ -168,6 +177,7 @@
         },
         "members": {
           "type": "array",
+	  "minItems": 2,
           "items": {
             "$ref": "#/definitions/rule"
           }
